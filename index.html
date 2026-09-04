@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="description" content="Spec Cards — Reconstruct cocktail specifications, master recipes, and develop professional bartending intuition." />
+  <meta name="theme-color" content="#14110F" />
+  <title>SPEC CARDS // Professional Cocktail Knowledge Game</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="app" class="app-root">
+    <!-- TOP STATUS BAR -->
+    <header class="bar-header" role="banner">
+      <div class="brand-group">
+        <div class="logo-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M8 22h8M12 15v7M5 3h14l-4 8a4 4 0 0 1-6 0L5 3z" />
+          </svg>
+        </div>
+        <div class="brand-titles">
+          <h1 class="brand-name">SPEC CARDS</h1>
+          <span class="brand-sub">COCKTAIL SPEC ENGINE</span>
+        </div>
+      </div>
+
+      <div class="hud-group" aria-label="Game HUD">
+        <div class="hud-pill streak-pill" id="hudStreak" title="Current streak">
+          <span class="hud-icon flame-icon" aria-hidden="true">🔥</span>
+          <span class="hud-val" id="streakVal">0</span>
+          <span class="hud-sub">STREAK</span>
+        </div>
+        <div class="hud-pill score-pill" id="hudScore" title="Score">
+          <span class="hud-icon" aria-hidden="true">★</span>
+          <span class="hud-val" id="scoreVal">0</span>
+        </div>
+        <button id="btnAudioToggle" class="icon-btn" aria-label="Toggle Sound" title="Toggle Sound">
+          <svg id="iconSoundOn" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+            <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+          </svg>
+          <svg id="iconSoundOff" class="hidden" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+            <line x1="23" y1="9" x2="17" y2="15"></line>
+            <line x1="17" y1="9" x2="23" y2="15"></line>
+          </svg>
+        </button>
+        <button id="btnOpenMenu" class="icon-btn" aria-label="Open Menu &amp; Codex" title="Menu &amp; Codex">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <line x1="3" y1="6" x2="21" y2="6"></line>
+            <line x1="3" y1="12" x2="21" y2="12"></line>
+            <line x1="3" y1="18" x2="21" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- NAVIGATION TABS -->
+    <nav class="mode-tabs" role="tablist" aria-label="Game Modes">
+      <button class="mode-tab active" role="tab" aria-selected="true" data-mode="classic">
+        <span class="tab-label">Classic Shift</span>
+      </button>
+      <button class="mode-tab" role="tab" aria-selected="false" data-mode="repair">
+        <span class="tab-label">Troubleshoot</span>
+      </button>
+      <button class="mode-tab" role="tab" aria-selected="false" data-mode="family">
+        <span class="tab-label">Family Drill</span>
+      </button>
+    </nav>
+
+    <!-- MAIN PLAY AREA -->
+    <main class="station-stage" role="main">
+      <!-- LEVEL / ROUND PROGRESS -->
+      <div class="deck-meta-bar">
+        <span class="meta-badge" id="modeBadge">CLASSIC SHIFT</span>
+        <span class="meta-counter" id="roundCounter">TICKET #1 / 10</span>
+        <span class="meta-diff" id="diffBadge">BARTENDER</span>
+      </div>
+
+      <!-- THE SPECIFICATION CARD -->
+      <article class="spec-card" id="specCard" aria-live="polite">
+        <!-- Card Header with family & glass silhouette -->
+        <div class="card-masthead">
+          <div class="masthead-left">
+            <span class="card-family-tag" id="cardFamily">SOUR FAMILY</span>
+            <h2 class="card-cocktail-title" id="cardTitle">WHISKEY SOUR</h2>
+            <span class="card-era" id="cardEra">Circa 1860s • American Classic</span>
+          </div>
+          <div class="masthead-glass" id="glassSilhouetteContainer" title="Prescribed Glass">
+            <div id="glassSvgSlot" class="glass-svg-wrap"></div>
+            <span class="glass-label-caption" id="cardGlassCaption">Coupe</span>
+          </div>
+        </div>
+
+        <!-- Recipe Core Items -->
+        <div class="spec-body">
+          <div class="section-rule">
+            <span class="rule-label">SPECIFICATION FORMULA</span>
+          </div>
+
+          <ul class="ingredient-list" id="ingredientList" role="list">
+            <!-- Dynamically populated ingredients with active blanks -->
+          </ul>
+
+          <div class="section-rule sub-rule">
+            <span class="rule-label">SERVICE PARAMETERS</span>
+          </div>
+
+          <div class="service-grid" id="serviceGrid">
+            <div class="param-cell" id="paramMethodCell">
+              <span class="param-key">METHOD</span>
+              <span class="param-val" id="paramMethodVal">SHAKE</span>
+            </div>
+            <div class="param-cell" id="paramIceCell">
+              <span class="param-key">ICE</span>
+              <span class="param-val" id="paramIceVal">NONE / CHILLED</span>
+            </div>
+            <div class="param-cell" id="paramGarnishCell">
+              <span class="param-key">GARNISH</span>
+              <span class="param-val" id="paramGarnishVal">ANGORSTURA &amp; LEMON</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Historical or Professional Clue -->
+        <div class="card-footer-tip" id="cardFootnote">
+          <span class="footnote-tag">PROFESSIONAL NOTE:</span>
+          <span class="footnote-text" id="footnoteText">Ensure emulsion prior to dilution when egg white is incorporated.</span>
+        </div>
+      </article>
+
+      <!-- INTERACTIVE ZONE (Options deck & confidence) -->
+      <section class="interaction-deck" id="interactionDeck" aria-label="Input options">
+        <div class="deck-prompt-bar">
+          <span class="deck-prompt-text" id="deckPrompt">Restore the missing specification field:</span>
+          <button id="btnHint" class="text-hint-btn" title="Expose ingredient role clue (Press H)">
+            <span class="hint-symbol">💡</span> HINT
+          </button>
+        </div>
+
+        <!-- Choice Grid -->
+        <div class="choice-matrix" id="choiceMatrix" role="group" aria-label="Available specifications">
+          <!-- 4 large dynamic touch buttons with keyboard index badges -->
+        </div>
+
+        <!-- Confidence Selector (Depth Mechanic) -->
+        <div class="confidence-selector" id="confidenceBar">
+          <span class="conf-label">CONFIDENCE:</span>
+          <div class="conf-buttons" role="radiogroup" aria-label="Confidence level">
+            <button class="conf-btn active" data-conf="certain" role="radio" aria-checked="true">Certain (1.5×)</button>
+            <button class="conf-btn" data-conf="likely" role="radio" aria-checked="false">Likely (1.0×)</button>
+            <button class="conf-btn" data-conf="guess" role="radio" aria-checked="false">Guessing (0.5×)</button>
+          </div>
+        </div>
+
+        <!-- Feedback & Diagnosis Tray (pops up on answer) -->
+        <div class="diagnosis-tray hidden" id="diagnosisTray" aria-live="assertive">
+          <div class="diag-header">
+            <span class="diag-badge" id="diagBadge">CORRECT</span>
+            <span class="diag-score" id="diagPoints">+150 PTS</span>
+          </div>
+          <p class="diag-reason" id="diagReason">
+            Rye whiskey provides the assertive spicy backbone to offset 0.75 oz fresh lemon and rich demerara syrup.
+          </p>
+          <div class="diag-actions">
+            <button id="btnNextTicket" class="action-btn primary-action">
+              <span>NEXT TICKET</span>
+              <span class="kbd-sub">↵ [ENTER]</span>
+            </button>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- DRAWER / MODAL: MENU, CODEX, PROGRESS & SETTINGS -->
+    <div class="modal-backdrop hidden" id="modalBackdrop" aria-hidden="true">
+      <div class="modal-dialog" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+        <div class="modal-header">
+          <h2 id="modalTitle" class="modal-title">SPEC CODEX &amp; BARSCRIPTA</h2>
+          <button id="btnCloseModal" class="icon-btn close-btn" aria-label="Close dialog">✕</button>
+        </div>
+
+        <!-- Modal Tabs -->
+        <div class="modal-subnav">
+          <button class="subnav-btn active" data-pane="paneCodex">Cocktail Codex</button>
+          <button class="subnav-btn" data-pane="paneStats">Bartender Stats</button>
+          <button class="subnav-btn" data-pane="paneGuide">Glass &amp; Families</button>
+        </div>
+
+        <div class="modal-content-scroll">
+          <!-- PANE 1: CODEX -->
+          <div class="modal-pane active" id="paneCodex">
+            <div class="filter-bar">
+              <input type="text" id="codexSearch" class="codex-input" placeholder="Filter by name, base spirit, family..." />
+            </div>
+            <div class="codex-cards-grid" id="codexGrid">
+              <!-- Rendered cocktail library -->
+            </div>
+          </div>
+
+          <!-- PANE 2: STATS & MASTERY -->
+          <div class="modal-pane" id="paneStats">
+            <div class="stats-overview-grid">
+              <div class="stat-card">
+                <span class="stat-num" id="stMasteryRank">Apprentice</span>
+                <span class="stat-desc">BARTENDER RANK</span>
+              </div>
+              <div class="stat-card">
+                <span class="stat-num" id="stTotalPassed">0</span>
+                <span class="stat-desc">SPECS MASTERED</span>
+              </div>
+              <div class="stat-card">
+                <span class="stat-num" id="stAccuracy">0%</span>
+                <span class="stat-desc">ACCURACY RATE</span>
+              </div>
+              <div class="stat-card">
+                <span class="stat-num" id="stBestStreak">0</span>
+                <span class="stat-desc">BEST SHIFT STREAK</span>
+              </div>
+            </div>
+
+            <div class="family-mastery-deck">
+              <h3 class="deck-subtitle">FAMILY KNOWLEDGE GRAPH</h3>
+              <div class="family-meter-list" id="familyMeterList">
+                <!-- Dynamically populated progress bars per family -->
+              </div>
+            </div>
+
+            <div class="storage-controls">
+              <button id="btnResetProgress" class="btn-text-danger">Reset Local Progress</button>
+            </div>
+          </div>
+
+          <!-- PANE 3: GLASSWARE & METHODS REFERENCE -->
+          <div class="modal-pane" id="paneGuide">
+            <h3 class="deck-subtitle">GLASSWARE SILHOUETTE ATLAS</h3>
+            <div class="glass-atlas-grid" id="glassAtlasGrid">
+              <!-- Visual reference of glassware -->
+            </div>
+            <h3 class="deck-subtitle" style="margin-top:24px;">COCKTAIL FAMILY STRUCTURES</h3>
+            <div class="guide-families-list" id="guideFamiliesList">
+              <!-- Explanations of Sour, Old Fashioned, Daisy, etc. -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
