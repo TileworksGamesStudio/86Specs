@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <meta name="description" content="Spec Cards — Professional mobile cocktail specification engine and bartender intuition trainer." />
+  <meta name="description" content="Spec Cards — Professional cocktail specification engine, recipe troubleshooting drill, and bartender intuition trainer." />
   <meta name="theme-color" content="#14110F" />
   <title>SPEC CARDS // Professional Cocktail Spec Engine</title>
   <link rel="stylesheet" href="style.css" />
@@ -19,13 +19,13 @@
         <!-- Brand Masthead -->
         <header class="menu-brand-header">
           <div class="menu-logo-mark" aria-hidden="true">
-            <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M8 22h8M12 15v7M5 3h14l-4 8a4 4 0 0 1-6 0L5 3z" />
             </svg>
           </div>
           <div class="menu-brand-titles">
             <h1 class="menu-brand-title">SPEC CARDS</h1>
-            <p class="menu-brand-subtitle">COCKTAIL SPEC ENGINE</p>
+            <p class="menu-brand-subtitle">COCKTAIL SPEC ENGINE &amp; DRILL STATION</p>
           </div>
         </header>
 
@@ -54,12 +54,12 @@
         </article>
 
         <!-- Primary Action / Mode Select Group -->
-        <nav class="menu-actions-group" aria-label="Select Game Mode">
+        <nav class="menu-actions-group" aria-label="Select Shift Drill Mode">
           <button id="btnStartClassic" type="button" class="menu-primary-btn" data-mode="classic">
             <div class="btn-btn-icon" aria-hidden="true">🍸</div>
             <div class="btn-text-block">
               <span class="btn-main-title">CLASSIC SHIFT</span>
-              <span class="btn-sub-desc">5 Ticket Speed Reconstruction</span>
+              <span class="btn-sub-desc">5 Ticket Speed Spec Reconstruction</span>
             </div>
             <span class="btn-chevron" aria-hidden="true">➔</span>
           </button>
@@ -68,7 +68,7 @@
             <div class="btn-btn-icon" aria-hidden="true">🛠️</div>
             <div class="btn-text-block">
               <span class="btn-main-title">TROUBLESHOOT DRILL</span>
-              <span class="btn-sub-desc">Identify &amp; Fix Recipe Flaws</span>
+              <span class="btn-sub-desc">Audit Flawed Recipes &amp; Imbalances</span>
             </div>
             <span class="btn-chevron" aria-hidden="true">➔</span>
           </button>
@@ -95,7 +95,7 @@
           </button>
         </div>
 
-        <!-- Tileworks Studio Navigation Button -->
+        <!-- Studio Navigation Footer Button -->
         <footer class="menu-footer-home">
           <a href="https://tileworksgamesstudio.github.io/86/" class="home-studio-btn" rel="noopener">
             <span class="studio-logo-icon" aria-hidden="true">⬡</span>
@@ -107,40 +107,40 @@
     </section>
 
     <!-- ===================================================================
-         VIEW 2: GAMEPLAY / SHIFT STAGE
+         VIEW 2: ACTIVE GAMEPLAY STATION
          =================================================================== -->
     <section id="gameplayView" class="view-screen hidden-view" aria-label="Active Shift Station">
       <!-- TOP HUD BAR -->
       <header class="bar-header" role="banner">
         <button id="btnBackToMenu" class="nav-back-btn" aria-label="Return to Main Menu" title="Return to Main Menu">
-          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <polyline points="15 18 9 12 15 6"></polyline>
           </svg>
           <span class="nav-back-text">MENU</span>
         </button>
 
-        <div class="hud-group" aria-label="Shift HUD">
+        <div class="hud-group" aria-label="Shift HUD Status">
           <div class="hud-pill streak-pill" id="hudStreak" title="Current shift streak">
             <span class="hud-icon flame-icon" aria-hidden="true">🔥</span>
             <span class="hud-val" id="streakVal">0</span>
           </div>
-          <div class="hud-pill score-pill" id="hudScore" title="Shift score">
+          <div class="hud-pill score-pill" id="hudScore" title="Current shift score">
             <span class="hud-icon" aria-hidden="true">★</span>
             <span class="hud-val" id="scoreVal">0</span>
           </div>
           <button id="btnAudioToggle" class="icon-btn" aria-label="Toggle Sound Effects" title="Toggle Sound">
-            <svg id="iconSoundOn" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+            <svg id="iconSoundOn" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
               <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
               <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
             </svg>
-            <svg id="iconSoundOff" class="hidden" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+            <svg id="iconSoundOff" class="hidden" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
               <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
               <line x1="23" y1="9" x2="17" y2="15"></line>
               <line x1="17" y1="9" x2="23" y2="15"></line>
             </svg>
           </button>
-          <button id="btnOpenMenu" class="icon-btn" aria-label="Open Spec Codex &amp; Stats" title="Menu &amp; Codex">
-            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <button id="btnOpenMenu" class="icon-btn" aria-label="Open Spec Codex and Career Data" title="Open Codex">
+            <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
               <line x1="3" y1="6" x2="21" y2="6"></line>
               <line x1="3" y1="12" x2="21" y2="12"></line>
               <line x1="3" y1="18" x2="21" y2="18"></line>
@@ -150,7 +150,7 @@
       </header>
 
       <!-- NAVIGATION TABS FOR QUICK MODE SWITCHING -->
-      <nav class="mode-tabs" role="tablist" aria-label="Shift Modes">
+      <nav class="mode-tabs" role="tablist" aria-label="Shift Drill Modes">
         <button class="mode-tab active" role="tab" id="tabClassic" aria-selected="true" data-mode="classic">
           <span class="tab-label">Classic Shift</span>
         </button>
@@ -177,7 +177,7 @@
           <div class="card-masthead">
             <div class="masthead-left">
               <span class="card-family-tag" id="cardFamily">SOUR FAMILY</span>
-              <h2 class="card-cocktail-title" id="cardTitle">WHISKEY SOUR</h2>
+              <h2 class="card-cocktail-title" id="cardTitle">Whiskey Sour</h2>
               <span class="card-era" id="cardEra">1860s • American Classic</span>
             </div>
             <div class="masthead-glass" id="glassSilhouetteContainer" title="Prescribed Glass">
@@ -186,8 +186,8 @@
             </div>
           </div>
 
-          <!-- Recipe Core Items -->
-          <div class="spec-body">
+          <!-- Recipe Body (Contained Scroll Area for Safety across screen sizes) -->
+          <div class="spec-body-scrollable" id="specBody">
             <div class="section-rule">
               <span class="rule-label">SPECIFICATION FORMULA</span>
             </div>
@@ -214,12 +214,12 @@
                 <span class="param-val" id="paramGarnishVal">ANGOSTURA &amp; LEMON</span>
               </div>
             </div>
-          </div>
 
-          <!-- Footnote Tip -->
-          <div class="card-footer-tip" id="cardFootnote">
-            <span class="footnote-tag">PROFESSIONAL NOTE:</span>
-            <span class="footnote-text" id="footnoteText">Ensure emulsification before dilution when egg white is incorporated.</span>
+            <!-- Professional Bartender Footnote -->
+            <div class="card-footer-tip" id="cardFootnote">
+              <span class="footnote-tag">BAR INTUITION:</span>
+              <span class="footnote-text" id="footnoteText">Ensure emulsification before dilution when egg white is incorporated.</span>
+            </div>
           </div>
         </article>
 
@@ -227,13 +227,13 @@
         <section class="interaction-deck" id="interactionDeck" aria-label="Specification Input">
           <div class="deck-prompt-bar">
             <span class="deck-prompt-text" id="deckPrompt">Restore the missing specification field:</span>
-            <button id="btnHint" class="text-hint-btn" type="button" title="Expose ingredient clue (Press H)" aria-label="Use ticket clue">
+            <button id="btnHint" class="text-hint-btn" type="button" title="Expose ticket clue (Shortcut: H)" aria-label="Use ticket clue">
               <span class="hint-symbol" aria-hidden="true">💡</span> HINT
             </button>
           </div>
 
           <!-- 4 Balanced Mobile Choice Buttons -->
-          <div class="choice-matrix" id="choiceMatrix" role="group" aria-label="Specification choices">
+          <div class="choice-matrix" id="choiceMatrix" role="group" aria-label="Specification options">
             <!-- Dynamically populated touch targets -->
           </div>
 
@@ -256,10 +256,13 @@
             <p class="diag-reason" id="diagReason">
               Rye whiskey supplies the spicy proof necessary to balance 0.75 oz fresh lemon and rich demerara syrup.
             </p>
-            <div class="diag-actions">
+            <div class="diag-actions" id="diagActions">
               <button id="btnNextTicket" type="button" class="action-btn primary-action">
                 <span id="btnNextText">NEXT TICKET</span>
                 <span class="kbd-sub">↵ [ENTER]</span>
+              </button>
+              <button id="btnReplayShift" type="button" class="action-btn secondary-action hidden">
+                <span>REPLAY SHIFT</span>
               </button>
             </div>
           </div>
@@ -277,19 +280,19 @@
           <button id="btnCloseModal" type="button" class="icon-btn close-btn" aria-label="Close dialog">✕</button>
         </div>
 
-        <!-- Modal Subnavigation -->
+        <!-- Modal Subnavigation Tabs -->
         <div class="modal-subnav" role="tablist" aria-label="Codex views">
-          <button type="button" class="subnav-btn active" role="tab" aria-selected="true" data-pane="paneCodex">Cocktail Codex</button>
-          <button type="button" class="subnav-btn" role="tab" aria-selected="false" data-pane="paneStats">Bartender Stats</button>
-          <button type="button" class="subnav-btn" role="tab" aria-selected="false" data-pane="paneGuide">Glass &amp; Families</button>
+          <button type="button" class="subnav-btn active" role="tab" id="tabCodexPane" aria-selected="true" data-pane="paneCodex">Cocktail Codex</button>
+          <button type="button" class="subnav-btn" role="tab" id="tabStatsPane" aria-selected="false" data-pane="paneStats">Bartender Stats</button>
+          <button type="button" class="subnav-btn" role="tab" id="tabGuidePane" aria-selected="false" data-pane="paneGuide">Glass &amp; Families</button>
         </div>
 
         <div class="modal-content-scroll">
           <!-- PANE 1: CODEX LIBRARY -->
-          <div class="modal-pane active" id="paneCodex" role="tabpanel">
+          <div class="modal-pane active" id="paneCodex" role="tabpanel" aria-labelledby="tabCodexPane">
             <div class="filter-bar">
               <label for="codexSearch" class="sr-only">Filter cocktail library</label>
-              <input type="search" id="codexSearch" class="codex-input" placeholder="Search by drink, spirit, or family..." autocomplete="off" />
+              <input type="search" id="codexSearch" class="codex-input" placeholder="Search by cocktail, base spirit, or family..." autocomplete="off" />
             </div>
             <div class="codex-cards-grid" id="codexGrid">
               <!-- Rendered cocktail library -->
@@ -297,10 +300,10 @@
           </div>
 
           <!-- PANE 2: CAREER STATS & FAMILY MASTERY -->
-          <div class="modal-pane" id="paneStats" role="tabpanel">
+          <div class="modal-pane" id="paneStats" role="tabpanel" aria-labelledby="tabStatsPane">
             <div class="stats-overview-grid">
               <div class="stat-card">
-                <span class="stat-num" id="stMasteryRank">Apprentice</span>
+                <span class="stat-num" id="stMasteryRank">Barback Apprentice</span>
                 <span class="stat-desc">BARTENDER RANK</span>
               </div>
               <div class="stat-card">
@@ -318,9 +321,10 @@
             </div>
 
             <div class="family-mastery-deck">
-              <h3 class="deck-subtitle">FAMILY KNOWLEDGE GRAPH</h3>
+              <h3 class="deck-subtitle">FAMILY KNOWLEDGE BREAKDOWN</h3>
+              <p class="deck-desc-sub">Tracks correct audits across cocktail architectural families:</p>
               <div class="family-meter-list" id="familyMeterList">
-                <!-- Dynamically populated progress bars -->
+                <!-- Dynamically populated progress bars per family -->
               </div>
             </div>
 
@@ -330,14 +334,14 @@
           </div>
 
           <!-- PANE 3: GLASSWARE & FAMILY STRUCTURES REFERENCE -->
-          <div class="modal-pane" id="paneGuide" role="tabpanel">
+          <div class="modal-pane" id="paneGuide" role="tabpanel" aria-labelledby="tabGuidePane">
             <h3 class="deck-subtitle">GLASSWARE SILHOUETTE ATLAS</h3>
             <div class="glass-atlas-grid" id="glassAtlasGrid">
               <!-- Visual reference of glassware -->
             </div>
             <h3 class="deck-subtitle guide-subtitle-spacing">COCKTAIL FAMILY STRUCTURES</h3>
             <div class="guide-families-list" id="guideFamiliesList">
-              <!-- Explanations of Sour, Old Fashioned, Daisy, etc. -->
+              <!-- Canonical explanations of Sour, Old Fashioned, Daisy, etc. -->
             </div>
           </div>
         </div>
