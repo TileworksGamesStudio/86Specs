@@ -1,3 +1,4 @@
+javascript
 /**
  * SPEC CARDS — COMPLETE GAME ENGINE & COCKTAIL KNOWLEDGE ARCHITECTURE
  * Fully continuous state, navigation, per-family tracking, and persistence engine.
@@ -5,6 +6,19 @@
 
 (function () {
   "use strict";
+
+  /* ==========================================================================
+     0. UTILITY FUNCTIONS
+     ========================================================================== */
+  // Fisher-Yates shuffle ensuring uniform randomization of options and tickets
+  function shuffleArray(array) {
+    const arr = [...array];
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+  }
 
   /* ==========================================================================
      1. ROBUST LOCALSTORAGE PERSISTENCE ENGINE
@@ -169,11 +183,6 @@
 
   /* ==========================================================================
      4. COMPREHENSIVE COCKTAIL DATABASE
-     ========================================================================== */
-  // >>> KEEP YOUR COCKTAIL_DATABASE ARRAY HERE <<<
-
-  /* ==========================================================================
-     4. COMPREHENSIVE COCKTAIL DATABASE (33 HIGH-DETAIL CANONICAL SPECS)
      ========================================================================== */
   const COCKTAIL_DATABASE = [
     {
@@ -2272,7 +2281,7 @@
 
   function generateTicketDeck(modeName) {
     const available = COCKTAIL_DATABASE.filter(c => c.modes && c.modes[modeName]);
-    const shuffled = [...available].sort(() => Math.random() - 0.5);
+    const shuffled = shuffleArray(available);
     return shuffled.slice(0, 5);
   }
 
@@ -2395,13 +2404,14 @@
     });
 
     DOM.deckPrompt.textContent = challenge.prompt;
-    renderChoices(challenge.options);
+    // Pass a fresh shuffle of the options each ticket
+    renderChoices(shuffleArray(challenge.options));
     updateHUD();
   }
 
-  function renderChoices(options) {
+  function renderChoices(shuffledOptions) {
     DOM.choiceMatrix.innerHTML = "";
-    options.forEach((optText, index) => {
+    shuffledOptions.forEach((optText, index) => {
       const btn = document.createElement("button");
       btn.className = "choice-btn";
       btn.type = "button";
@@ -2859,7 +2869,6 @@
         }
       } else {
         if (e.key === "Enter" || e.key === " ") {
-          // Prevent double fire if an on-screen button is actively focused
           if (e.target && e.target.tagName === "BUTTON") return;
           e.preventDefault();
           advanceNextTicket();
