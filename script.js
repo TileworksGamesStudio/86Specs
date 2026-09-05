@@ -1,36 +1,44 @@
-/**
- * SPEC CARDS — COMPLETE GAME ENGINE & KNOWLEDGE ARCHITECTURE
- * Mobile-First Cocktail Specification Engine with Robust LocalStorage Persistence.
- */
-
-(function () {
-  "use strict";
-
-  /* ==========================================================================
-     1. LOCAL STORAGE PERSISTENCE ENGINE
-     ========================================================================== */
-  const STORAGE_KEY = "speccards_app_data_v1";
+const STORAGE_KEY = "speccards_app_data_v2";
 
   const defaultStorageData = {
-    version: 1,
+    version: 2,
     sound: "on",
     preferredMode: "classic",
     highScore: 0,
     bestStreak: 0,
     totalCompleted: 0,
     correctCount: 0,
-    totalAttempts: 0
+    totalAttempts: 0,
+    familyMastery: {
+      "Sour": { attempts: 0, correct: 0 },
+      "Daisy": { attempts: 0, correct: 0 },
+      "Old Fashioned": { attempts: 0, correct: 0 },
+      "Bitter / Aperitivo": { attempts: 0, correct: 0 },
+      "Martini": { attempts: 0, correct: 0 },
+      "Highball / Collins": { attempts: 0, correct: 0 }
+    }
   };
 
   function loadStoredState() {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
-      if (!raw) return { ...defaultStorageData };
+      if (!raw) return JSON.parse(JSON.stringify(defaultStorageData));
       const parsed = JSON.parse(raw);
-      if (typeof parsed !== "object" || parsed === null) return { ...defaultStorageData };
-      return { ...defaultStorageData, ...parsed };
+      if (typeof parsed !== "object" || parsed === null) {
+        return JSON.parse(JSON.stringify(defaultStorageData));
+      }
+
+      // Merge defaults safely
+      return {
+        ...defaultStorageData,
+        ...parsed,
+        familyMastery: {
+          ...defaultStorageData.familyMastery,
+          ...(parsed.familyMastery || {})
+        }
+      };
     } catch {
-      return { ...defaultStorageData };
+      return JSON.parse(JSON.stringify(defaultStorageData));
     }
   }
 
@@ -38,7 +46,7 @@
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
     } catch {
-      /* Private mode fallback */
+      /* In-memory fallback */
     }
   }
 
@@ -79,13 +87,13 @@
         const gain = this.ctx.createGain();
         osc.type = "sine";
         osc.frequency.setValueAtTime(620, this.ctx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(180, this.ctx.currentTime + 0.05);
-        gain.gain.setValueAtTime(0.12, this.ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.05);
+        osc.frequency.exponentialRampToValueAtTime(180, this.ctx.currentTime + 0.04);
+        gain.gain.setValueAtTime(0.1, this.ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.04);
         osc.connect(gain);
         gain.connect(this.ctx.destination);
         osc.start();
-        osc.stop(this.ctx.currentTime + 0.05);
+        osc.stop(this.ctx.currentTime + 0.04);
       } catch {}
     }
 
@@ -99,14 +107,14 @@
           const osc = this.ctx.createOscillator();
           const gain = this.ctx.createGain();
           osc.type = "triangle";
-          osc.frequency.setValueAtTime(freq, t + idx * 0.055);
+          osc.frequency.setValueAtTime(freq, t + idx * 0.05);
           gain.gain.setValueAtTime(0, t);
-          gain.gain.setValueAtTime(0.14, t + idx * 0.055);
-          gain.gain.exponentialRampToValueAtTime(0.001, t + idx * 0.055 + 0.3);
+          gain.gain.setValueAtTime(0.12, t + idx * 0.05);
+          gain.gain.exponentialRampToValueAtTime(0.001, t + idx * 0.05 + 0.28);
           osc.connect(gain);
           gain.connect(this.ctx.destination);
-          osc.start(t + idx * 0.055);
-          osc.stop(t + idx * 0.055 + 0.32);
+          osc.start(t + idx * 0.05);
+          osc.stop(t + idx * 0.05 + 0.3);
         });
       } catch {}
     }
@@ -121,13 +129,13 @@
         const gain = this.ctx.createGain();
         osc.type = "sawtooth";
         osc.frequency.setValueAtTime(145, t);
-        osc.frequency.exponentialRampToValueAtTime(85, t + 0.22);
-        gain.gain.setValueAtTime(0.16, t);
-        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.22);
+        osc.frequency.exponentialRampToValueAtTime(80, t + 0.2);
+        gain.gain.setValueAtTime(0.14, t);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.2);
         osc.connect(gain);
         gain.connect(this.ctx.destination);
         osc.start(t);
-        osc.stop(t + 0.22);
+        osc.stop(t + 0.2);
       } catch {}
     }
   }
@@ -160,13 +168,17 @@
       <path d="M12 12 C12 24 36 24 36 12 Z" />
       <line x1="24" y1="24" x2="24" y2="40" />
       <line x1="16" y1="40" x2="32" y2="40" />
+    </svg>`,
+    Collins: `<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+      <polygon points="15,6 33,6 31,42 17,42" />
+      <line x1="16" y1="16" x2="32" y2="16" stroke-dasharray="2 2" opacity="0.6"/>
     </svg>`
   };
 
   /* ==========================================================================
-     4. COCKTAIL DATASET LIBRARY
+     4. COMPREHENSIVE COCKTAIL DATABASE
      ========================================================================== */
-  const SPEC_DATASET = [
+  const COCKTAIL_DATABASE = [
     {
       id: "whiskey-sour",
       name: "Whiskey Sour",
@@ -177,52 +189,85 @@
       ice: "None / Served Up",
       method: "Shake (Dry Shake first)",
       garnish: "Angostura Drops & Lemon Twist",
-      footnote: "Egg white requires a dry shake (no ice) to build protein emulsion prior to chilling.",
+      footnote: "Dry shaking without ice emulsifies the egg white proteins prior to cold dilution.",
       spec: [
         { measure: "2.0 oz", name: "Bourbon or Rye Whiskey", role: "Base Spirit" },
         { measure: "0.75 oz", name: "Fresh Lemon Juice", role: "Sour Element" },
         { measure: "0.75 oz", name: "Rich Simple Syrup (2:1)", role: "Sweet Modifier" },
         { measure: "1 dash", name: "Egg White (Optional)", role: "Textural Agent" }
       ],
-      challenge: {
-        type: "ingredient",
-        targetIndex: 0,
-        prompt: "Restore the missing core base spirit:",
-        correctAnswer: "Bourbon or Rye Whiskey",
-        options: [
-          "Bourbon or Rye Whiskey",
-          "London Dry Gin",
-          "Blanco Tequila",
-          "Aged Dark Rum"
-        ],
-        hint: "This spirit provides the oak tannins and proof necessary to balance fresh lemon.",
-        diagnosis: "Bourbon or rye whiskey supplies the proof and barrel sweetness necessary to balance 0.75 oz lemon and rich simple syrup."
+      modes: {
+        classic: {
+          type: "ingredient",
+          targetIndex: 0,
+          prompt: "Specify the core base spirit required for the Whiskey Sour:",
+          correctAnswer: "Bourbon or Rye Whiskey",
+          options: ["Bourbon or Rye Whiskey", "London Dry Gin", "Blanco Tequila", "Aged Rum"],
+          hint: "Provides the barrel proof and oak tannins necessary to balance tart lemon.",
+          diagnosis: "Bourbon or rye whiskey supplies the proof and vanilla-oak structure to balance 0.75 oz lemon and rich syrup."
+        },
+        family: {
+          type: "measure",
+          targetIndex: 1,
+          prompt: "Identify the canonical acid pour in the standard 2:0.75:0.75 Sour template:",
+          correctAnswer: "0.75 oz",
+          options: ["0.75 oz", "0.25 oz", "1.25 oz", "1.5 oz"],
+          hint: "The golden sour ratio balances 2 oz spirit with equal parts acid and 2:1 sugar.",
+          diagnosis: "Standard craft sour ratio employs 0.75 oz fresh citrus to temper 2.0 oz 80-100 proof spirit."
+        }
       }
     },
     {
       id: "negroni",
       name: "Negroni",
       family: "Bitter / Aperitivo",
-      era: "1919 • Caffè Casoni, Florence",
+      era: "1919 • Florence, Italy",
       baseSpirit: "London Dry Gin",
       glass: "Rocks",
       ice: "Large Clear Ice Cube",
       method: "Stir Thoroughly",
       garnish: "Expressed Orange Peel",
-      footnote: "Equal-part construction relying on thermal chilling and controlled dilution over dense ice.",
+      footnote: "Equal-parts construction relying on chilling and controlled thermal dilution over dense ice.",
       spec: [
         { measure: "1.0 oz", name: "London Dry Gin", role: "Base Spirit" },
         { measure: "1.0 oz", name: "Campari", role: "Bitter Aperitif" },
         { measure: "1.0 oz", name: "Sweet Red Vermouth", role: "Fortified Modifier" }
       ],
-      challenge: {
-        type: "measure",
-        targetIndex: 1,
-        prompt: "Specify the canonical pour measure for Campari:",
-        correctAnswer: "1.0 oz",
-        options: ["1.0 oz", "0.5 oz", "1.5 oz", "2.0 oz"],
-        hint: "The classic Negroni is built on strict equal-parts harmony.",
-        diagnosis: "A canonical Negroni demands equal parts (1.0 oz each) of gin, Campari, and sweet vermouth."
+      modes: {
+        classic: {
+          type: "measure",
+          targetIndex: 1,
+          prompt: "Specify the canonical pour measure for Campari in a classic Negroni:",
+          correctAnswer: "1.0 oz",
+          options: ["1.0 oz", "0.5 oz", "1.5 oz", "2.0 oz"],
+          hint: "The classic Negroni is built on strict equal-parts harmony.",
+          diagnosis: "A canonical Negroni demands equal parts (1.0 oz each) of gin, Campari, and sweet vermouth."
+        },
+        repair: {
+          type: "troubleshoot",
+          targetIndex: 1,
+          flawIngredientDisplay: "Campari 2.0 oz (FLAW)",
+          correctIngredientName: "Campari (Equal Parts 1.0 oz)",
+          prompt: "RECIPE AUDIT: Identify the flaw that breaks Negroni harmony:",
+          correctAnswer: "Over-Bitter: Campari is poured at 2.0 oz instead of 1.0 oz",
+          options: [
+            "Over-Bitter: Campari is poured at 2.0 oz instead of 1.0 oz",
+            "Base Spirit: Should use peated Scotch whisky",
+            "Service Method: Must be shaken with crushed ice",
+            "Glassware: Must be served in a Champagne flute"
+          ],
+          hint: "Look at the proportions—the aperitif overpoweringly exceeds the gin and vermouth.",
+          diagnosis: "Equal parts is essential to the Negroni. Doubling the bitter modifier masks the botanicals and destroys balance."
+        },
+        family: {
+          type: "ingredient",
+          targetIndex: 2,
+          prompt: "Which aromatized wine completes the Negroni 1:1:1 formula?",
+          correctAnswer: "Sweet Red Vermouth",
+          options: ["Sweet Red Vermouth", "Dry French Vermouth", "Fino Sherry", "Ruby Port"],
+          hint: "This Italian Torino vermouth provides sweetness and herbal bitterness.",
+          diagnosis: "Sweet red (Torino) vermouth balances the assertive gentian bitterness of Campari and the dry juniper of gin."
+        }
       }
     },
     {
@@ -235,25 +280,57 @@
       ice: "Large Clear Cube",
       method: "Stir Thoroughly",
       garnish: "Expressed Orange & Brandied Cherry",
-      footnote: "The primogenitor formula: spirit, sugar, water (ice dilution), and aromatic bitters.",
+      footnote: "The primogenitor cocktail: spirit, sugar, water (ice dilution), and aromatic bitters.",
       spec: [
         { measure: "2.0 oz", name: "Rye or Bourbon Whiskey", role: "Base Spirit" },
         { measure: "1 barspoon", name: "Demerara Syrup (2:1)", role: "Sweet Modifier" },
         { measure: "2 dashes", name: "Angostura Aromatic Bitters", role: "Bitter Accent" }
       ],
-      challenge: {
-        type: "method",
-        targetIndex: -1,
-        prompt: "Specify the proper technique and service parameter:",
-        correctAnswer: "Stir Thoroughly",
-        options: [
-          "Stir Thoroughly",
-          "Hard Shake & Fine Strain",
-          "Build in Glass & Top with Soda",
-          "Muddle & Flash Blend"
-        ],
-        hint: "Spirit-forward drinks without citrus juices require gentle stirring to prevent cloudiness.",
-        diagnosis: "Stirring gently incorporates cold dilution without chipping ice or introducing aeration."
+      modes: {
+        classic: {
+          type: "method",
+          targetIndex: -1,
+          prompt: "Specify the proper technique and service parameter for an Old Fashioned:",
+          correctAnswer: "Stir Thoroughly",
+          options: [
+            "Stir Thoroughly",
+            "Hard Shake & Fine Strain",
+            "Build in Glass & Top with Club Soda",
+            "Muddle Citrus Flesh & Flash Blend"
+          ],
+          hint: "Spirit-forward drinks without citrus juice require gentle stirring to prevent cloudiness.",
+          diagnosis: "Stirring gently incorporates cold dilution without chipping ice or introducing aerated bubbles."
+        },
+        repair: {
+          type: "troubleshoot",
+          targetIndex: 1,
+          flawIngredientDisplay: "Muddled Maraschino Cherry & Orange Slice in Pint Glass (FLAW)",
+          correctIngredientName: "Demerara Syrup & Expressed Citrus Peel",
+          prompt: "RECIPE AUDIT: Identify the Prohibition-era flaw distorting the classic Old Fashioned:",
+          correctAnswer: "Muddling fruit pulp creates an over-diluted fruit compote",
+          options: [
+            "Muddling fruit pulp creates an over-diluted fruit compote",
+            "Rye whiskey is too spicy and should be replaced by vodka",
+            "Bitters should never be used in an Old Fashioned",
+            "It must be served boiling hot in a mug"
+          ],
+          hint: "Muddling fruit slices with granulated sugar was an old trick to mask bathtub whiskey.",
+          diagnosis: "Craft practice avoids pulverizing fruit pulp into the drink. Expressing oils over the glass provides clean aroma without muddy fruit residue."
+        },
+        family: {
+          type: "ingredient",
+          targetIndex: 2,
+          prompt: "What indispensable accent bridges the whiskey and sweetener in this family?",
+          correctAnswer: "Aromatic Bitters (Angostura)",
+          options: [
+            "Aromatic Bitters (Angostura)",
+            "Heavy Whipping Cream",
+            "Fresh Lime Juice",
+            "Sparkling Mineral Water"
+          ],
+          hint: "Bitters are defined as the seasoning that makes an Old Fashioned a 'cocktail'.",
+          diagnosis: "Bitters tie together the proof of the spirit and the richness of the sugar."
+        }
       }
     },
     {
@@ -266,27 +343,47 @@
       ice: "None / Served Up",
       method: "Hard Shake",
       garnish: "Lime Wheel & Half-Salt Rim",
-      footnote: "A classic Daisy: spirit, citrus acid, and an orange liqueur cordial modifier.",
+      footnote: "A classic Daisy: spirit, citrus acid, and an orange liqueur modifier.",
       spec: [
         { measure: "2.0 oz", name: "Blanco Tequila", role: "Base Spirit" },
-        { measure: "1.0 oz", name: "Sweet Red Vermouth (FLAW)", role: "Modifier Error" },
+        { measure: "1.0 oz", name: "Cointreau / Triple Sec", role: "Orange Cordial Modifier" },
         { measure: "0.75 oz", name: "Fresh Lime Juice", role: "Sour Element" }
       ],
-      challenge: {
-        type: "troubleshoot",
-        targetIndex: 1,
-        flawIngredientDisplay: "Sweet Red Vermouth",
-        correctIngredientName: "Cointreau / Orange Liqueur",
-        prompt: "DIAGNOSTIC AUDIT: Identify the deliberate recipe violation:",
-        correctAnswer: "Modifier Flaw: Replace Sweet Vermouth with Cointreau",
-        options: [
-          "Modifier Flaw: Replace Sweet Vermouth with Cointreau",
-          "Base Spirit Flaw: Should be London Dry Gin",
-          "Glassware Flaw: Must be served in a Champagne Flute",
-          "Service Flaw: Method should be stirred over crushed ice"
-        ],
-        hint: "A Daisy cocktail balances citrus with an orange liqueur, never fortified wine.",
-        diagnosis: "The Margarita is an agave Daisy; it requires orange liqueur (Cointreau or triple sec) as the sweetener."
+      modes: {
+        classic: {
+          type: "ingredient",
+          targetIndex: 1,
+          prompt: "Identify the cordial modifier that defines the Margarita as a Daisy:",
+          correctAnswer: "Cointreau / Triple Sec",
+          options: ["Cointreau / Triple Sec", "Maraschino Liqueur", "Sweet Vermouth", "Creme de Violette"],
+          hint: "A Daisy cocktail swaps out plain syrup for a citrus-flavored liqueur.",
+          diagnosis: "A Daisy structure pairs spirit with fresh citrus and an orange liqueur like Cointreau."
+        },
+        repair: {
+          type: "troubleshoot",
+          targetIndex: 1,
+          flawIngredientDisplay: "Bottled Sour Mix & Sweet Vermouth (FLAW)",
+          correctIngredientName: "Fresh Lime Juice & Cointreau",
+          prompt: "RECIPE AUDIT: Identify the fatal modifier violation in this spec:",
+          correctAnswer: "Artificial sour mix and vermouth replace fresh lime and orange liqueur",
+          options: [
+            "Artificial sour mix and vermouth replace fresh lime and orange liqueur",
+            "Tequila must be replaced with London Dry Gin",
+            "Margaritas must never have salt on the rim",
+            "A Margarita should be stirred in a beaker"
+          ],
+          hint: "The modifier and acid must be fresh lime juice and triple sec.",
+          diagnosis: "Bottled mix introduces artificial preservatives. Real Margaritas require 100% agave tequila, fresh lime, and orange liqueur."
+        },
+        family: {
+          type: "ingredient",
+          targetIndex: 0,
+          prompt: "Which spirit grounds the canonical Margarita Daisy formula?",
+          correctAnswer: "Blanco Tequila (100% Agave)",
+          options: ["Blanco Tequila (100% Agave)", "Cognac", "London Dry Gin", "White Rum"],
+          hint: "An unaged agave spirit with herbal, peppery vegetal notes.",
+          diagnosis: "Blanco tequila provides the vegetal agave backbone for the citrus and triple sec."
+        }
       }
     },
     {
@@ -299,37 +396,221 @@
       ice: "None (Pre-chilled Stemware)",
       method: "Stir Thoroughly",
       garnish: "Lemon Twist or Castelvetrano Olive",
-      footnote: "Stirring protects botanical clarity and produces a dense, crystal-clear spirit texture.",
+      footnote: "Stirring protects botanical clarity and produces a dense, crystal-clear texture without aeration.",
       spec: [
         { measure: "2.5 oz", name: "London Dry Gin", role: "Base Spirit" },
         { measure: "0.5 oz", name: "Dry French Vermouth", role: "Fortified Modifier" },
         { measure: "1 dash", name: "Orange Bitters", role: "Aromatic Accent" }
       ],
-      challenge: {
-        type: "ingredient",
-        targetIndex: 1,
-        prompt: "Specify the fortified wine modifier that completes the Dry Martini:",
-        correctAnswer: "Dry French Vermouth",
-        options: [
-          "Dry French Vermouth",
-          "Sweet Red Vermouth",
-          "Green Chartreuse",
-          "Maraschino Liqueur"
-        ],
-        hint: "This dry aromatized wine from France softens juniper proof without adding dark sugar.",
-        diagnosis: "Dry French vermouth imparts herbal acidity to round out gin without masking its crisp botanical profile."
+      modes: {
+        classic: {
+          type: "ingredient",
+          targetIndex: 1,
+          prompt: "Specify the fortified wine modifier that completes the Dry Martini:",
+          correctAnswer: "Dry French Vermouth",
+          options: ["Dry French Vermouth", "Sweet Red Vermouth", "Green Chartreuse", "Maraschino Liqueur"],
+          hint: "This dry aromatized wine softens juniper proof without dark sugar.",
+          diagnosis: "Dry French vermouth imparts herbal acidity to round out high-proof gin without masking botanicals."
+        },
+        repair: {
+          type: "troubleshoot",
+          targetIndex: -1,
+          flawIngredientDisplay: "Violently Shaken until Frothy & Broken Ice Chips (FLAW)",
+          correctIngredientName: "Gently Stirred to Velvety Clarity",
+          prompt: "RECIPE AUDIT: Identify the technique error on this classic Martini ticket:",
+          correctAnswer: "Shaking creates unwanted ice shards and cloudy aeration",
+          options: [
+            "Shaking creates unwanted ice shards and cloudy aeration",
+            "A Martini should never contain gin",
+            "Vermouth must be boiled in a copper pan first",
+            "The glass should be warmed under hot water"
+          ],
+          hint: "Unless explicitly ordered 'bruised', a classic gin martini should be stirred.",
+          diagnosis: "Shaking aerates the spirit and fills the drink with micro-ice shards, destroying silky clarity."
+        },
+        family: {
+          type: "measure",
+          targetIndex: 1,
+          prompt: "What is the standard ratio of dry vermouth to 2.5 oz gin in a balanced 5:1 Dry Martini?",
+          correctAnswer: "0.5 oz",
+          options: ["0.5 oz", "1.5 oz", "2.0 oz", "0.0 oz (None)"],
+          hint: "5 parts gin (2.5 oz) to 1 part dry vermouth.",
+          diagnosis: "A 5:1 proportion translates to 2.5 oz gin and 0.5 oz dry vermouth."
+        }
+      }
+    },
+    {
+      id: "daiquiri",
+      name: "Daiquiri",
+      family: "Sour",
+      era: "1898 • Daiquiri, Cuba",
+      baseSpirit: "White Rum",
+      glass: "Coupe",
+      ice: "None / Served Up",
+      method: "Hard Shake & Fine Strain",
+      garnish: "Lime Wheel (or none)",
+      footnote: "The purest expression of the sour: sugar cane spirit, lime acid, and sucrose.",
+      spec: [
+        { measure: "2.0 oz", name: "White Rum", role: "Base Spirit" },
+        { measure: "0.75 oz", name: "Fresh Lime Juice", role: "Sour Element" },
+        { measure: "0.75 oz", name: "Rich Simple Syrup (2:1)", role: "Sweet Modifier" }
+      ],
+      modes: {
+        classic: {
+          type: "ingredient",
+          targetIndex: 0,
+          prompt: "Identify the base spirit that defines the Cuban Daiquiri:",
+          correctAnswer: "White Rum",
+          options: ["White Rum", "Bourbon Whiskey", "Blanco Tequila", "Mezcal"],
+          hint: "A clean, lightly aged and filtered sugarcane distillate.",
+          diagnosis: "White rum provides clean grass and tropical notes that marry with fresh lime and sucrose."
+        },
+        repair: {
+          type: "troubleshoot",
+          targetIndex: 2,
+          flawIngredientDisplay: "Industrial Frozen Strawberry Slush Puree (FLAW)",
+          correctIngredientName: "Rich Simple Syrup (2:1)",
+          prompt: "RECIPE AUDIT: Identify the deviation from authentic Daiquiri spec:",
+          correctAnswer: "Synthetic strawberry slush replaces the classic 3-ingredient balance",
+          options: [
+            "Synthetic strawberry slush replaces the classic 3-ingredient balance",
+            "White rum should be swapped for spiced rum",
+            "Daiquiris should be served in a ceramic tiki mug",
+            "Lime juice must be heated before shaking"
+          ],
+          hint: "A true classic Daiquiri is never an electric-blender fruit slush.",
+          diagnosis: "The authentic classic Daiquiri is a shaken coupe cocktail of rum, lime, and simple syrup."
+        },
+        family: {
+          type: "measure",
+          targetIndex: 2,
+          prompt: "In a 2:0.75:0.75 Cuban Sour ratio, what measure of rich syrup balances 0.75 oz lime?",
+          correctAnswer: "0.75 oz",
+          options: ["0.75 oz", "0.25 oz", "1.5 oz", "2.0 oz"],
+          hint: "Equal parts balance with the 0.75 oz fresh lime.",
+          diagnosis: "0.75 oz of 2:1 simple syrup provides the exact density needed to balance 0.75 oz lime juice."
+        }
+      }
+    },
+    {
+      id: "tom-collins",
+      name: "Tom Collins",
+      family: "Highball / Collins",
+      era: "1870s • Jerry Thomas Classic",
+      baseSpirit: "Old Tom or London Dry Gin",
+      glass: "Collins",
+      ice: "Column Ice Spears",
+      method: "Shake Citrus & Syrup, Top with Club Soda",
+      garnish: "Lemon Wheel & Maraschino Cherry",
+      footnote: "An elongated sour: spirit, citrus, sugar, topped with effervescent soda water.",
+      spec: [
+        { measure: "2.0 oz", name: "Old Tom or London Dry Gin", role: "Base Spirit" },
+        { measure: "0.75 oz", name: "Fresh Lemon Juice", role: "Sour Element" },
+        { measure: "0.75 oz", name: "Simple Syrup", role: "Sweet Modifier" },
+        { measure: "2.5 oz", name: "Club Soda", role: "Effervescent Lengthener" }
+      ],
+      modes: {
+        classic: {
+          type: "ingredient",
+          targetIndex: 3,
+          prompt: "Which lengthener transforms a gin sour into a Tom Collins?",
+          correctAnswer: "Club Soda",
+          options: ["Club Soda", "Tonic Water", "Ginger Beer", "Champagne"],
+          hint: "Unflavored carbonated mineral water provides effervescence without added sweetness.",
+          diagnosis: "Club soda lengthens the sour into a tall, refreshing highball without adding residual sugar."
+        },
+        repair: {
+          type: "troubleshoot",
+          targetIndex: 3,
+          flawIngredientDisplay: "Club Soda Shaken Inside Tin with Ice (FLAW)",
+          correctIngredientName: "Club Soda Poured Gently as Top",
+          prompt: "RECIPE AUDIT: Identify the bartender technique disaster on this Collins ticket:",
+          correctAnswer: "Shaking carbonated soda inside a sealed shaker causes pressure explosion",
+          options: [
+            "Shaking carbonated soda inside a sealed shaker causes pressure explosion",
+            "Gin cannot be mixed with lemon juice",
+            "Tom Collins must be served warm",
+            "Lemon wheel must be flambéed"
+          ],
+          hint: "Never shake carbonated liquids in a tin.",
+          diagnosis: "Effervescent toppers must always be built on top after shaking the sour core, never shaken in the tin."
+        },
+        family: {
+          type: "measure",
+          targetIndex: 0,
+          prompt: "Specify the standard spirit pour for a tall Collins:",
+          correctAnswer: "2.0 oz",
+          options: ["2.0 oz", "0.5 oz", "3.5 oz", "1.0 oz"],
+          hint: "Full 2 oz base spirit provides punch that withstands club soda dilution.",
+          diagnosis: "2.0 oz base spirit ensures botanical presence survives lengthening with soda."
+        }
+      }
+    },
+    {
+      id: "manhattan",
+      name: "Manhattan",
+      family: "Old Fashioned",
+      era: "1870s • Manhattan Club, NYC",
+      baseSpirit: "Rye Whiskey",
+      glass: "Coupe",
+      ice: "None / Served Up",
+      method: "Stir Thoroughly",
+      garnish: "Brandied Cherry",
+      footnote: "The 2:1 formula: American whiskey balanced by Italian vermouth and aromatic bitters.",
+      spec: [
+        { measure: "2.0 oz", name: "Rye Whiskey", role: "Base Spirit" },
+        { measure: "1.0 oz", name: "Sweet Red Vermouth", role: "Fortified Modifier" },
+        { measure: "2 dashes", name: "Angostura Bitters", role: "Aromatic Accent" }
+      ],
+      modes: {
+        classic: {
+          type: "measure",
+          targetIndex: 1,
+          prompt: "Specify the classic pour of sweet vermouth in a standard Manhattan:",
+          correctAnswer: "1.0 oz",
+          options: ["1.0 oz", "0.25 oz", "2.0 oz", "0.5 oz"],
+          hint: "Standard 2:1 whiskey to vermouth ratio.",
+          diagnosis: "The canonical Manhattan formula follows 2 parts rye (2.0 oz) to 1 part sweet vermouth (1.0 oz)."
+        },
+        repair: {
+          type: "troubleshoot",
+          targetIndex: 0,
+          flawIngredientDisplay: "Vodka 2.0 oz (FLAW)",
+          correctIngredientName: "Rye Whiskey 2.0 oz",
+          prompt: "RECIPE AUDIT: Identify the base spirit flaw on this Manhattan ticket:",
+          correctAnswer: "Vodka has no oak tannins or spice to support sweet vermouth",
+          options: [
+            "Vodka has no oak tannins or spice to support sweet vermouth",
+            "Manhattans must only be made with dark rum",
+            "Sweet vermouth is illegal in New York",
+            "Bitters must be omitted completely"
+          ],
+          hint: "A Manhattan requires the barrel age and spicy rye grains of American whiskey.",
+          diagnosis: "Rye whiskey provides spicy proof and oak tannins to balance sweet fortified vermouth."
+        },
+        family: {
+          type: "ingredient",
+          targetIndex: 1,
+          prompt: "Identify the fortified wine modifier in the Manhattan:",
+          correctAnswer: "Sweet Red Vermouth",
+          options: ["Sweet Red Vermouth", "Dry French Vermouth", "Triple Sec", "Apricot Brandy"],
+          hint: "An Italian Torino vermouth with botanical caramel notes.",
+          diagnosis: "Sweet vermouth introduces acidity, herbal complexity, and sweetness to 2 oz rye."
+        }
       }
     }
   ];
 
   /* ==========================================================================
-     5. APPLICATION STATE
+     5. APPLICATION STATE ARCHITECTURE
      ========================================================================== */
   const state = {
-    currentView: "menu", // "menu" or "gameplay"
+    currentView: "menu", // "menu" | "gameplay"
     mode: persistentData.preferredMode || "classic",
+    tickets: [],
     currentTicketIndex: 0,
-    totalTickets: SPEC_DATASET.length,
+    totalTickets: 5,
+    activeCocktail: null,
     activeChallenge: null,
     selectedConfidence: "certain",
     shiftScore: 0,
@@ -339,14 +620,14 @@
   };
 
   /* ==========================================================================
-     6. DOM ELEMENT REPOSITORY
+     6. DOM ELEMENT CACHE
      ========================================================================== */
   const DOM = {
     // Views
     mainMenuView: document.getElementById("mainMenuView"),
     gameplayView: document.getElementById("gameplayView"),
 
-    // Menu Elements
+    // Menu Hub
     menuRankBadge: document.getElementById("menuRankBadge"),
     menuAccuracyPill: document.getElementById("menuAccuracyPill"),
     menuHighscoreVal: document.getElementById("menuHighscoreVal"),
@@ -360,7 +641,7 @@
     menuSoundIcon: document.getElementById("menuSoundIcon"),
     menuSoundLabel: document.getElementById("menuSoundLabel"),
 
-    // Gameplay Header / HUD
+    // Active Station Header / HUD
     btnBackToMenu: document.getElementById("btnBackToMenu"),
     streakVal: document.getElementById("streakVal"),
     scoreVal: document.getElementById("scoreVal"),
@@ -380,6 +661,7 @@
     cardEra: document.getElementById("cardEra"),
     glassSvgSlot: document.getElementById("glassSvgSlot"),
     cardGlassCaption: document.getElementById("cardGlassCaption"),
+    specBody: document.getElementById("specBody"),
     ingredientList: document.getElementById("ingredientList"),
     paramMethodVal: document.getElementById("paramMethodVal"),
     paramIceVal: document.getElementById("paramIceVal"),
@@ -399,6 +681,7 @@
     diagReason: document.getElementById("diagReason"),
     btnNextTicket: document.getElementById("btnNextTicket"),
     btnNextText: document.getElementById("btnNextText"),
+    btnReplayShift: document.getElementById("btnReplayShift"),
 
     // Modal Drawer
     modalBackdrop: document.getElementById("modalBackdrop"),
@@ -418,7 +701,7 @@
   };
 
   /* ==========================================================================
-     7. VIEW SWITCHING & NAVIGATION
+     7. VIEW NAVIGATION & TRANSITIONS
      ========================================================================== */
   function showView(viewName) {
     state.currentView = viewName;
@@ -436,27 +719,35 @@
     }
   }
 
+  function generateTicketDeck(modeName) {
+    // Filter cocktails that have a challenge defined for this specific mode
+    const available = COCKTAIL_DATABASE.filter(c => c.modes && c.modes[modeName]);
+    // Shuffle tickets for variety
+    const shuffled = [...available].sort(() => Math.random() - 0.5);
+    // Return standard 5 tickets
+    return shuffled.slice(0, 5);
+  }
+
   function startShiftMode(modeName) {
     audio.playClick();
     state.mode = modeName;
     persistentData.preferredMode = modeName;
     saveStoredState(persistentData);
 
+    state.tickets = generateTicketDeck(modeName);
+    state.totalTickets = state.tickets.length;
     state.currentTicketIndex = 0;
     state.shiftScore = 0;
     state.streak = 0;
     state.shiftFinished = false;
-    DOM.btnNextText.textContent = "NEXT TICKET";
 
-    if (modeName === "repair") {
-      state.currentTicketIndex = 3; // Direct to diagnostic Margarita ticket
-    } else {
-      state.currentTicketIndex = 0;
-    }
+    // Reset buttons
+    DOM.btnNextText.textContent = "NEXT TICKET";
+    DOM.btnReplayShift.classList.add("hidden");
 
     // Sync mode tabs UI
     DOM.modeTabs.forEach(tab => {
-      const isMatch = tab.dataset.mode === modeName;
+      const isMatch = (tab.dataset.mode === modeName);
       tab.classList.toggle("active", isMatch);
       tab.setAttribute("aria-selected", isMatch ? "true" : "false");
     });
@@ -466,7 +757,7 @@
   }
 
   /* ==========================================================================
-     8. GAME ENGINE & TICKET RENDERING
+     8. SPECIFICATION TICKET RENDERING
      ========================================================================== */
   function renderTicket() {
     state.answered = false;
@@ -480,11 +771,16 @@
     void DOM.specCard.offsetWidth;
     DOM.specCard.classList.add("card-enter");
 
-    const cocktail = SPEC_DATASET[state.currentTicketIndex];
-    state.activeChallenge = cocktail;
+    const cocktail = state.tickets[state.currentTicketIndex];
+    state.activeCocktail = cocktail;
+    const challenge = cocktail.modes[state.mode];
+    state.activeChallenge = challenge;
+
+    // Reset container scroll position so top is always immediately seen
+    DOM.specBody.scrollTop = 0;
 
     // Masthead
-    DOM.cardFamily.textContent = `${cocktail.family} FAMILY`;
+    DOM.cardFamily.textContent = `${cocktail.family.toUpperCase()} FAMILY`;
     DOM.cardTitle.textContent = cocktail.name;
     DOM.cardEra.textContent = cocktail.era;
 
@@ -494,9 +790,9 @@
 
     // Parameters
     DOM.paramMethodCell.classList.remove("is-blank-target");
-    if (cocktail.challenge.type === "method") {
+    if (challenge.type === "method") {
       DOM.paramMethodCell.classList.add("is-blank-target");
-      DOM.paramMethodVal.innerHTML = `<span class="blank-slot" style="min-width:58px; height:14px;"></span>`;
+      DOM.paramMethodVal.innerHTML = `<span class="blank-slot" style="min-width:60px; height:14px;"></span>`;
     } else {
       DOM.paramMethodVal.textContent = cocktail.method.toUpperCase();
     }
@@ -505,25 +801,25 @@
     DOM.paramGarnishVal.textContent = cocktail.garnish.toUpperCase();
     DOM.footnoteText.textContent = cocktail.footnote;
 
-    // Ingredients List
+    // Ingredients
     DOM.ingredientList.innerHTML = "";
     cocktail.spec.forEach((item, idx) => {
       const li = document.createElement("li");
       li.className = "spec-item";
 
-      const isTarget = (cocktail.challenge.targetIndex === idx);
-      const isTroubleshoot = (cocktail.challenge.type === "troubleshoot" && isTarget);
+      const isTarget = (challenge.targetIndex === idx);
+      const isTroubleshoot = (challenge.type === "troubleshoot" && isTarget);
 
       if (isTroubleshoot) {
         li.classList.add("is-flawed-target");
-      } else if (isTarget && cocktail.challenge.type !== "method") {
+      } else if (isTarget && challenge.type !== "method") {
         li.classList.add("is-blank-target");
       }
 
       const measureSpan = document.createElement("span");
       measureSpan.className = "spec-measure";
-      if (isTarget && cocktail.challenge.type === "measure") {
-        measureSpan.innerHTML = `<span class="blank-slot" style="min-width:42px;"></span>`;
+      if (isTarget && challenge.type === "measure") {
+        measureSpan.innerHTML = `<span class="blank-slot" style="min-width:44px;"></span>`;
       } else {
         measureSpan.textContent = item.measure;
       }
@@ -534,9 +830,9 @@
       const nameSpan = document.createElement("span");
       nameSpan.className = "spec-name";
 
-      if (isTroubleshoot) {
-        nameSpan.textContent = cocktail.challenge.flawIngredientDisplay;
-      } else if (isTarget && cocktail.challenge.type === "ingredient") {
+      if (isTroubleshoot && challenge.flawIngredientDisplay) {
+        nameSpan.textContent = challenge.flawIngredientDisplay;
+      } else if (isTarget && challenge.type === "ingredient") {
         nameSpan.innerHTML = `<span class="blank-slot"></span>`;
       } else {
         nameSpan.textContent = item.name;
@@ -554,8 +850,8 @@
       DOM.ingredientList.appendChild(li);
     });
 
-    DOM.deckPrompt.textContent = cocktail.challenge.prompt;
-    renderChoices(cocktail.challenge.options);
+    DOM.deckPrompt.textContent = challenge.prompt;
+    renderChoices(challenge.options);
     updateHUD();
   }
 
@@ -603,15 +899,26 @@
   }
 
   /* ==========================================================================
-     9. ANSWER EVALUATION & FEEDBACK
+     9. ANSWER EVALUATION & PROGRESSION ENGINE
      ========================================================================== */
   function handleAnswer(chosenText, chosenButton) {
     if (state.answered) return;
     state.answered = true;
+
     persistentData.totalAttempts++;
 
-    const currentChallenge = state.activeChallenge.challenge;
-    const isCorrect = (chosenText === currentChallenge.correctAnswer);
+    const cocktail = state.activeCocktail;
+    const challenge = state.activeChallenge;
+    const isCorrect = (chosenText === challenge.correctAnswer);
+
+    // Track family mastery per cocktail category
+    const famKey = cocktail.family;
+    if (persistentData.familyMastery[famKey]) {
+      persistentData.familyMastery[famKey].attempts++;
+      if (isCorrect) {
+        persistentData.familyMastery[famKey].correct++;
+      }
+    }
 
     const buttons = DOM.choiceMatrix.querySelectorAll(".choice-btn");
     buttons.forEach(b => (b.disabled = true));
@@ -640,29 +947,29 @@
         persistentData.highScore = state.shiftScore;
       }
 
-      fillCardBlank(currentChallenge);
+      fillCardBlank(challenge, true);
 
       DOM.diagBadge.className = "diag-badge correct";
       DOM.diagBadge.textContent = "SPEC CERTIFIED ✓";
       DOM.diagPoints.textContent = `+${pointsEarned} PTS (${state.selectedConfidence.toUpperCase()})`;
-      DOM.diagReason.textContent = currentChallenge.diagnosis;
+      DOM.diagReason.textContent = challenge.diagnosis;
     } else {
       audio.playWrong();
       chosenButton.classList.add("is-wrong");
 
       buttons.forEach(b => {
-        if (b.dataset.choice === currentChallenge.correctAnswer) {
+        if (b.dataset.choice === challenge.correctAnswer) {
           b.classList.add("is-correct");
         }
       });
 
       state.streak = 0;
-      fillCardBlank(currentChallenge);
+      fillCardBlank(challenge, false);
 
       DOM.diagBadge.className = "diag-badge wrong";
       DOM.diagBadge.textContent = "SPEC VIOLATION ✕";
       DOM.diagPoints.textContent = "+0 PTS (STREAK RESET)";
-      DOM.diagReason.textContent = `Accurate spec: "${currentChallenge.correctAnswer}". ${currentChallenge.diagnosis}`;
+      DOM.diagReason.textContent = `Accurate spec: "${challenge.correctAnswer}". ${challenge.diagnosis}`;
     }
 
     saveStoredState(persistentData);
@@ -682,7 +989,7 @@
       DOM.paramMethodVal.textContent = challenge.correctAnswer.toUpperCase();
     } else if (challenge.type === "troubleshoot") {
       const el = DOM.ingredientList.querySelector(".is-flawed-target .spec-name");
-      if (el) el.textContent = `${challenge.correctIngredientName} (CORRECTED)`;
+      if (el) el.textContent = `${challenge.correctIngredientName || challenge.correctAnswer} (AUDITED)`;
     }
   }
 
@@ -711,12 +1018,18 @@
     DOM.confidenceBar.classList.add("hidden");
 
     DOM.diagBadge.className = "diag-badge correct";
-    DOM.diagBadge.textContent = "SERVICE COMPLETE ★";
-    DOM.diagPoints.textContent = `SHIFT SCORE: ${state.shiftScore}`;
-    DOM.diagReason.textContent = `Shift complete! Career statistics updated. High Score: ${persistentData.highScore} PTS.`;
+    DOM.diagBadge.textContent = "SHIFT COMPLETE ★";
+    DOM.diagPoints.textContent = `FINAL SCORE: ${state.shiftScore}`;
+    DOM.diagReason.textContent = `Shift tickets verified! Career statistics and family knowledge updated. High Score: ${persistentData.highScore} PTS.`;
 
     DOM.btnNextText.textContent = "RETURN TO MENU";
+    DOM.btnReplayShift.classList.remove("hidden");
     DOM.btnNextTicket.focus();
+  }
+
+  function replayCurrentShift() {
+    audio.playClick();
+    startShiftMode(state.mode);
   }
 
   /* ==========================================================================
@@ -733,21 +1046,23 @@
     DOM.menuCertifiedVal.textContent = persistentData.totalCompleted;
 
     let rank = "BARBACK APPRENTICE";
-    if (persistentData.totalCompleted >= 20 && pct >= 80) rank = "GRANDMASTER MIXOLOGIST";
-    else if (persistentData.totalCompleted >= 10) rank = "SENIOR BARTENDER";
+    if (persistentData.totalCompleted >= 25 && pct >= 80) rank = "GRANDMASTER MIXOLOGIST";
+    else if (persistentData.totalCompleted >= 12 && pct >= 70) rank = "SENIOR BARTENDER";
     else if (persistentData.totalCompleted >= 5) rank = "WORKING BARTENDER";
     DOM.menuRankBadge.textContent = rank;
 
     const isMuted = audio.muted;
     DOM.menuSoundIcon.textContent = isMuted ? "🔇" : "🔊";
     DOM.menuSoundLabel.textContent = `SOUND: ${isMuted ? "OFF" : "ON"}`;
+    DOM.iconSoundOn.classList.toggle("hidden", isMuted);
+    DOM.iconSoundOff.classList.toggle("hidden", !isMuted);
   }
 
   function renderCodex(query = "") {
     DOM.codexGrid.innerHTML = "";
     const filterTerm = query.trim().toLowerCase();
 
-    const matched = SPEC_DATASET.filter(c => {
+    const matched = COCKTAIL_DATABASE.filter(c => {
       return (
         c.name.toLowerCase().includes(filterTerm) ||
         c.family.toLowerCase().includes(filterTerm) ||
@@ -759,7 +1074,8 @@
       const emptyMsg = document.createElement("p");
       emptyMsg.style.color = "var(--tx-muted)";
       emptyMsg.style.fontSize = "0.8rem";
-      emptyMsg.textContent = "No matching cocktail specifications found.";
+      emptyMsg.style.padding = "10px 0";
+      emptyMsg.textContent = "No matching cocktail specifications found in atlas.";
       DOM.codexGrid.appendChild(emptyMsg);
       return;
     }
@@ -791,25 +1107,27 @@
     DOM.stBestStreak.textContent = persistentData.bestStreak;
 
     let rank = "Barback Apprentice";
-    if (persistentData.totalCompleted >= 20 && pct >= 80) rank = "Grandmaster Mixologist";
-    else if (persistentData.totalCompleted >= 10) rank = "Senior Bartender";
+    if (persistentData.totalCompleted >= 25 && pct >= 80) rank = "Grandmaster Mixologist";
+    else if (persistentData.totalCompleted >= 12 && pct >= 70) rank = "Senior Bartender";
     else if (persistentData.totalCompleted >= 5) rank = "Working Bartender";
     DOM.stMasteryRank.textContent = rank;
 
-    const families = ["Sour", "Bitter / Aperitivo", "Old Fashioned", "Daisy", "Martini"];
     DOM.familyMeterList.innerHTML = "";
+    const families = Object.keys(persistentData.familyMastery);
 
     families.forEach(fam => {
-      const progressPct = total > 0 ? Math.min(100, Math.round((correct / total) * 100)) : 0;
+      const fStat = persistentData.familyMastery[fam];
+      const famPct = fStat.attempts > 0 ? Math.round((fStat.correct / fStat.attempts) * 100) : 0;
+
       const row = document.createElement("div");
       row.className = "fam-meter-row";
       row.innerHTML = `
         <div class="fam-meter-info">
           <span>${fam}</span>
-          <span>${progressPct}%</span>
+          <span>${fStat.correct}/${fStat.attempts} (${famPct}%)</span>
         </div>
         <div class="fam-track">
-          <div class="fam-fill" style="width: ${progressPct}%;"></div>
+          <div class="fam-fill" style="width: ${famPct}%;"></div>
         </div>
       `;
       DOM.familyMeterList.appendChild(row);
@@ -822,19 +1140,20 @@
       const card = document.createElement("div");
       card.className = "glass-card";
       card.innerHTML = `
-        <div class="glass-svg-wrap" style="width:34px; height:38px;">${GLASS_SVGS[glassName]}</div>
+        <div class="glass-svg-wrap" style="width:32px; height:36px;">${GLASS_SVGS[glassName]}</div>
         <span class="glass-card-name">${glassName}</span>
-        <span class="glass-card-desc">Chilled Stemware</span>
+        <span class="glass-card-desc">Prescribed Stemware</span>
       `;
       DOM.glassAtlasGrid.appendChild(card);
     });
 
     const FAMILY_DEFINITIONS = [
-      { name: "The Sour", desc: "2 oz Spirit + 0.75 oz Citrus Acid + 0.75 oz Sweetener. Emulsified with optional egg white." },
-      { name: "The Daisy", desc: "A sour sweetened by a cordial or orange liqueur (e.g. Cointreau in the Margarita)." },
-      { name: "The Old Fashioned", desc: "Spirit-forward: 2 oz Spirit + Demerara or Sugar + Aromatic Bitters stirred over dense ice." },
-      { name: "The Aperitivo / Equal Parts", desc: "Equal parts harmony of spirit, bitter aperitif, and vermouth (e.g. Negroni 1:1:1 formula)." },
-      { name: "The Martini", desc: "High-proof spirit tempered by dry aromatized wine (e.g. 5:1 Dry Gin to French Vermouth)." }
+      { name: "The Sour (2 : 0.75 : 0.75)", desc: "2 oz Spirit + 0.75 oz Fresh Citrus + 0.75 oz Sweetener. Shaken hard for aeration and emulsification." },
+      { name: "The Daisy (Citrus + Cordial)", desc: "A sour sweetened by a cordial or orange liqueur (e.g. Cointreau in the Margarita, Sidecar, or Corpse Reviver)." },
+      { name: "The Old Fashioned (Spirit Forward)", desc: "2 oz Spirit + Demerara or Rich Syrup + Aromatic Bitters stirred gently over dense ice to velvet chill." },
+      { name: "The Aperitivo / Equal Parts (1 : 1 : 1)", desc: "Equal parts harmony of spirit, bitter gentian aperitif, and vermouth (e.g. Negroni, Boulevardier)." },
+      { name: "The Martini (High-Proof + Fortified)", desc: "High-proof spirit tempered by dry aromatized wine (e.g. 5:1 Dry Gin to French Vermouth)." },
+      { name: "The Highball & Collins (Lengthened Sour)", desc: "Base spirit and citrus lengthened by effervescent club soda over clear column ice spears." }
     ];
 
     DOM.guideFamiliesList.innerHTML = "";
@@ -865,13 +1184,13 @@
   }
 
   /* ==========================================================================
-     11. KEYBOARD & CONTROLS BINDING
+     11. USER CONTROLS, KEYBOARD & EVENT BINDINGS
      ========================================================================== */
   function triggerHint() {
     if (state.answered || !state.activeChallenge) return;
     audio.playClick();
     DOM.btnHint.disabled = true;
-    DOM.deckPrompt.textContent = `HINT: ${state.activeChallenge.challenge.hint}`;
+    DOM.deckPrompt.textContent = `HINT: ${state.activeChallenge.hint}`;
   }
 
   function handleKeyboard(e) {
@@ -914,42 +1233,41 @@
   }
 
   function bindEvents() {
-    // Menu Buttons
+    // Menu Launchers
     DOM.btnStartClassic.addEventListener("click", () => startShiftMode("classic"));
     DOM.btnStartRepair.addEventListener("click", () => startShiftMode("repair"));
     DOM.btnStartFamily.addEventListener("click", () => startShiftMode("family"));
     DOM.btnMenuOpenCodex.addEventListener("click", openModal);
 
     DOM.btnMenuSoundToggle.addEventListener("click", () => {
-      const isMuted = audio.toggleMute();
-      DOM.iconSoundOn.classList.toggle("hidden", isMuted);
-      DOM.iconSoundOff.classList.toggle("hidden", !isMuted);
+      audio.toggleMute();
       updateMenuSummary();
-      if (!isMuted) audio.playClick();
+      if (!audio.muted) audio.playClick();
     });
 
-    // Gameplay Controls
+    // Gameplay HUD Actions
     DOM.btnBackToMenu.addEventListener("click", () => {
       audio.playClick();
       showView("menu");
     });
 
     DOM.btnNextTicket.addEventListener("click", advanceNextTicket);
+    DOM.btnReplayShift.addEventListener("click", replayCurrentShift);
     DOM.btnHint.addEventListener("click", triggerHint);
     window.addEventListener("keydown", handleKeyboard);
 
     DOM.btnAudioToggle.addEventListener("click", () => {
-      const isMuted = audio.toggleMute();
-      DOM.iconSoundOn.classList.toggle("hidden", isMuted);
-      DOM.iconSoundOff.classList.toggle("hidden", !isMuted);
+      audio.toggleMute();
       updateMenuSummary();
-      if (!isMuted) audio.playClick();
+      if (!audio.muted) audio.playClick();
     });
 
-    if (audio.muted) {
-      DOM.iconSoundOn.classList.add("hidden");
-      DOM.iconSoundOff.classList.remove("hidden");
-    }
+    // Gameplay Mode Tabs
+    DOM.modeTabs.forEach(tab => {
+      tab.addEventListener("click", () => {
+        startShiftMode(tab.dataset.mode);
+      });
+    });
 
     // Modal Drawer Controls
     DOM.btnOpenMenu.addEventListener("click", openModal);
@@ -977,23 +1295,25 @@
       renderCodex(e.target.value);
     });
 
-    // Mode Navigation Tabs in Gameplay
-    DOM.modeTabs.forEach(tab => {
-      tab.addEventListener("click", () => {
-        startShiftMode(tab.dataset.mode);
-      });
-    });
-
-    // Reset Progress Action
+    // Stored Progress Reset
     DOM.btnResetProgress.addEventListener("click", () => {
+      if (!window.confirm("Reset all bartender career stats, streak, and family records?")) {
+        return;
+      }
       localStorage.removeItem(STORAGE_KEY);
       persistentData.highScore = 0;
       persistentData.bestStreak = 0;
       persistentData.totalCompleted = 0;
       persistentData.correctCount = 0;
       persistentData.totalAttempts = 0;
+      Object.keys(persistentData.familyMastery).forEach(k => {
+        persistentData.familyMastery[k] = { attempts: 0, correct: 0 };
+      });
       saveStoredState(persistentData);
 
+      state.shiftScore = 0;
+      state.streak = 0;
+      updateHUD();
       updateMenuSummary();
       renderStats();
       closeModal();
@@ -1004,6 +1324,7 @@
 
   function init() {
     bindEvents();
+    updateMenuSummary();
     showView("menu");
   }
 
