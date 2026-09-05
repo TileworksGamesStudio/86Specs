@@ -1,4 +1,3 @@
-javascript
 /**
  * SPEC CARDS — COMPLETE GAME ENGINE & COCKTAIL KNOWLEDGE ARCHITECTURE
  * Fully continuous state, navigation, per-family tracking, and persistence engine.
@@ -6,19 +5,6 @@ javascript
 
 (function () {
   "use strict";
-
-  /* ==========================================================================
-     0. UTILITY FUNCTIONS
-     ========================================================================== */
-  // Fisher-Yates shuffle ensuring uniform randomization of options and tickets
-  function shuffleArray(array) {
-    const arr = [...array];
-    for (let i = arr.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [arr[i], arr[j]] = [arr[j], arr[i]];
-    }
-    return arr;
-  }
 
   /* ==========================================================================
      1. ROBUST LOCALSTORAGE PERSISTENCE ENGINE
@@ -183,6 +169,11 @@ javascript
 
   /* ==========================================================================
      4. COMPREHENSIVE COCKTAIL DATABASE
+     ========================================================================== */
+  // >>> KEEP YOUR COCKTAIL_DATABASE ARRAY HERE <<<
+
+  /* ==========================================================================
+     4. COMPREHENSIVE COCKTAIL DATABASE (33 HIGH-DETAIL CANONICAL SPECS)
      ========================================================================== */
   const COCKTAIL_DATABASE = [
     {
@@ -2281,7 +2272,7 @@ javascript
 
   function generateTicketDeck(modeName) {
     const available = COCKTAIL_DATABASE.filter(c => c.modes && c.modes[modeName]);
-    const shuffled = shuffleArray(available);
+    const shuffled = [...available].sort(() => Math.random() - 0.5);
     return shuffled.slice(0, 5);
   }
 
@@ -2404,13 +2395,21 @@ javascript
     });
 
     DOM.deckPrompt.textContent = challenge.prompt;
-    // Pass a fresh shuffle of the options each ticket
-    renderChoices(shuffleArray(challenge.options));
+    renderChoices(challenge.options);
     updateHUD();
   }
 
-  function renderChoices(shuffledOptions) {
+  function renderChoices(options) {
     DOM.choiceMatrix.innerHTML = "";
+    const shuffledOptions = [...options];
+    for (let index = shuffledOptions.length - 1; index > 0; index -= 1) {
+      const swapIndex = Math.floor(Math.random() * (index + 1));
+      [shuffledOptions[index], shuffledOptions[swapIndex]] = [
+        shuffledOptions[swapIndex],
+        shuffledOptions[index]
+      ];
+    }
+
     shuffledOptions.forEach((optText, index) => {
       const btn = document.createElement("button");
       btn.className = "choice-btn";
@@ -2869,6 +2868,7 @@ javascript
         }
       } else {
         if (e.key === "Enter" || e.key === " ") {
+          // Prevent double fire if an on-screen button is actively focused
           if (e.target && e.target.tagName === "BUTTON") return;
           e.preventDefault();
           advanceNextTicket();
