@@ -1,46 +1,56 @@
 /**
- * SPEC CARDS — COMPLETE BUG-FIXED GAME ENGINE
- * Vanilla browser-native JavaScript. Zero external dependencies.
+ * SPEC CARDS — COMPLETE GAME ENGINE & KNOWLEDGE ARCHITECTURE
+ * Mobile-First Cocktail Specification Engine with Robust LocalStorage Persistence.
  */
 
 (function () {
   "use strict";
 
   /* ==========================================================================
-     1. LOCAL STORAGE PERSISTENCE WRAPPER
+     1. LOCAL STORAGE PERSISTENCE ENGINE
      ========================================================================== */
-  const Storage = {
-    get(key, fallback = null) {
-      try {
-        const val = localStorage.getItem(key);
-        return val !== null ? val : fallback;
-      } catch {
-        return fallback;
-      }
-    },
-    set(key, val) {
-      try {
-        localStorage.setItem(key, String(val));
-      } catch {
-        /* Storage blocked */
-      }
-    },
-    remove(key) {
-      try {
-        localStorage.removeItem(key);
-      } catch {
-        /* Storage blocked */
-      }
-    }
+  const STORAGE_KEY = "speccards_app_data_v1";
+
+  const defaultStorageData = {
+    version: 1,
+    sound: "on",
+    preferredMode: "classic",
+    highScore: 0,
+    bestStreak: 0,
+    totalCompleted: 0,
+    correctCount: 0,
+    totalAttempts: 0
   };
 
+  function loadStoredState() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return { ...defaultStorageData };
+      const parsed = JSON.parse(raw);
+      if (typeof parsed !== "object" || parsed === null) return { ...defaultStorageData };
+      return { ...defaultStorageData, ...parsed };
+    } catch {
+      return { ...defaultStorageData };
+    }
+  }
+
+  function saveStoredState(data) {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    } catch {
+      /* Private mode fallback */
+    }
+  }
+
+  const persistentData = loadStoredState();
+
   /* ==========================================================================
-     2. SYNTHETIC AUDIO ENGINE
+     2. SYNTHETIC AUDIO ENGINE (Web Audio API)
      ========================================================================== */
   class SoundEngine {
     constructor() {
       this.ctx = null;
-      this.muted = Storage.get("speccards_sound", "on") === "off";
+      this.muted = persistentData.sound === "off";
     }
 
     init() {
@@ -55,7 +65,8 @@
 
     toggleMute() {
       this.muted = !this.muted;
-      Storage.set("speccards_sound", this.muted ? "off" : "on");
+      persistentData.sound = this.muted ? "off" : "on";
+      saveStoredState(persistentData);
       return this.muted;
     }
 
@@ -121,6 +132,8 @@
     }
   }
 
+  const audio = new SoundEngine();
+
   /* ==========================================================================
      3. SVG GLASSWARE ATLAS
      ========================================================================== */
@@ -151,7 +164,7 @@
   };
 
   /* ==========================================================================
-     4. CANONICAL DATASET
+     4. COCKTAIL DATASET LIBRARY
      ========================================================================== */
   const SPEC_DATASET = [
     {
@@ -182,7 +195,7 @@
           "Blanco Tequila",
           "Aged Dark Rum"
         ],
-        hint: "This spirit provides the oak tannins and proof necessary to counterbalance tart lemon juice.",
+        hint: "This spirit provides the oak tannins and proof necessary to balance fresh lemon.",
         diagnosis: "Bourbon or rye whiskey supplies the proof and barrel sweetness necessary to balance 0.75 oz lemon and rich simple syrup."
       }
     },
@@ -208,8 +221,8 @@
         prompt: "Specify the canonical pour measure for Campari:",
         correctAnswer: "1.0 oz",
         options: ["1.0 oz", "0.5 oz", "1.5 oz", "2.0 oz"],
-        hint: "The classic Negroni is built on strict equal-parts harmony between spirit, aperitif, and vermouth.",
-        diagnosis: "A canonical Negroni demands equal parts (1.0 oz each) of gin, Campari, and sweet vermouth to achieve bitter-sweet equilibrium."
+        hint: "The classic Negroni is built on strict equal-parts harmony.",
+        diagnosis: "A canonical Negroni demands equal parts (1.0 oz each) of gin, Campari, and sweet vermouth."
       }
     },
     {
@@ -239,8 +252,8 @@
           "Build in Glass & Top with Soda",
           "Muddle & Flash Blend"
         ],
-        hint: "Spirit-forward cocktails without citrus juices require gentle stirring to prevent aeration and cloudiness.",
-        diagnosis: "Stirring gently incorporates cold dilution without chipping ice or introducing oxygen bubbles, preserving a silky texture."
+        hint: "Spirit-forward drinks without citrus juices require gentle stirring to prevent cloudiness.",
+        diagnosis: "Stirring gently incorporates cold dilution without chipping ice or introducing aeration."
       }
     },
     {
@@ -272,8 +285,8 @@
           "Glassware Flaw: Must be served in a Champagne Flute",
           "Service Flaw: Method should be stirred over crushed ice"
         ],
-        hint: "A Daisy cocktail always balances citrus with an orange liqueur, never fortified wine.",
-        diagnosis: "The Margarita is an agave Daisy; it requires orange liqueur (Cointreau or triple sec) as the aromatic sweetener, not sweet vermouth."
+        hint: "A Daisy cocktail balances citrus with an orange liqueur, never fortified wine.",
+        diagnosis: "The Margarita is an agave Daisy; it requires orange liqueur (Cointreau or triple sec) as the sweetener."
       }
     },
     {
@@ -295,7 +308,7 @@
       challenge: {
         type: "ingredient",
         targetIndex: 1,
-        prompt: "Specify the fortified wine modifier that completes the 5:1 Dry Martini:",
+        prompt: "Specify the fortified wine modifier that completes the Dry Martini:",
         correctAnswer: "Dry French Vermouth",
         options: [
           "Dry French Vermouth",
@@ -303,123 +316,158 @@
           "Green Chartreuse",
           "Maraschino Liqueur"
         ],
-        hint: "This dry aromatized wine from France softens juniper proof without contributing dark botanical sugars.",
-        diagnosis: "Dry French vermouth imparts herbal acidity to round out high-proof gin without masking its crisp botanical profile."
+        hint: "This dry aromatized wine from France softens juniper proof without adding dark sugar.",
+        diagnosis: "Dry French vermouth imparts herbal acidity to round out gin without masking its crisp botanical profile."
       }
     }
   ];
 
   /* ==========================================================================
-     5. STATE & DOM REPOSITORY
+     5. APPLICATION STATE
      ========================================================================== */
   const state = {
-    view: "menu",
-    mode: "classic",
-    currentTicketIndex: parseInt(Storage.get("speccards_ticket", "0"), 10) || 0,
+    currentView: "menu", // "menu" or "gameplay"
+    mode: persistentData.preferredMode || "classic",
+    currentTicketIndex: 0,
     totalTickets: SPEC_DATASET.length,
     activeChallenge: null,
     selectedConfidence: "certain",
-    bestScore: parseInt(Storage.get("speccards_bestscore", "0"), 10) || 0,
     shiftScore: 0,
     streak: 0,
-    bestStreak: parseInt(Storage.get("speccards_beststreak", "0"), 10) || 0,
-    totalCompleted: parseInt(Storage.get("speccards_completed", "0"), 10) || 0,
-    correctCount: parseInt(Storage.get("speccards_correct", "0"), 10) || 0,
-    totalAttempts: parseInt(Storage.get("speccards_attempts", "0"), 10) || 0,
     answered: false,
     shiftFinished: false
   };
 
-  if (state.currentTicketIndex >= SPEC_DATASET.length || state.currentTicketIndex < 0) {
-    state.currentTicketIndex = 0;
-  }
+  /* ==========================================================================
+     6. DOM ELEMENT REPOSITORY
+     ========================================================================== */
+  const DOM = {
+    // Views
+    mainMenuView: document.getElementById("mainMenuView"),
+    gameplayView: document.getElementById("gameplayView"),
 
-  const audio = new SoundEngine();
+    // Menu Elements
+    menuRankBadge: document.getElementById("menuRankBadge"),
+    menuAccuracyPill: document.getElementById("menuAccuracyPill"),
+    menuHighscoreVal: document.getElementById("menuHighscoreVal"),
+    menuBestStreakVal: document.getElementById("menuBestStreakVal"),
+    menuCertifiedVal: document.getElementById("menuCertifiedVal"),
+    btnStartClassic: document.getElementById("btnStartClassic"),
+    btnStartRepair: document.getElementById("btnStartRepair"),
+    btnStartFamily: document.getElementById("btnStartFamily"),
+    btnMenuOpenCodex: document.getElementById("btnMenuOpenCodex"),
+    btnMenuSoundToggle: document.getElementById("btnMenuSoundToggle"),
+    menuSoundIcon: document.getElementById("menuSoundIcon"),
+    menuSoundLabel: document.getElementById("menuSoundLabel"),
 
-  let DOM = {};
+    // Gameplay Header / HUD
+    btnBackToMenu: document.getElementById("btnBackToMenu"),
+    streakVal: document.getElementById("streakVal"),
+    scoreVal: document.getElementById("scoreVal"),
+    btnAudioToggle: document.getElementById("btnAudioToggle"),
+    iconSoundOn: document.getElementById("iconSoundOn"),
+    iconSoundOff: document.getElementById("iconSoundOff"),
+    btnOpenMenu: document.getElementById("btnOpenMenu"),
+    modeTabs: document.querySelectorAll(".mode-tab"),
+    modeBadge: document.getElementById("modeBadge"),
+    roundCounter: document.getElementById("roundCounter"),
+    diffBadge: document.getElementById("diffBadge"),
 
-  function cacheDOM() {
-    DOM = {
-      viewMenu: document.getElementById("viewMenu"),
-      viewGame: document.getElementById("viewGame"),
-      qstatScore: document.getElementById("qstatScore"),
-      qstatAccuracy: document.getElementById("qstatAccuracy"),
-      btnOpenCodexFromMenu: document.getElementById("btnOpenCodexFromMenu"),
-      btnOpenSettingsFromMenu: document.getElementById("btnOpenSettingsFromMenu"),
-      btnReturnMenu: document.getElementById("btnReturnMenu"),
-      streakVal: document.getElementById("streakVal"),
-      scoreVal: document.getElementById("scoreVal"),
-      btnAudioToggle: document.getElementById("btnAudioToggle"),
-      iconSoundOn: document.getElementById("iconSoundOn"),
-      iconSoundOff: document.getElementById("iconSoundOff"),
-      btnOpenMenu: document.getElementById("btnOpenMenu"),
-      modeTabs: document.querySelectorAll(".mode-tab"),
-      modeBadge: document.getElementById("modeBadge"),
-      roundCounter: document.getElementById("roundCounter"),
-      diffBadge: document.getElementById("diffBadge"),
-      specCard: document.getElementById("specCard"),
-      cardFamily: document.getElementById("cardFamily"),
-      cardTitle: document.getElementById("cardTitle"),
-      cardEra: document.getElementById("cardEra"),
-      glassSvgSlot: document.getElementById("glassSvgSlot"),
-      cardGlassCaption: document.getElementById("cardGlassCaption"),
-      ingredientList: document.getElementById("ingredientList"),
-      paramMethodVal: document.getElementById("paramMethodVal"),
-      paramIceVal: document.getElementById("paramIceVal"),
-      paramGarnishVal: document.getElementById("paramGarnishVal"),
-      paramMethodCell: document.getElementById("paramMethodCell"),
-      footnoteText: document.getElementById("footnoteText"),
-      deckPrompt: document.getElementById("deckPrompt"),
-      btnHint: document.getElementById("btnHint"),
-      choiceMatrix: document.getElementById("choiceMatrix"),
-      confidenceBar: document.getElementById("confidenceBar"),
-      confButtons: document.querySelectorAll(".conf-btn"),
-      diagnosisTray: document.getElementById("diagnosisTray"),
-      diagBadge: document.getElementById("diagBadge"),
-      diagPoints: document.getElementById("diagPoints"),
-      diagReason: document.getElementById("diagReason"),
-      btnNextTicket: document.getElementById("btnNextTicket"),
-      btnNextText: document.getElementById("btnNextText"),
-      modalBackdrop: document.getElementById("modalBackdrop"),
-      btnCloseModal: document.getElementById("btnCloseModal"),
-      subnavButtons: document.querySelectorAll(".subnav-btn"),
-      modalPanes: document.querySelectorAll(".modal-pane"),
-      codexSearch: document.getElementById("codexSearch"),
-      codexGrid: document.getElementById("codexGrid"),
-      stMasteryRank: document.getElementById("stMasteryRank"),
-      stTotalPassed: document.getElementById("stTotalPassed"),
-      stAccuracy: document.getElementById("stAccuracy"),
-      stBestStreak: document.getElementById("stBestStreak"),
-      familyMeterList: document.getElementById("familyMeterList"),
-      glassAtlasGrid: document.getElementById("glassAtlasGrid"),
-      guideFamiliesList: document.getElementById("guideFamiliesList"),
-      btnResetProgress: document.getElementById("btnResetProgress"),
-      btnSettingAudioToggle: document.getElementById("btnSettingAudioToggle")
-    };
-  }
+    // Spec Card
+    specCard: document.getElementById("specCard"),
+    cardFamily: document.getElementById("cardFamily"),
+    cardTitle: document.getElementById("cardTitle"),
+    cardEra: document.getElementById("cardEra"),
+    glassSvgSlot: document.getElementById("glassSvgSlot"),
+    cardGlassCaption: document.getElementById("cardGlassCaption"),
+    ingredientList: document.getElementById("ingredientList"),
+    paramMethodVal: document.getElementById("paramMethodVal"),
+    paramIceVal: document.getElementById("paramIceVal"),
+    paramGarnishVal: document.getElementById("paramGarnishVal"),
+    paramMethodCell: document.getElementById("paramMethodCell"),
+    footnoteText: document.getElementById("footnoteText"),
+
+    // Interaction Deck
+    deckPrompt: document.getElementById("deckPrompt"),
+    btnHint: document.getElementById("btnHint"),
+    choiceMatrix: document.getElementById("choiceMatrix"),
+    confidenceBar: document.getElementById("confidenceBar"),
+    confButtons: document.querySelectorAll(".conf-btn"),
+    diagnosisTray: document.getElementById("diagnosisTray"),
+    diagBadge: document.getElementById("diagBadge"),
+    diagPoints: document.getElementById("diagPoints"),
+    diagReason: document.getElementById("diagReason"),
+    btnNextTicket: document.getElementById("btnNextTicket"),
+    btnNextText: document.getElementById("btnNextText"),
+
+    // Modal Drawer
+    modalBackdrop: document.getElementById("modalBackdrop"),
+    btnCloseModal: document.getElementById("btnCloseModal"),
+    subnavButtons: document.querySelectorAll(".subnav-btn"),
+    modalPanes: document.querySelectorAll(".modal-pane"),
+    codexSearch: document.getElementById("codexSearch"),
+    codexGrid: document.getElementById("codexGrid"),
+    stMasteryRank: document.getElementById("stMasteryRank"),
+    stTotalPassed: document.getElementById("stTotalPassed"),
+    stAccuracy: document.getElementById("stAccuracy"),
+    stBestStreak: document.getElementById("stBestStreak"),
+    familyMeterList: document.getElementById("familyMeterList"),
+    glassAtlasGrid: document.getElementById("glassAtlasGrid"),
+    guideFamiliesList: document.getElementById("guideFamiliesList"),
+    btnResetProgress: document.getElementById("btnResetProgress")
+  };
 
   /* ==========================================================================
-     6. VIEW SWITCHING & RENDERING PIPELINE
+     7. VIEW SWITCHING & NAVIGATION
      ========================================================================== */
-  function switchView(viewName) {
-    state.view = viewName;
+  function showView(viewName) {
+    state.currentView = viewName;
     if (viewName === "menu") {
-      DOM.viewMenu.classList.add("active");
-      DOM.viewGame.classList.remove("active");
-      updateMenuStats();
+      DOM.gameplayView.classList.add("hidden-view");
+      DOM.gameplayView.classList.remove("active-view");
+      DOM.mainMenuView.classList.remove("hidden-view");
+      DOM.mainMenuView.classList.add("active-view");
+      updateMenuSummary();
     } else {
-      DOM.viewMenu.classList.remove("active");
-      DOM.viewGame.classList.add("active");
-      renderTicket();
+      DOM.mainMenuView.classList.add("hidden-view");
+      DOM.mainMenuView.classList.remove("active-view");
+      DOM.gameplayView.classList.remove("hidden-view");
+      DOM.gameplayView.classList.add("active-view");
     }
   }
 
-  function updateMenuStats() {
-    DOM.qstatScore.textContent = state.bestScore;
-    const pct = state.totalAttempts > 0 ? Math.round((state.correctCount / state.totalAttempts) * 100) : 0;
-    DOM.qstatAccuracy.textContent = `${pct}%`;
+  function startShiftMode(modeName) {
+    audio.playClick();
+    state.mode = modeName;
+    persistentData.preferredMode = modeName;
+    saveStoredState(persistentData);
+
+    state.currentTicketIndex = 0;
+    state.shiftScore = 0;
+    state.streak = 0;
+    state.shiftFinished = false;
+    DOM.btnNextText.textContent = "NEXT TICKET";
+
+    if (modeName === "repair") {
+      state.currentTicketIndex = 3; // Direct to diagnostic Margarita ticket
+    } else {
+      state.currentTicketIndex = 0;
+    }
+
+    // Sync mode tabs UI
+    DOM.modeTabs.forEach(tab => {
+      const isMatch = tab.dataset.mode === modeName;
+      tab.classList.toggle("active", isMatch);
+      tab.setAttribute("aria-selected", isMatch ? "true" : "false");
+    });
+
+    showView("gameplay");
+    renderTicket();
   }
 
+  /* ==========================================================================
+     8. GAME ENGINE & TICKET RENDERING
+     ========================================================================== */
   function renderTicket() {
     state.answered = false;
     DOM.diagnosisTray.classList.add("hidden");
@@ -427,24 +475,28 @@
     DOM.confidenceBar.classList.remove("hidden");
     DOM.btnHint.disabled = false;
 
+    // Trigger card enter animation
     DOM.specCard.classList.remove("card-enter");
     void DOM.specCard.offsetWidth;
     DOM.specCard.classList.add("card-enter");
 
-    const cocktail = SPEC_DATASET[state.currentTicketIndex] || SPEC_DATASET[0];
+    const cocktail = SPEC_DATASET[state.currentTicketIndex];
     state.activeChallenge = cocktail;
 
+    // Masthead
     DOM.cardFamily.textContent = `${cocktail.family} FAMILY`;
     DOM.cardTitle.textContent = cocktail.name;
     DOM.cardEra.textContent = cocktail.era;
 
+    // Glassware
     DOM.cardGlassCaption.textContent = cocktail.glass;
     DOM.glassSvgSlot.innerHTML = GLASS_SVGS[cocktail.glass] || GLASS_SVGS["Coupe"];
 
+    // Parameters
     DOM.paramMethodCell.classList.remove("is-blank-target");
     if (cocktail.challenge.type === "method") {
       DOM.paramMethodCell.classList.add("is-blank-target");
-      DOM.paramMethodVal.innerHTML = `<span class="blank-slot" style="min-width:60px; height:14px;" aria-label="Blank method"></span>`;
+      DOM.paramMethodVal.innerHTML = `<span class="blank-slot" style="min-width:58px; height:14px;"></span>`;
     } else {
       DOM.paramMethodVal.textContent = cocktail.method.toUpperCase();
     }
@@ -453,6 +505,7 @@
     DOM.paramGarnishVal.textContent = cocktail.garnish.toUpperCase();
     DOM.footnoteText.textContent = cocktail.footnote;
 
+    // Ingredients List
     DOM.ingredientList.innerHTML = "";
     cocktail.spec.forEach((item, idx) => {
       const li = document.createElement("li");
@@ -470,7 +523,7 @@
       const measureSpan = document.createElement("span");
       measureSpan.className = "spec-measure";
       if (isTarget && cocktail.challenge.type === "measure") {
-        measureSpan.innerHTML = `<span class="blank-slot" style="min-width:42px;" aria-label="Blank measure"></span>`;
+        measureSpan.innerHTML = `<span class="blank-slot" style="min-width:42px;"></span>`;
       } else {
         measureSpan.textContent = item.measure;
       }
@@ -484,7 +537,7 @@
       if (isTroubleshoot) {
         nameSpan.textContent = cocktail.challenge.flawIngredientDisplay;
       } else if (isTarget && cocktail.challenge.type === "ingredient") {
-        nameSpan.innerHTML = `<span class="blank-slot" aria-label="Blank ingredient name"></span>`;
+        nameSpan.innerHTML = `<span class="blank-slot"></span>`;
       } else {
         nameSpan.textContent = item.name;
       }
@@ -550,12 +603,12 @@
   }
 
   /* ==========================================================================
-     7. ANSWER EVALUATION & FEEDBACK
+     9. ANSWER EVALUATION & FEEDBACK
      ========================================================================== */
   function handleAnswer(chosenText, chosenButton) {
     if (state.answered) return;
     state.answered = true;
-    state.totalAttempts++;
+    persistentData.totalAttempts++;
 
     const currentChallenge = state.activeChallenge.challenge;
     const isCorrect = (chosenText === currentChallenge.correctAnswer);
@@ -572,21 +625,19 @@
       chosenButton.classList.add("is-correct");
 
       state.streak++;
-      if (state.streak > state.bestStreak) {
-        state.bestStreak = state.streak;
-        Storage.set("speccards_beststreak", state.bestStreak);
+      if (state.streak > persistentData.bestStreak) {
+        persistentData.bestStreak = state.streak;
       }
-      state.correctCount++;
-      state.totalCompleted++;
+      persistentData.correctCount++;
+      persistentData.totalCompleted++;
 
       const basePoints = 100;
       const streakBonus = (state.streak - 1) * 25;
       const pointsEarned = Math.round((basePoints + streakBonus) * confMultiplier);
       state.shiftScore += pointsEarned;
 
-      if (state.shiftScore > state.bestScore) {
-        state.bestScore = state.shiftScore;
-        Storage.set("speccards_bestscore", state.bestScore);
+      if (state.shiftScore > persistentData.highScore) {
+        persistentData.highScore = state.shiftScore;
       }
 
       fillCardBlank(currentChallenge);
@@ -614,10 +665,7 @@
       DOM.diagReason.textContent = `Accurate spec: "${currentChallenge.correctAnswer}". ${currentChallenge.diagnosis}`;
     }
 
-    Storage.set("speccards_completed", state.totalCompleted);
-    Storage.set("speccards_correct", state.correctCount);
-    Storage.set("speccards_attempts", state.totalAttempts);
-
+    saveStoredState(persistentData);
     updateHUD();
     DOM.diagnosisTray.classList.remove("hidden");
     DOM.btnNextTicket.focus();
@@ -642,11 +690,7 @@
     audio.playClick();
 
     if (state.shiftFinished) {
-      state.shiftFinished = false;
-      state.currentTicketIndex = 0;
-      state.shiftScore = 0;
-      DOM.btnNextText.textContent = "NEXT TICKET";
-      renderTicket();
+      showView("menu");
       return;
     }
 
@@ -654,7 +698,6 @@
     if (state.currentTicketIndex >= state.totalTickets) {
       completeShift();
     } else {
-      Storage.set("speccards_ticket", state.currentTicketIndex);
       renderTicket();
     }
   }
@@ -669,41 +712,37 @@
 
     DOM.diagBadge.className = "diag-badge correct";
     DOM.diagBadge.textContent = "SERVICE COMPLETE ★";
-    DOM.diagPoints.textContent = `FINAL SCORE: ${state.shiftScore}`;
-    DOM.diagReason.textContent = `Shift complete with ${state.correctCount} specifications certified across all cocktail families. Bartender intuition calibrated.`;
+    DOM.diagPoints.textContent = `SHIFT SCORE: ${state.shiftScore}`;
+    DOM.diagReason.textContent = `Shift complete! Career statistics updated. High Score: ${persistentData.highScore} PTS.`;
 
-    DOM.btnNextText.textContent = "START NEW SHIFT";
+    DOM.btnNextText.textContent = "RETURN TO MENU";
     DOM.btnNextTicket.focus();
   }
 
   /* ==========================================================================
-     8. HINTS & CONFIDENCE CONTROLS
+     10. MENU SUMMARY & CODEX / STATS RENDERING
      ========================================================================== */
-  function triggerHint() {
-    if (state.answered || !state.activeChallenge) return;
-    audio.playClick();
-    DOM.btnHint.disabled = true;
-    DOM.deckPrompt.textContent = `HINT: ${state.activeChallenge.challenge.hint}`;
+  function updateMenuSummary() {
+    const total = persistentData.totalAttempts;
+    const correct = persistentData.correctCount;
+    const pct = total > 0 ? Math.round((correct / total) * 100) : 0;
+
+    DOM.menuAccuracyPill.textContent = `${pct}% ACCURACY`;
+    DOM.menuHighscoreVal.textContent = persistentData.highScore;
+    DOM.menuBestStreakVal.textContent = persistentData.bestStreak;
+    DOM.menuCertifiedVal.textContent = persistentData.totalCompleted;
+
+    let rank = "BARBACK APPRENTICE";
+    if (persistentData.totalCompleted >= 20 && pct >= 80) rank = "GRANDMASTER MIXOLOGIST";
+    else if (persistentData.totalCompleted >= 10) rank = "SENIOR BARTENDER";
+    else if (persistentData.totalCompleted >= 5) rank = "WORKING BARTENDER";
+    DOM.menuRankBadge.textContent = rank;
+
+    const isMuted = audio.muted;
+    DOM.menuSoundIcon.textContent = isMuted ? "🔇" : "🔊";
+    DOM.menuSoundLabel.textContent = `SOUND: ${isMuted ? "OFF" : "ON"}`;
   }
 
-  function setupConfidenceControls() {
-    DOM.confButtons.forEach(btn => {
-      btn.addEventListener("click", () => {
-        audio.playClick();
-        DOM.confButtons.forEach(b => {
-          b.classList.remove("active");
-          b.setAttribute("aria-checked", "false");
-        });
-        btn.classList.add("active");
-        btn.setAttribute("aria-checked", "true");
-        state.selectedConfidence = btn.dataset.conf;
-      });
-    });
-  }
-
-  /* ==========================================================================
-     9. MODAL CODEX, STATS & ATLAS VIEWS
-     ========================================================================== */
   function renderCodex(query = "") {
     DOM.codexGrid.innerHTML = "";
     const filterTerm = query.trim().toLowerCase();
@@ -728,7 +767,6 @@
     matched.forEach(c => {
       const item = document.createElement("div");
       item.className = "codex-item";
-
       const specSummary = c.spec.map(s => `${s.measure} ${s.name}`).join(" • ");
 
       item.innerHTML = `
@@ -744,27 +782,25 @@
   }
 
   function renderStats() {
-    const total = state.totalAttempts;
-    const correct = state.correctCount;
+    const total = persistentData.totalAttempts;
+    const correct = persistentData.correctCount;
     const pct = total > 0 ? Math.round((correct / total) * 100) : 0;
 
-    DOM.stTotalPassed.textContent = state.totalCompleted;
+    DOM.stTotalPassed.textContent = persistentData.totalCompleted;
     DOM.stAccuracy.textContent = `${pct}%`;
-    DOM.stBestStreak.textContent = state.bestStreak;
+    DOM.stBestStreak.textContent = persistentData.bestStreak;
 
     let rank = "Barback Apprentice";
-    if (state.totalCompleted >= 20 && pct >= 80) rank = "Grandmaster Mixologist";
-    else if (state.totalCompleted >= 10) rank = "Senior Bartender";
-    else if (state.totalCompleted >= 5) rank = "Working Bartender";
+    if (persistentData.totalCompleted >= 20 && pct >= 80) rank = "Grandmaster Mixologist";
+    else if (persistentData.totalCompleted >= 10) rank = "Senior Bartender";
+    else if (persistentData.totalCompleted >= 5) rank = "Working Bartender";
     DOM.stMasteryRank.textContent = rank;
 
     const families = ["Sour", "Bitter / Aperitivo", "Old Fashioned", "Daisy", "Martini"];
     DOM.familyMeterList.innerHTML = "";
 
     families.forEach(fam => {
-      const hasCompleted = state.totalCompleted > 0;
-      const progressPct = hasCompleted ? Math.min(100, Math.round((state.correctCount / Math.max(1, state.totalAttempts)) * 100)) : 0;
-
+      const progressPct = total > 0 ? Math.min(100, Math.round((correct / total) * 100)) : 0;
       const row = document.createElement("div");
       row.className = "fam-meter-row";
       row.innerHTML = `
@@ -786,19 +822,19 @@
       const card = document.createElement("div");
       card.className = "glass-card";
       card.innerHTML = `
-        <div class="glass-svg-wrap" style="width:28px; height:30px;">${GLASS_SVGS[glassName]}</div>
+        <div class="glass-svg-wrap" style="width:34px; height:38px;">${GLASS_SVGS[glassName]}</div>
         <span class="glass-card-name">${glassName}</span>
-        <span class="glass-card-desc">Chilled Presentation</span>
+        <span class="glass-card-desc">Chilled Stemware</span>
       `;
       DOM.glassAtlasGrid.appendChild(card);
     });
 
     const FAMILY_DEFINITIONS = [
-      { name: "The Sour", desc: "Core formula: 2 oz Spirit + 0.75 oz Citrus Acid + 0.75 oz Sweetener. Emulsified with egg white for silky texture." },
-      { name: "The Daisy", desc: "A sour sweetened by a cordial or liqueur (e.g. Cointreau in the Margarita)." },
-      { name: "The Old Fashioned", desc: "Spirit-forward construction: 2 oz Spirit + Demerara or Sugar Cube + Aromatic Bitters gently stirred over dense ice." },
+      { name: "The Sour", desc: "2 oz Spirit + 0.75 oz Citrus Acid + 0.75 oz Sweetener. Emulsified with optional egg white." },
+      { name: "The Daisy", desc: "A sour sweetened by a cordial or orange liqueur (e.g. Cointreau in the Margarita)." },
+      { name: "The Old Fashioned", desc: "Spirit-forward: 2 oz Spirit + Demerara or Sugar + Aromatic Bitters stirred over dense ice." },
       { name: "The Aperitivo / Equal Parts", desc: "Equal parts harmony of spirit, bitter aperitif, and vermouth (e.g. Negroni 1:1:1 formula)." },
-      { name: "The Martini", desc: "High-proof spirit tempered by dry fortified wine (e.g. 5:1 Dry Gin to French Vermouth), stirred for glass clarity." }
+      { name: "The Martini", desc: "High-proof spirit tempered by dry aromatized wine (e.g. 5:1 Dry Gin to French Vermouth)." }
     ];
 
     DOM.guideFamiliesList.innerHTML = "";
@@ -813,22 +849,11 @@
     });
   }
 
-  function openModal(defaultPane = "paneCodex") {
+  function openModal() {
     audio.playClick();
     renderCodex();
     renderStats();
     renderAtlas();
-
-    DOM.subnavButtons.forEach(btn => {
-      const active = (btn.dataset.pane === defaultPane);
-      btn.classList.toggle("active", active);
-      btn.setAttribute("aria-selected", active ? "true" : "false");
-    });
-
-    DOM.modalPanes.forEach(pane => {
-      pane.classList.toggle("active", pane.id === defaultPane);
-    });
-
     DOM.modalBackdrop.classList.remove("hidden");
     DOM.modalBackdrop.setAttribute("aria-hidden", "false");
   }
@@ -840,15 +865,22 @@
   }
 
   /* ==========================================================================
-     10. KEYBOARD NAVIGATION
+     11. KEYBOARD & CONTROLS BINDING
      ========================================================================== */
+  function triggerHint() {
+    if (state.answered || !state.activeChallenge) return;
+    audio.playClick();
+    DOM.btnHint.disabled = true;
+    DOM.deckPrompt.textContent = `HINT: ${state.activeChallenge.challenge.hint}`;
+  }
+
   function handleKeyboard(e) {
     if (!DOM.modalBackdrop.classList.contains("hidden")) {
       if (e.key === "Escape") closeModal();
       return;
     }
 
-    if (state.view === "game") {
+    if (state.currentView === "gameplay") {
       if (e.key >= "1" && e.key <= "4") {
         const idx = parseInt(e.key, 10) - 1;
         const buttons = DOM.choiceMatrix.querySelectorAll(".choice-btn");
@@ -866,77 +898,65 @@
     }
   }
 
-  /* ==========================================================================
-     11. EVENT BINDINGS & INITIALIZATION
-     ========================================================================== */
-  function bindEvents() {
-    document.querySelectorAll(".menu-mode-card").forEach(card => {
-      card.addEventListener("click", () => {
+  function setupConfidenceControls() {
+    DOM.confButtons.forEach(btn => {
+      btn.addEventListener("click", () => {
         audio.playClick();
-        state.mode = card.dataset.mode;
-        state.shiftFinished = false;
-        DOM.btnNextText.textContent = "NEXT TICKET";
-
-        if (state.mode === "repair") {
-          state.currentTicketIndex = 3;
-        } else if (state.mode === "family") {
-          state.currentTicketIndex = 0;
-        } else {
-          state.currentTicketIndex = 0;
-        }
-
-        DOM.modeTabs.forEach(t => {
-          const active = (t.dataset.mode === state.mode);
-          t.classList.toggle("active", active);
-          t.setAttribute("aria-selected", active ? "true" : "false");
+        DOM.confButtons.forEach(b => {
+          b.classList.remove("active");
+          b.setAttribute("aria-checked", "false");
         });
-
-        switchView("game");
+        btn.classList.add("active");
+        btn.setAttribute("aria-checked", "true");
+        state.selectedConfidence = btn.dataset.conf;
       });
     });
+  }
 
-    if (DOM.btnOpenCodexFromMenu) DOM.btnOpenCodexFromMenu.addEventListener("click", () => openModal("paneCodex"));
-    if (DOM.btnOpenSettingsFromMenu) DOM.btnOpenSettingsFromMenu.addEventListener("click", () => openModal("paneSettings"));
-    if (DOM.btnReturnMenu) DOM.btnReturnMenu.addEventListener("click", () => {
-      audio.playClick();
-      switchView("menu");
+  function bindEvents() {
+    // Menu Buttons
+    DOM.btnStartClassic.addEventListener("click", () => startShiftMode("classic"));
+    DOM.btnStartRepair.addEventListener("click", () => startShiftMode("repair"));
+    DOM.btnStartFamily.addEventListener("click", () => startShiftMode("family"));
+    DOM.btnMenuOpenCodex.addEventListener("click", openModal);
+
+    DOM.btnMenuSoundToggle.addEventListener("click", () => {
+      const isMuted = audio.toggleMute();
+      DOM.iconSoundOn.classList.toggle("hidden", isMuted);
+      DOM.iconSoundOff.classList.toggle("hidden", !isMuted);
+      updateMenuSummary();
+      if (!isMuted) audio.playClick();
     });
 
-    if (DOM.btnNextTicket) DOM.btnNextTicket.addEventListener("click", advanceNextTicket);
-    if (DOM.btnHint) DOM.btnHint.addEventListener("click", triggerHint);
+    // Gameplay Controls
+    DOM.btnBackToMenu.addEventListener("click", () => {
+      audio.playClick();
+      showView("menu");
+    });
+
+    DOM.btnNextTicket.addEventListener("click", advanceNextTicket);
+    DOM.btnHint.addEventListener("click", triggerHint);
     window.addEventListener("keydown", handleKeyboard);
 
-    const updateAudioUI = () => {
-      if (DOM.iconSoundOn) DOM.iconSoundOn.classList.toggle("hidden", audio.muted);
-      if (DOM.iconSoundOff) DOM.iconSoundOff.classList.toggle("hidden", !audio.muted);
-      if (DOM.btnSettingAudioToggle) DOM.btnSettingAudioToggle.textContent = audio.muted ? "MUTED" : "ENABLED";
-    };
+    DOM.btnAudioToggle.addEventListener("click", () => {
+      const isMuted = audio.toggleMute();
+      DOM.iconSoundOn.classList.toggle("hidden", isMuted);
+      DOM.iconSoundOff.classList.toggle("hidden", !isMuted);
+      updateMenuSummary();
+      if (!isMuted) audio.playClick();
+    });
 
-    if (DOM.btnAudioToggle) {
-      DOM.btnAudioToggle.addEventListener("click", () => {
-        audio.toggleMute();
-        updateAudioUI();
-        if (!audio.muted) audio.playClick();
-      });
+    if (audio.muted) {
+      DOM.iconSoundOn.classList.add("hidden");
+      DOM.iconSoundOff.classList.remove("hidden");
     }
 
-    if (DOM.btnSettingAudioToggle) {
-      DOM.btnSettingAudioToggle.addEventListener("click", () => {
-        audio.toggleMute();
-        updateAudioUI();
-        if (!audio.muted) audio.playClick();
-      });
-    }
-
-    updateAudioUI();
-
-    if (DOM.btnOpenMenu) DOM.btnOpenMenu.addEventListener("click", () => openModal("paneCodex"));
-    if (DOM.btnCloseModal) DOM.btnCloseModal.addEventListener("click", closeModal);
-    if (DOM.modalBackdrop) {
-      DOM.modalBackdrop.addEventListener("click", (e) => {
-        if (e.target === DOM.modalBackdrop) closeModal();
-      });
-    }
+    // Modal Drawer Controls
+    DOM.btnOpenMenu.addEventListener("click", openModal);
+    DOM.btnCloseModal.addEventListener("click", closeModal);
+    DOM.modalBackdrop.addEventListener("click", (e) => {
+      if (e.target === DOM.modalBackdrop) closeModal();
+    });
 
     DOM.subnavButtons.forEach(btn => {
       btn.addEventListener("click", () => {
@@ -953,69 +973,38 @@
       });
     });
 
-    if (DOM.codexSearch) {
-      DOM.codexSearch.addEventListener("input", (e) => {
-        renderCodex(e.target.value);
-      });
-    }
+    DOM.codexSearch.addEventListener("input", (e) => {
+      renderCodex(e.target.value);
+    });
 
+    // Mode Navigation Tabs in Gameplay
     DOM.modeTabs.forEach(tab => {
       tab.addEventListener("click", () => {
-        audio.playClick();
-        DOM.modeTabs.forEach(t => {
-          t.classList.remove("active");
-          t.setAttribute("aria-selected", "false");
-        });
-        tab.classList.add("active");
-        tab.setAttribute("aria-selected", "true");
-
-        state.mode = tab.dataset.mode;
-        state.shiftFinished = false;
-        DOM.btnNextText.textContent = "NEXT TICKET";
-
-        if (state.mode === "repair") {
-          state.currentTicketIndex = 3;
-        } else if (state.mode === "family") {
-          state.currentTicketIndex = 0;
-        } else {
-          state.currentTicketIndex = 0;
-        }
-
-        renderTicket();
+        startShiftMode(tab.dataset.mode);
       });
     });
 
-    if (DOM.btnResetProgress) {
-      DOM.btnResetProgress.addEventListener("click", () => {
-        Storage.remove("speccards_completed");
-        Storage.remove("speccards_correct");
-        Storage.remove("speccards_attempts");
-        Storage.remove("speccards_beststreak");
-        Storage.remove("speccards_bestscore");
-        Storage.remove("speccards_ticket");
+    // Reset Progress Action
+    DOM.btnResetProgress.addEventListener("click", () => {
+      localStorage.removeItem(STORAGE_KEY);
+      persistentData.highScore = 0;
+      persistentData.bestStreak = 0;
+      persistentData.totalCompleted = 0;
+      persistentData.correctCount = 0;
+      persistentData.totalAttempts = 0;
+      saveStoredState(persistentData);
 
-        state.totalCompleted = 0;
-        state.correctCount = 0;
-        state.totalAttempts = 0;
-        state.bestStreak = 0;
-        state.streak = 0;
-        state.bestScore = 0;
-        state.currentTicketIndex = 0;
-
-        renderStats();
-        updateHUD();
-        closeModal();
-        switchView("menu");
-      });
-    }
+      updateMenuSummary();
+      renderStats();
+      closeModal();
+    });
 
     setupConfidenceControls();
   }
 
   function init() {
-    cacheDOM();
     bindEvents();
-    switchView("menu");
+    showView("menu");
   }
 
   if (document.readyState === "loading") {
