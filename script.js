@@ -39,7 +39,6 @@
         return JSON.parse(JSON.stringify(defaultStorageData));
       }
 
-      // Merge defaults safely
       return {
         ...defaultStorageData,
         ...parsed,
@@ -731,11 +730,8 @@
   }
 
   function generateTicketDeck(modeName) {
-    // Filter cocktails that have a challenge defined for this specific mode
     const available = COCKTAIL_DATABASE.filter(c => c.modes && c.modes[modeName]);
-    // Shuffle tickets for variety
     const shuffled = [...available].sort(() => Math.random() - 0.5);
-    // Return standard 5 tickets
     return shuffled.slice(0, 5);
   }
 
@@ -752,11 +748,9 @@
     state.streak = 0;
     state.shiftFinished = false;
 
-    // Reset buttons
     DOM.btnNextText.textContent = "NEXT TICKET";
     DOM.btnReplayShift.classList.add("hidden");
 
-    // Sync mode tabs UI
     DOM.modeTabs.forEach(tab => {
       const isMatch = (tab.dataset.mode === modeName);
       tab.classList.toggle("active", isMatch);
@@ -777,7 +771,6 @@
     DOM.confidenceBar.classList.remove("hidden");
     DOM.btnHint.disabled = false;
 
-    // Trigger card enter animation
     DOM.specCard.classList.remove("card-enter");
     void DOM.specCard.offsetWidth;
     DOM.specCard.classList.add("card-enter");
@@ -787,19 +780,15 @@
     const challenge = cocktail.modes[state.mode];
     state.activeChallenge = challenge;
 
-    // Reset container scroll position so top is always immediately seen
     DOM.specBody.scrollTop = 0;
 
-    // Masthead
     DOM.cardFamily.textContent = `${cocktail.family.toUpperCase()} FAMILY`;
     DOM.cardTitle.textContent = cocktail.name;
     DOM.cardEra.textContent = cocktail.era;
 
-    // Glassware
     DOM.cardGlassCaption.textContent = cocktail.glass;
     DOM.glassSvgSlot.innerHTML = GLASS_SVGS[cocktail.glass] || GLASS_SVGS["Coupe"];
 
-    // Parameters
     DOM.paramMethodCell.classList.remove("is-blank-target");
     if (challenge.type === "method") {
       DOM.paramMethodCell.classList.add("is-blank-target");
@@ -812,7 +801,6 @@
     DOM.paramGarnishVal.textContent = cocktail.garnish.toUpperCase();
     DOM.footnoteText.textContent = cocktail.footnote;
 
-    // Ingredients
     DOM.ingredientList.innerHTML = "";
     cocktail.spec.forEach((item, idx) => {
       const li = document.createElement("li");
@@ -911,7 +899,7 @@
 
   /* ==========================================================================
      9. ANSWER EVALUATION & PROGRESSION ENGINE
-     ========================================================================= */
+     ========================================================================== */
   function handleAnswer(chosenText, chosenButton) {
     if (state.answered) return;
     state.answered = true;
@@ -922,7 +910,6 @@
     const challenge = state.activeChallenge;
     const isCorrect = (chosenText === challenge.correctAnswer);
 
-    // Track family mastery per cocktail category
     const famKey = cocktail.family;
     if (persistentData.familyMastery[famKey]) {
       persistentData.familyMastery[famKey].attempts++;
@@ -1041,6 +1028,24 @@
   function replayCurrentShift() {
     audio.playClick();
     startShiftMode(state.mode);
+  }
+
+  function handleHint() {
+    if (state.answered || !state.activeChallenge) return;
+    audio.playClick();
+    DOM.btnHint.disabled = true;
+    DOM.deckPrompt.textContent = `💡 CLUE: ${state.activeChallenge.hint}`;
+
+    // Eliminate one incorrect option as visual assistance
+    const wrongButtons = Array.from(DOM.choiceMatrix.querySelectorAll(".choice-btn")).filter(
+      btn => btn.dataset.choice !== state.activeChallenge.correctAnswer
+    );
+    if (wrongButtons.length > 0) {
+      const eliminated = wrongButtons[Math.floor(Math.random() * wrongButtons.length)];
+      eliminated.disabled = true;
+      eliminated.style.opacity = "0.35";
+      eliminated.style.textDecoration = "line-through";
+    }
   }
 
   /* ==========================================================================
@@ -1181,7 +1186,7 @@
 
   function openModal() {
     audio.playClick();
-    renderCodex();
+    renderCodex(DOM.codexSearch.value || "");
     renderStats();
     renderAtlas();
     DOM.modalBackdrop.classList.remove("hidden");
@@ -1191,4 +1196,133 @@
   function closeModal() {
     audio.playClick();
     DOM.modalBackdrop.classList.add("hidden");
-    DOM.modalBackdrop.setAttribute("a
+    DOM.modalBackdrop.setAttribute("aria-hidden", "true");
+  }
+
+  function switchModalPane(paneId) {
+    audio.playClick();
+    DOM.subnavButtons.forEach(btn => {
+      const match = (btn.dataset.pane === paneId);
+      btn.classList.toggle("active", match);
+      btn.setAttribute("aria-selected", match ? "true" : "false");
+    });
+    DOM.modalPanes.forEach(pane => {
+      pane.classList.toggle("active", pane.id === paneId);
+    });
+  }
+
+  function resetCareerData() {
+    if (confirm("Reset all saved high scores, streaks, and family mastery statistics?")) {
+      localStorage.removeItem(STORAGE_KEY);
+      Object.assign(persistentData, JSON.parse(JSON.stringify(defaultStorageData)));
+      saveStoredState(persistentData);
+      renderStats();
+      updateMenuSummary();
+      audio.playClick();
+    }
+  }
+
+  /* ==========================================================================
+     11. EVENT LISTENERS SETUP
+     ========================================================================== */
+  function setupEventListeners() {
+    // Mode launches
+    DOM.btnStartClassic.addEventListener("click", () => startShiftMode("classic"));
+    DOM.btnStartRepair.addEventListener("click", () => startShiftMode("repair"));
+    DOM.btnStartFamily.addEventListener("click", () => startShiftMode("family"));
+
+    // Gameplay tabs
+    DOM.modeTabs.forEach(tab => {
+      tab.addEventListener("click", () => startShiftMode(tab.dataset.mode));
+    });
+
+    // Navigation back to menu
+    DOM.btnBackToMenu.addEventListener("click", () => {
+      audio.playClick();
+      showView("menu");
+    });
+
+    // Audio toggles
+    const handleAudioToggle = () => {
+      audio.toggleMute();
+      updateMenuSummary();
+    };
+    DOM.btnAudioToggle.addEventListener("click", handleAudioToggle);
+    DOM.btnMenuSoundToggle.addEventListener("click", handleAudioToggle);
+
+    // Modal triggers
+    DOM.btnOpenMenu.addEventListener("click", openModal);
+    DOM.btnMenuOpenCodex.addEventListener("click", openModal);
+    DOM.btnCloseModal.addEventListener("click", closeModal);
+    DOM.modalBackdrop.addEventListener("click", (e) => {
+      if (e.target === DOM.modalBackdrop) closeModal();
+    });
+
+    // Modal tabs
+    DOM.subnavButtons.forEach(btn => {
+      btn.addEventListener("click", () => switchModalPane(btn.dataset.pane));
+    });
+
+    // Codex live search
+    DOM.codexSearch.addEventListener("input", (e) => {
+      renderCodex(e.target.value);
+    });
+
+    // Reset progress
+    DOM.btnResetProgress.addEventListener("click", resetCareerData);
+
+    // Confidence radio selector
+    DOM.confButtons.forEach(btn => {
+      btn.addEventListener("click", () => {
+        audio.playClick();
+        DOM.confButtons.forEach(b => {
+          b.classList.remove("active");
+          b.setAttribute("aria-checked", "false");
+        });
+        btn.classList.add("active");
+        btn.setAttribute("aria-checked", "true");
+        state.selectedConfidence = btn.dataset.conf;
+      });
+    });
+
+    // Shift progress buttons
+    DOM.btnNextTicket.addEventListener("click", advanceNextTicket);
+    DOM.btnReplayShift.addEventListener("click", replayCurrentShift);
+    DOM.btnHint.addEventListener("click", handleHint);
+
+    // Keyboard Shortcuts
+    window.addEventListener("keydown", (e) => {
+      if (DOM.modalBackdrop && !DOM.modalBackdrop.classList.contains("hidden")) {
+        if (e.key === "Escape") closeModal();
+        return;
+      }
+
+      if (state.currentView !== "gameplay") return;
+
+      if (!state.answered) {
+        if (["1", "2", "3", "4"].includes(e.key)) {
+          const index = parseInt(e.key, 10) - 1;
+          const buttons = DOM.choiceMatrix.querySelectorAll(".choice-btn");
+          if (buttons[index] && !buttons[index].disabled) {
+            buttons[index].click();
+          }
+        } else if (e.key.toLowerCase() === "h") {
+          if (!DOM.btnHint.disabled) DOM.btnHint.click();
+        }
+      } else {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          advanceNextTicket();
+        }
+      }
+    });
+  }
+
+  // Application bootstrap
+  function init() {
+    updateMenuSummary();
+    setupEventListeners();
+  }
+
+  init();
+})();
