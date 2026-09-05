@@ -1,4 +1,15 @@
-const STORAGE_KEY = "speccards_app_data_v2";
+/**
+ * SPEC CARDS — COMPLETE GAME ENGINE & COCKTAIL KNOWLEDGE ARCHITECTURE
+ * Fully continuous state, navigation, per-family tracking, and persistence engine.
+ */
+
+(function () {
+  "use strict";
+
+  /* ==========================================================================
+     1. ROBUST LOCALSTORAGE PERSISTENCE ENGINE
+     ========================================================================== */
+  const STORAGE_KEY = "speccards_app_data_v2";
 
   const defaultStorageData = {
     version: 2,
@@ -900,7 +911,7 @@ const STORAGE_KEY = "speccards_app_data_v2";
 
   /* ==========================================================================
      9. ANSWER EVALUATION & PROGRESSION ENGINE
-     ========================================================================== */
+     ========================================================================= */
   function handleAnswer(chosenText, chosenButton) {
     if (state.answered) return;
     state.answered = true;
@@ -1180,157 +1191,4 @@ const STORAGE_KEY = "speccards_app_data_v2";
   function closeModal() {
     audio.playClick();
     DOM.modalBackdrop.classList.add("hidden");
-    DOM.modalBackdrop.setAttribute("aria-hidden", "true");
-  }
-
-  /* ==========================================================================
-     11. USER CONTROLS, KEYBOARD & EVENT BINDINGS
-     ========================================================================== */
-  function triggerHint() {
-    if (state.answered || !state.activeChallenge) return;
-    audio.playClick();
-    DOM.btnHint.disabled = true;
-    DOM.deckPrompt.textContent = `HINT: ${state.activeChallenge.hint}`;
-  }
-
-  function handleKeyboard(e) {
-    if (!DOM.modalBackdrop.classList.contains("hidden")) {
-      if (e.key === "Escape") closeModal();
-      return;
-    }
-
-    if (state.currentView === "gameplay") {
-      if (e.key >= "1" && e.key <= "4") {
-        const idx = parseInt(e.key, 10) - 1;
-        const buttons = DOM.choiceMatrix.querySelectorAll(".choice-btn");
-        if (buttons[idx] && !buttons[idx].disabled) {
-          buttons[idx].click();
-        }
-      } else if (e.key === "Enter" || e.key === " ") {
-        if (!DOM.diagnosisTray.classList.contains("hidden")) {
-          e.preventDefault();
-          advanceNextTicket();
-        }
-      } else if (e.key.toLowerCase() === "h") {
-        triggerHint();
-      }
-    }
-  }
-
-  function setupConfidenceControls() {
-    DOM.confButtons.forEach(btn => {
-      btn.addEventListener("click", () => {
-        audio.playClick();
-        DOM.confButtons.forEach(b => {
-          b.classList.remove("active");
-          b.setAttribute("aria-checked", "false");
-        });
-        btn.classList.add("active");
-        btn.setAttribute("aria-checked", "true");
-        state.selectedConfidence = btn.dataset.conf;
-      });
-    });
-  }
-
-  function bindEvents() {
-    // Menu Launchers
-    DOM.btnStartClassic.addEventListener("click", () => startShiftMode("classic"));
-    DOM.btnStartRepair.addEventListener("click", () => startShiftMode("repair"));
-    DOM.btnStartFamily.addEventListener("click", () => startShiftMode("family"));
-    DOM.btnMenuOpenCodex.addEventListener("click", openModal);
-
-    DOM.btnMenuSoundToggle.addEventListener("click", () => {
-      audio.toggleMute();
-      updateMenuSummary();
-      if (!audio.muted) audio.playClick();
-    });
-
-    // Gameplay HUD Actions
-    DOM.btnBackToMenu.addEventListener("click", () => {
-      audio.playClick();
-      showView("menu");
-    });
-
-    DOM.btnNextTicket.addEventListener("click", advanceNextTicket);
-    DOM.btnReplayShift.addEventListener("click", replayCurrentShift);
-    DOM.btnHint.addEventListener("click", triggerHint);
-    window.addEventListener("keydown", handleKeyboard);
-
-    DOM.btnAudioToggle.addEventListener("click", () => {
-      audio.toggleMute();
-      updateMenuSummary();
-      if (!audio.muted) audio.playClick();
-    });
-
-    // Gameplay Mode Tabs
-    DOM.modeTabs.forEach(tab => {
-      tab.addEventListener("click", () => {
-        startShiftMode(tab.dataset.mode);
-      });
-    });
-
-    // Modal Drawer Controls
-    DOM.btnOpenMenu.addEventListener("click", openModal);
-    DOM.btnCloseModal.addEventListener("click", closeModal);
-    DOM.modalBackdrop.addEventListener("click", (e) => {
-      if (e.target === DOM.modalBackdrop) closeModal();
-    });
-
-    DOM.subnavButtons.forEach(btn => {
-      btn.addEventListener("click", () => {
-        audio.playClick();
-        DOM.subnavButtons.forEach(b => {
-          b.classList.remove("active");
-          b.setAttribute("aria-selected", "false");
-        });
-        DOM.modalPanes.forEach(p => p.classList.remove("active"));
-        btn.classList.add("active");
-        btn.setAttribute("aria-selected", "true");
-        const targetPane = document.getElementById(btn.dataset.pane);
-        if (targetPane) targetPane.classList.add("active");
-      });
-    });
-
-    DOM.codexSearch.addEventListener("input", (e) => {
-      renderCodex(e.target.value);
-    });
-
-    // Stored Progress Reset
-    DOM.btnResetProgress.addEventListener("click", () => {
-      if (!window.confirm("Reset all bartender career stats, streak, and family records?")) {
-        return;
-      }
-      localStorage.removeItem(STORAGE_KEY);
-      persistentData.highScore = 0;
-      persistentData.bestStreak = 0;
-      persistentData.totalCompleted = 0;
-      persistentData.correctCount = 0;
-      persistentData.totalAttempts = 0;
-      Object.keys(persistentData.familyMastery).forEach(k => {
-        persistentData.familyMastery[k] = { attempts: 0, correct: 0 };
-      });
-      saveStoredState(persistentData);
-
-      state.shiftScore = 0;
-      state.streak = 0;
-      updateHUD();
-      updateMenuSummary();
-      renderStats();
-      closeModal();
-    });
-
-    setupConfidenceControls();
-  }
-
-  function init() {
-    bindEvents();
-    updateMenuSummary();
-    showView("menu");
-  }
-
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", init);
-  } else {
-    init();
-  }
-})();
+    DOM.modalBackdrop.setAttribute("a
