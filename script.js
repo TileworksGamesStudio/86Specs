@@ -1,14 +1,13 @@
 /**
- * SPEC CARDS — COMPLETE GAME ENGINE & KNOWLEDGE ARCHITECTURE
+ * SPEC CARDS — COMPLETE BUG-FIXED GAME ENGINE
  * Vanilla browser-native JavaScript. Zero external dependencies.
- * Upgraded with robust localStorage persistence, main menu flow, and screen-efficient mobile layout.
  */
 
 (function () {
   "use strict";
 
   /* ==========================================================================
-     1. LOCAL STORAGE PERSISTENCE ARCHITECTURE (ROBUSTNESS CONTRACT)
+     1. LOCAL STORAGE PERSISTENCE WRAPPER
      ========================================================================== */
   const Storage = {
     get(key, fallback = null) {
@@ -36,7 +35,7 @@
   };
 
   /* ==========================================================================
-     2. SYNTHETIC AUDIO ENGINE (Web Audio API)
+     2. SYNTHETIC AUDIO ENGINE
      ========================================================================== */
   class SoundEngine {
     constructor() {
@@ -152,7 +151,7 @@
   };
 
   /* ==========================================================================
-     4. IN-SCRIPT CANONICAL CONTENT DATASET
+     4. CANONICAL DATASET
      ========================================================================== */
   const SPEC_DATASET = [
     {
@@ -310,123 +309,97 @@
     }
   ];
 
-  function validateDataset(dataset) {
-    if (!Array.isArray(dataset) || dataset.length !== 5) {
-      console.warn("SpecCards Dataset Warning: Exactly 5 challenges required.");
-    }
-    const seenIds = new Set();
-    dataset.forEach((entry, i) => {
-      if (!entry.id || seenIds.has(entry.id)) {
-        entry.id = entry.id || `spec-${i}`;
-      }
-      seenIds.add(entry.id);
-      if (!Array.isArray(entry.spec)) entry.spec = [];
-      if (!entry.challenge) {
-        entry.challenge = {
-          type: "ingredient",
-          targetIndex: 0,
-          prompt: "Identify the missing field:",
-          correctAnswer: entry.spec[0]?.name || "Bourbon",
-          options: [entry.spec[0]?.name || "Bourbon"],
-          hint: "Check family balance.",
-          diagnosis: "Standard balanced spec."
-        };
-      }
-      if (!Array.isArray(entry.challenge.options) || entry.challenge.options.length < 2) {
-        entry.challenge.options = [entry.challenge.correctAnswer, "Alternative Spec A", "Alternative Spec B", "Alternative Spec C"];
-      }
-    });
-    return dataset;
-  }
-
-  const VALIDATED_DATASET = validateDataset(SPEC_DATASET);
-
   /* ==========================================================================
-     5. APPLICATION STATE & PERSISTENCE
+     5. STATE & DOM REPOSITORY
      ========================================================================== */
   const state = {
-    view: "menu", // "menu", "game"
-    mode: "classic", // "classic", "repair", "family"
-    currentTicketIndex: parseInt(Storage.get("speccards_ticket", "0"), 10),
-    totalTickets: VALIDATED_DATASET.length,
+    view: "menu",
+    mode: "classic",
+    currentTicketIndex: parseInt(Storage.get("speccards_ticket", "0"), 10) || 0,
+    totalTickets: SPEC_DATASET.length,
     activeChallenge: null,
     selectedConfidence: "certain",
-    bestScore: parseInt(Storage.get("speccards_bestscore", "0"), 10),
+    bestScore: parseInt(Storage.get("speccards_bestscore", "0"), 10) || 0,
     shiftScore: 0,
     streak: 0,
-    bestStreak: parseInt(Storage.get("speccards_beststreak", "0"), 10),
-    totalCompleted: parseInt(Storage.get("speccards_completed", "0"), 10),
-    correctCount: parseInt(Storage.get("speccards_correct", "0"), 10),
-    totalAttempts: parseInt(Storage.get("speccards_attempts", "0"), 10),
+    bestStreak: parseInt(Storage.get("speccards_beststreak", "0"), 10) || 0,
+    totalCompleted: parseInt(Storage.get("speccards_completed", "0"), 10) || 0,
+    correctCount: parseInt(Storage.get("speccards_correct", "0"), 10) || 0,
+    totalAttempts: parseInt(Storage.get("speccards_attempts", "0"), 10) || 0,
     answered: false,
     shiftFinished: false
   };
 
+  if (state.currentTicketIndex >= SPEC_DATASET.length || state.currentTicketIndex < 0) {
+    state.currentTicketIndex = 0;
+  }
+
   const audio = new SoundEngine();
 
-  /* ==========================================================================
-     6. DOM ELEMENT REPOSITORY
-     ========================================================================== */
-  const DOM = {
-    viewMenu: document.getElementById("viewMenu"),
-    viewGame: document.getElementById("viewGame"),
-    qstatScore: document.getElementById("qstatScore"),
-    qstatAccuracy: document.getElementById("qstatAccuracy"),
-    btnOpenCodexFromMenu: document.getElementById("btnOpenCodexFromMenu"),
-    btnOpenSettingsFromMenu: document.getElementById("btnOpenSettingsFromMenu"),
-    btnReturnMenu: document.getElementById("btnReturnMenu"),
-    streakVal: document.getElementById("streakVal"),
-    scoreVal: document.getElementById("scoreVal"),
-    btnAudioToggle: document.getElementById("btnAudioToggle"),
-    iconSoundOn: document.getElementById("iconSoundOn"),
-    iconSoundOff: document.getElementById("iconSoundOff"),
-    btnOpenMenu: document.getElementById("btnOpenMenu"),
-    modeTabs: document.querySelectorAll(".mode-tab"),
-    modeBadge: document.getElementById("modeBadge"),
-    roundCounter: document.getElementById("roundCounter"),
-    diffBadge: document.getElementById("diffBadge"),
-    specCard: document.getElementById("specCard"),
-    cardFamily: document.getElementById("cardFamily"),
-    cardTitle: document.getElementById("cardTitle"),
-    cardEra: document.getElementById("cardEra"),
-    glassSvgSlot: document.getElementById("glassSvgSlot"),
-    cardGlassCaption: document.getElementById("cardGlassCaption"),
-    ingredientList: document.getElementById("ingredientList"),
-    paramMethodVal: document.getElementById("paramMethodVal"),
-    paramIceVal: document.getElementById("paramIceVal"),
-    paramGarnishVal: document.getElementById("paramGarnishVal"),
-    paramMethodCell: document.getElementById("paramMethodCell"),
-    footnoteText: document.getElementById("footnoteText"),
-    deckPrompt: document.getElementById("deckPrompt"),
-    btnHint: document.getElementById("btnHint"),
-    choiceMatrix: document.getElementById("choiceMatrix"),
-    confidenceBar: document.getElementById("confidenceBar"),
-    confButtons: document.querySelectorAll(".conf-btn"),
-    diagnosisTray: document.getElementById("diagnosisTray"),
-    diagBadge: document.getElementById("diagBadge"),
-    diagPoints: document.getElementById("diagPoints"),
-    diagReason: document.getElementById("diagReason"),
-    btnNextTicket: document.getElementById("btnNextTicket"),
-    btnNextText: document.getElementById("btnNextText"),
-    modalBackdrop: document.getElementById("modalBackdrop"),
-    btnCloseModal: document.getElementById("btnCloseModal"),
-    subnavButtons: document.querySelectorAll(".subnav-btn"),
-    modalPanes: document.querySelectorAll(".modal-pane"),
-    codexSearch: document.getElementById("codexSearch"),
-    codexGrid: document.getElementById("codexGrid"),
-    stMasteryRank: document.getElementById("stMasteryRank"),
-    stTotalPassed: document.getElementById("stTotalPassed"),
-    stAccuracy: document.getElementById("stAccuracy"),
-    stBestStreak: document.getElementById("stBestStreak"),
-    familyMeterList: document.getElementById("familyMeterList"),
-    glassAtlasGrid: document.getElementById("glassAtlasGrid"),
-    guideFamiliesList: document.getElementById("guideFamiliesList"),
-    btnResetProgress: document.getElementById("btnResetProgress"),
-    btnSettingAudioToggle: document.getElementById("btnSettingAudioToggle")
-  };
+  let DOM = {};
+
+  function cacheDOM() {
+    DOM = {
+      viewMenu: document.getElementById("viewMenu"),
+      viewGame: document.getElementById("viewGame"),
+      qstatScore: document.getElementById("qstatScore"),
+      qstatAccuracy: document.getElementById("qstatAccuracy"),
+      btnOpenCodexFromMenu: document.getElementById("btnOpenCodexFromMenu"),
+      btnOpenSettingsFromMenu: document.getElementById("btnOpenSettingsFromMenu"),
+      btnReturnMenu: document.getElementById("btnReturnMenu"),
+      streakVal: document.getElementById("streakVal"),
+      scoreVal: document.getElementById("scoreVal"),
+      btnAudioToggle: document.getElementById("btnAudioToggle"),
+      iconSoundOn: document.getElementById("iconSoundOn"),
+      iconSoundOff: document.getElementById("iconSoundOff"),
+      btnOpenMenu: document.getElementById("btnOpenMenu"),
+      modeTabs: document.querySelectorAll(".mode-tab"),
+      modeBadge: document.getElementById("modeBadge"),
+      roundCounter: document.getElementById("roundCounter"),
+      diffBadge: document.getElementById("diffBadge"),
+      specCard: document.getElementById("specCard"),
+      cardFamily: document.getElementById("cardFamily"),
+      cardTitle: document.getElementById("cardTitle"),
+      cardEra: document.getElementById("cardEra"),
+      glassSvgSlot: document.getElementById("glassSvgSlot"),
+      cardGlassCaption: document.getElementById("cardGlassCaption"),
+      ingredientList: document.getElementById("ingredientList"),
+      paramMethodVal: document.getElementById("paramMethodVal"),
+      paramIceVal: document.getElementById("paramIceVal"),
+      paramGarnishVal: document.getElementById("paramGarnishVal"),
+      paramMethodCell: document.getElementById("paramMethodCell"),
+      footnoteText: document.getElementById("footnoteText"),
+      deckPrompt: document.getElementById("deckPrompt"),
+      btnHint: document.getElementById("btnHint"),
+      choiceMatrix: document.getElementById("choiceMatrix"),
+      confidenceBar: document.getElementById("confidenceBar"),
+      confButtons: document.querySelectorAll(".conf-btn"),
+      diagnosisTray: document.getElementById("diagnosisTray"),
+      diagBadge: document.getElementById("diagBadge"),
+      diagPoints: document.getElementById("diagPoints"),
+      diagReason: document.getElementById("diagReason"),
+      btnNextTicket: document.getElementById("btnNextTicket"),
+      btnNextText: document.getElementById("btnNextText"),
+      modalBackdrop: document.getElementById("modalBackdrop"),
+      btnCloseModal: document.getElementById("btnCloseModal"),
+      subnavButtons: document.querySelectorAll(".subnav-btn"),
+      modalPanes: document.querySelectorAll(".modal-pane"),
+      codexSearch: document.getElementById("codexSearch"),
+      codexGrid: document.getElementById("codexGrid"),
+      stMasteryRank: document.getElementById("stMasteryRank"),
+      stTotalPassed: document.getElementById("stTotalPassed"),
+      stAccuracy: document.getElementById("stAccuracy"),
+      stBestStreak: document.getElementById("stBestStreak"),
+      familyMeterList: document.getElementById("familyMeterList"),
+      glassAtlasGrid: document.getElementById("glassAtlasGrid"),
+      guideFamiliesList: document.getElementById("guideFamiliesList"),
+      btnResetProgress: document.getElementById("btnResetProgress"),
+      btnSettingAudioToggle: document.getElementById("btnSettingAudioToggle")
+    };
+  }
 
   /* ==========================================================================
-     7. VIEW SWITCHING & RENDERING PIPELINE
+     6. VIEW SWITCHING & RENDERING PIPELINE
      ========================================================================== */
   function switchView(viewName) {
     state.view = viewName;
@@ -458,7 +431,7 @@
     void DOM.specCard.offsetWidth;
     DOM.specCard.classList.add("card-enter");
 
-    const cocktail = VALIDATED_DATASET[state.currentTicketIndex];
+    const cocktail = SPEC_DATASET[state.currentTicketIndex] || SPEC_DATASET[0];
     state.activeChallenge = cocktail;
 
     DOM.cardFamily.textContent = `${cocktail.family} FAMILY`;
@@ -577,7 +550,7 @@
   }
 
   /* ==========================================================================
-     8. ANSWER EVALUATION & FEEDBACK
+     7. ANSWER EVALUATION & FEEDBACK
      ========================================================================== */
   function handleAnswer(chosenText, chosenButton) {
     if (state.answered) return;
@@ -704,7 +677,7 @@
   }
 
   /* ==========================================================================
-     9. HINTS & CONFIDENCE CONTROLS
+     8. HINTS & CONFIDENCE CONTROLS
      ========================================================================== */
   function triggerHint() {
     if (state.answered || !state.activeChallenge) return;
@@ -729,13 +702,13 @@
   }
 
   /* ==========================================================================
-     10. MODAL CODEX, STATS & ATLAS VIEWS
+     9. MODAL CODEX, STATS & ATLAS VIEWS
      ========================================================================== */
   function renderCodex(query = "") {
     DOM.codexGrid.innerHTML = "";
     const filterTerm = query.trim().toLowerCase();
 
-    const matched = VALIDATED_DATASET.filter(c => {
+    const matched = SPEC_DATASET.filter(c => {
       return (
         c.name.toLowerCase().includes(filterTerm) ||
         c.family.toLowerCase().includes(filterTerm) ||
@@ -813,7 +786,7 @@
       const card = document.createElement("div");
       card.className = "glass-card";
       card.innerHTML = `
-        <div class="glass-svg-wrap" style="width:30px; height:34px;">${GLASS_SVGS[glassName]}</div>
+        <div class="glass-svg-wrap" style="width:28px; height:30px;">${GLASS_SVGS[glassName]}</div>
         <span class="glass-card-name">${glassName}</span>
         <span class="glass-card-desc">Chilled Presentation</span>
       `;
@@ -867,7 +840,7 @@
   }
 
   /* ==========================================================================
-     11. KEYBOARD NAVIGATION
+     10. KEYBOARD NAVIGATION
      ========================================================================== */
   function handleKeyboard(e) {
     if (!DOM.modalBackdrop.classList.contains("hidden")) {
@@ -894,10 +867,9 @@
   }
 
   /* ==========================================================================
-     12. INITIALIZATION & EVENT BINDINGS
+     11. EVENT BINDINGS & INITIALIZATION
      ========================================================================== */
   function bindEvents() {
-    // Menu Mode Cards
     document.querySelectorAll(".menu-mode-card").forEach(card => {
       card.addEventListener("click", () => {
         audio.playClick();
@@ -923,44 +895,48 @@
       });
     });
 
-    DOM.btnOpenCodexFromMenu.addEventListener("click", () => openModal("paneCodex"));
-    DOM.btnOpenSettingsFromMenu.addEventListener("click", () => openModal("paneSettings"));
-    DOM.btnReturnMenu.addEventListener("click", () => {
+    if (DOM.btnOpenCodexFromMenu) DOM.btnOpenCodexFromMenu.addEventListener("click", () => openModal("paneCodex"));
+    if (DOM.btnOpenSettingsFromMenu) DOM.btnOpenSettingsFromMenu.addEventListener("click", () => openModal("paneSettings"));
+    if (DOM.btnReturnMenu) DOM.btnReturnMenu.addEventListener("click", () => {
       audio.playClick();
       switchView("menu");
     });
 
-    DOM.btnNextTicket.addEventListener("click", advanceNextTicket);
-    DOM.btnHint.addEventListener("click", triggerHint);
+    if (DOM.btnNextTicket) DOM.btnNextTicket.addEventListener("click", advanceNextTicket);
+    if (DOM.btnHint) DOM.btnHint.addEventListener("click", triggerHint);
     window.addEventListener("keydown", handleKeyboard);
 
-    // Audio Mute Toggles
     const updateAudioUI = () => {
-      DOM.iconSoundOn.classList.toggle("hidden", audio.muted);
-      DOM.iconSoundOff.classList.toggle("hidden", !audio.muted);
-      DOM.btnSettingAudioToggle.textContent = audio.muted ? "MUTED" : "ENABLED";
+      if (DOM.iconSoundOn) DOM.iconSoundOn.classList.toggle("hidden", audio.muted);
+      if (DOM.iconSoundOff) DOM.iconSoundOff.classList.toggle("hidden", !audio.muted);
+      if (DOM.btnSettingAudioToggle) DOM.btnSettingAudioToggle.textContent = audio.muted ? "MUTED" : "ENABLED";
     };
 
-    DOM.btnAudioToggle.addEventListener("click", () => {
-      audio.toggleMute();
-      updateAudioUI();
-      if (!audio.muted) audio.playClick();
-    });
+    if (DOM.btnAudioToggle) {
+      DOM.btnAudioToggle.addEventListener("click", () => {
+        audio.toggleMute();
+        updateAudioUI();
+        if (!audio.muted) audio.playClick();
+      });
+    }
 
-    DOM.btnSettingAudioToggle.addEventListener("click", () => {
-      audio.toggleMute();
-      updateAudioUI();
-      if (!audio.muted) audio.playClick();
-    });
+    if (DOM.btnSettingAudioToggle) {
+      DOM.btnSettingAudioToggle.addEventListener("click", () => {
+        audio.toggleMute();
+        updateAudioUI();
+        if (!audio.muted) audio.playClick();
+      });
+    }
 
     updateAudioUI();
 
-    // Modal Events
-    DOM.btnOpenMenu.addEventListener("click", () => openModal("paneCodex"));
-    DOM.btnCloseModal.addEventListener("click", closeModal);
-    DOM.modalBackdrop.addEventListener("click", (e) => {
-      if (e.target === DOM.modalBackdrop) closeModal();
-    });
+    if (DOM.btnOpenMenu) DOM.btnOpenMenu.addEventListener("click", () => openModal("paneCodex"));
+    if (DOM.btnCloseModal) DOM.btnCloseModal.addEventListener("click", closeModal);
+    if (DOM.modalBackdrop) {
+      DOM.modalBackdrop.addEventListener("click", (e) => {
+        if (e.target === DOM.modalBackdrop) closeModal();
+      });
+    }
 
     DOM.subnavButtons.forEach(btn => {
       btn.addEventListener("click", () => {
@@ -977,11 +953,12 @@
       });
     });
 
-    DOM.codexSearch.addEventListener("input", (e) => {
-      renderCodex(e.target.value);
-    });
+    if (DOM.codexSearch) {
+      DOM.codexSearch.addEventListener("input", (e) => {
+        renderCodex(e.target.value);
+      });
+    }
 
-    // Mode Navigation Tabs in Gameplay
     DOM.modeTabs.forEach(tab => {
       tab.addEventListener("click", () => {
         audio.playClick();
@@ -1008,33 +985,35 @@
       });
     });
 
-    // Reset Progress
-    DOM.btnResetProgress.addEventListener("click", () => {
-      Storage.remove("speccards_completed");
-      Storage.remove("speccards_correct");
-      Storage.remove("speccards_attempts");
-      Storage.remove("speccards_beststreak");
-      Storage.remove("speccards_bestscore");
-      Storage.remove("speccards_ticket");
+    if (DOM.btnResetProgress) {
+      DOM.btnResetProgress.addEventListener("click", () => {
+        Storage.remove("speccards_completed");
+        Storage.remove("speccards_correct");
+        Storage.remove("speccards_attempts");
+        Storage.remove("speccards_beststreak");
+        Storage.remove("speccards_bestscore");
+        Storage.remove("speccards_ticket");
 
-      state.totalCompleted = 0;
-      state.correctCount = 0;
-      state.totalAttempts = 0;
-      state.bestStreak = 0;
-      state.streak = 0;
-      state.bestScore = 0;
-      state.currentTicketIndex = 0;
+        state.totalCompleted = 0;
+        state.correctCount = 0;
+        state.totalAttempts = 0;
+        state.bestStreak = 0;
+        state.streak = 0;
+        state.bestScore = 0;
+        state.currentTicketIndex = 0;
 
-      renderStats();
-      updateHUD();
-      closeModal();
-      switchView("menu");
-    });
+        renderStats();
+        updateHUD();
+        closeModal();
+        switchView("menu");
+      });
+    }
 
     setupConfidenceControls();
   }
 
   function init() {
+    cacheDOM();
     bindEvents();
     switchView("menu");
   }

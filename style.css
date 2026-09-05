@@ -1,11 +1,5 @@
 /* ==========================================================================
-   SPEC CARDS — MASTER STYLESHEET (MOBILE-FIRST OPTIMIZED)
-   Brand Palette:
-   Burnt Orange: #CE6635
-   Deep Brown:   #74442D
-   Warm Gold:    #E0AD55
-   Deep Red:     #A43B2D
-   Neutrals:     #14110F (Charcoal), #1E1A17, #27211C, #F6EFE9, #C8B8AB
+   SPEC CARDS — MASTER STYLESHEET (BUG-FIXED & ROBUST)
    ========================================================================== */
 
 :root {
@@ -130,7 +124,7 @@ button:focus-visible {
    VIEW 1: HOME MAIN MENU
    ========================================================================== */
 #viewMenu {
-  padding: 20px;
+  padding: 16px 20px;
   justify-content: space-between;
   background: radial-gradient(circle at 50% 20%, rgba(116, 68, 45, 0.25) 0%, transparent 70%), var(--bg-app);
   overflow-y: auto;
@@ -141,32 +135,32 @@ button:focus-visible {
   flex-direction: column;
   align-items: center;
   text-align: center;
-  padding: 10px 0 16px;
-  gap: 6px;
+  padding: 6px 0 12px;
+  gap: 4px;
 }
 
 .hero-logo {
-  width: 52px;
-  height: 52px;
+  width: 48px;
+  height: 48px;
   border-radius: var(--radius-lg);
   background: linear-gradient(135deg, var(--c-orange) 0%, var(--c-brown) 100%);
   color: #FFF;
   display: grid;
   place-items: center;
   box-shadow: 0 4px 16px rgba(206, 102, 53, 0.45);
-  margin-bottom: 4px;
+  margin-bottom: 2px;
 }
 
 .hero-title {
   font-family: var(--font-serif);
-  font-size: 1.8rem;
+  font-size: 1.6rem;
   font-weight: 700;
   letter-spacing: 0.1em;
   color: #FFF;
 }
 
 .hero-subtitle {
-  font-size: 0.68rem;
+  font-size: 0.62rem;
   font-weight: 700;
   letter-spacing: 0.2em;
   color: var(--c-gold);
@@ -175,7 +169,7 @@ button:focus-visible {
 .menu-content {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 12px;
   flex: 1;
   max-width: 480px;
   width: 100%;
@@ -186,17 +180,17 @@ button:focus-visible {
 .menu-mode-stack {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
 }
 
 .menu-mode-card {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 12px;
   background: var(--bg-card);
   border: 1px solid var(--border-card);
   border-radius: var(--radius-md);
-  padding: 14px 16px;
+  padding: 12px 14px;
   text-align: left;
   transition: var(--trans-fast);
   box-shadow: 0 4px 12px rgba(0,0,0,0.3);
@@ -205,13 +199,12 @@ button:focus-visible {
 .menu-mode-card:hover {
   border-color: var(--c-gold);
   background: var(--bg-card-alt);
-  transform: translateY(-1px);
 }
 
 .mode-card-icon {
-  font-size: 1.6rem;
-  width: 42px;
-  height: 42px;
+  font-size: 1.4rem;
+  width: 38px;
+  height: 38px;
   background: rgba(224, 173, 85, 0.1);
   border-radius: var(--radius-sm);
   display: grid;
@@ -222,33 +215,33 @@ button:focus-visible {
 .mode-card-info {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 1px;
 }
 
 .mode-card-title {
   font-family: var(--font-serif);
-  font-size: 1.1rem;
+  font-size: 1.05rem;
   font-weight: 700;
   color: #FFF;
 }
 
 .mode-card-desc {
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   color: var(--tx-secondary);
-  line-height: 1.35;
+  line-height: 1.3;
 }
 
 .menu-quick-stats {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 10px;
+  gap: 8px;
 }
 
 .qstat-pill {
   background: var(--bg-surface);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);
-  padding: 10px;
+  padding: 8px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -257,13 +250,13 @@ button:focus-visible {
 
 .qstat-val {
   font-family: var(--font-serif);
-  font-size: 1.25rem;
+  font-size: 1.15rem;
   font-weight: 700;
   color: var(--c-gold);
 }
 
 .qstat-lbl {
-  font-size: 0.6rem;
+  font-size: 0.58rem;
   font-weight: 700;
   letter-spacing: 0.1em;
   color: var(--tx-muted);
@@ -272,9 +265,9 @@ button:focus-visible {
 .menu-footer {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
   align-items: center;
-  padding-top: 10px;
+  padding-top: 8px;
   max-width: 480px;
   width: 100%;
   margin: 0 auto;
@@ -282,17 +275,17 @@ button:focus-visible {
 
 .menu-footer-actions {
   display: flex;
-  gap: 10px;
+  gap: 8px;
   width: 100%;
 }
 
 .secondary-action-btn {
   flex: 1;
-  min-height: 42px;
+  min-height: 40px;
   background: var(--bg-surface);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   font-weight: 600;
   color: var(--tx-primary);
   display: grid;
@@ -306,13 +299,12 @@ button:focus-visible {
 }
 
 .home-studio-link {
-  font-size: 0.72rem;
+  font-size: 0.7rem;
   font-weight: 700;
   letter-spacing: 0.15em;
   color: var(--c-orange);
   text-decoration: none;
-  padding: 6px 12px;
-  transition: var(--trans-fast);
+  padding: 4px 10px;
 }
 
 .home-studio-link:hover {
@@ -326,7 +318,7 @@ button:focus-visible {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 10px 14px;
+  padding: 8px 12px;
   background: linear-gradient(180deg, #1D1815 0%, #15110F 100%);
   border-bottom: 1px solid var(--border-subtle);
   flex-shrink: 0;
@@ -335,23 +327,23 @@ button:focus-visible {
 .hud-group {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 5px;
 }
 
 .hud-pill {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: 3px;
   background: var(--bg-surface);
   border: 1px solid var(--border-subtle);
-  padding: 3px 8px;
+  padding: 2px 7px;
   border-radius: var(--radius-pill);
-  font-size: 0.78rem;
+  font-size: 0.75rem;
   font-weight: 600;
 }
 
 .hud-icon {
-  font-size: 0.85rem;
+  font-size: 0.8rem;
 }
 
 .flame-icon {
@@ -374,8 +366,8 @@ button:focus-visible {
 }
 
 .icon-btn {
-  width: 38px;
-  height: 38px;
+  width: 36px;
+  height: 36px;
   display: grid;
   place-items: center;
   border-radius: var(--radius-md);
@@ -391,21 +383,20 @@ button:focus-visible {
   border-color: var(--c-gold);
 }
 
-/* Mode Tabs */
 .mode-tabs {
   display: flex;
   background: #181412;
   border-bottom: 1px solid var(--border-subtle);
-  padding: 0 10px;
-  gap: 4px;
+  padding: 0 8px;
+  gap: 3px;
   flex-shrink: 0;
 }
 
 .mode-tab {
   flex: 1;
-  min-height: 38px;
-  padding: 6px 2px;
-  font-size: 0.74rem;
+  min-height: 36px;
+  padding: 4px 2px;
+  font-size: 0.72rem;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -427,13 +418,12 @@ button:focus-visible {
   border-bottom-color: var(--c-gold);
 }
 
-/* Station Stage */
 .station-stage {
   flex: 1;
   display: flex;
   flex-direction: column;
-  padding: 10px 14px 14px;
-  gap: 8px;
+  padding: 8px 12px 12px;
+  gap: 6px;
   overflow-y: auto;
   justify-content: space-between;
 }
@@ -442,7 +432,7 @@ button:focus-visible {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  font-size: 0.68rem;
+  font-size: 0.65rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--tx-muted);
@@ -453,7 +443,7 @@ button:focus-visible {
 .meta-badge {
   color: var(--c-orange);
   background: rgba(206, 102, 53, 0.12);
-  padding: 2px 6px;
+  padding: 2px 5px;
   border-radius: var(--radius-sm);
   border: 1px solid rgba(206, 102, 53, 0.25);
 }
@@ -462,7 +452,6 @@ button:focus-visible {
   color: var(--c-gold);
 }
 
-/* Specification Card */
 .spec-card {
   background: var(--bg-card);
   border: 1px solid var(--border-card);
@@ -477,11 +466,11 @@ button:focus-visible {
 }
 
 .spec-card.card-enter {
-  animation: cardEnter 220ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: cardEnter 200ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 @keyframes cardEnter {
-  from { opacity: 0; transform: translateY(8px) scale(0.99); }
+  from { opacity: 0; transform: translateY(6px) scale(0.99); }
   to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
@@ -489,7 +478,7 @@ button:focus-visible {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  padding: 10px 14px 8px;
+  padding: 8px 12px 6px;
   border-bottom: 1px dashed var(--border-card);
   background: linear-gradient(180deg, rgba(116, 68, 45, 0.18) 0%, transparent 100%);
 }
@@ -498,11 +487,11 @@ button:focus-visible {
   display: flex;
   flex-direction: column;
   gap: 1px;
-  padding-right: 10px;
+  padding-right: 8px;
 }
 
 .card-family-tag {
-  font-size: 0.62rem;
+  font-size: 0.6rem;
   font-weight: 700;
   letter-spacing: 0.12em;
   color: var(--c-orange);
@@ -511,15 +500,15 @@ button:focus-visible {
 
 .card-cocktail-title {
   font-family: var(--font-serif);
-  font-size: 1.2rem;
+  font-size: 1.1rem;
   color: #FFF;
   font-weight: 700;
   letter-spacing: 0.02em;
-  line-height: 1.15;
+  line-height: 1.1;
 }
 
 .card-era {
-  font-size: 0.68rem;
+  font-size: 0.65rem;
   color: var(--tx-muted);
 }
 
@@ -528,13 +517,13 @@ button:focus-visible {
   flex-direction: column;
   align-items: center;
   gap: 1px;
-  min-width: 42px;
+  min-width: 38px;
   flex-shrink: 0;
 }
 
 .glass-svg-wrap {
-  width: 30px;
-  height: 34px;
+  width: 28px;
+  height: 30px;
   display: grid;
   place-items: center;
   color: var(--c-gold);
@@ -546,7 +535,7 @@ button:focus-visible {
 }
 
 .glass-label-caption {
-  font-size: 0.58rem;
+  font-size: 0.55rem;
   letter-spacing: 0.04em;
   color: var(--tx-secondary);
   text-transform: uppercase;
@@ -554,13 +543,13 @@ button:focus-visible {
 }
 
 .spec-body {
-  padding: 10px 14px;
+  padding: 8px 12px;
 }
 
 .section-rule {
   display: flex;
   align-items: center;
-  margin-bottom: 6px;
+  margin-bottom: 4px;
 }
 
 .section-rule::after {
@@ -568,11 +557,11 @@ button:focus-visible {
   flex: 1;
   height: 1px;
   background: var(--border-subtle);
-  margin-left: 8px;
+  margin-left: 6px;
 }
 
 .rule-label {
-  font-size: 0.58rem;
+  font-size: 0.55rem;
   font-weight: 700;
   letter-spacing: 0.1em;
   color: var(--tx-muted);
@@ -580,32 +569,32 @@ button:focus-visible {
 }
 
 .sub-rule {
-  margin-top: 10px;
+  margin-top: 8px;
 }
 
 .ingredient-list {
   list-style: none;
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: 4px;
 }
 
 .spec-item {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 5px 8px;
+  padding: 4px 7px;
   background: var(--bg-card-alt);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-sm);
-  font-size: 0.85rem;
+  font-size: 0.82rem;
   transition: var(--trans-fast);
 }
 
 .spec-item.is-blank-target {
   border-color: var(--c-gold);
   background: rgba(224, 173, 85, 0.09);
-  box-shadow: inset 0 0 8px var(--c-gold-glow);
+  box-shadow: inset 0 0 6px var(--c-gold-glow);
   position: relative;
 }
 
@@ -613,19 +602,19 @@ button:focus-visible {
   content: "TARGET";
   position: absolute;
   right: 6px;
-  top: -6px;
+  top: -5px;
   background: var(--c-gold);
   color: #1A140F;
-  font-size: 0.52rem;
+  font-size: 0.5rem;
   font-weight: 800;
-  padding: 1px 4px;
+  padding: 1px 3px;
   border-radius: 2px;
 }
 
 .spec-item.is-flawed-target {
   border-color: var(--c-red);
   background: rgba(164, 59, 45, 0.12);
-  box-shadow: inset 0 0 8px var(--c-red-glow);
+  box-shadow: inset 0 0 6px var(--c-red-glow);
   position: relative;
 }
 
@@ -633,21 +622,21 @@ button:focus-visible {
   content: "DEFECT";
   position: absolute;
   right: 6px;
-  top: -6px;
+  top: -5px;
   background: var(--c-red);
   color: #FFF;
-  font-size: 0.52rem;
+  font-size: 0.5rem;
   font-weight: 800;
-  padding: 1px 4px;
+  padding: 1px 3px;
   border-radius: 2px;
 }
 
 .spec-measure {
   font-family: var(--font-mono);
-  font-size: 0.82rem;
+  font-size: 0.78rem;
   color: var(--c-gold);
   font-weight: 700;
-  min-width: 50px;
+  min-width: 48px;
 }
 
 .spec-name-role {
@@ -663,7 +652,7 @@ button:focus-visible {
 }
 
 .spec-role-tag {
-  font-size: 0.58rem;
+  font-size: 0.55rem;
   color: var(--tx-muted);
   text-transform: uppercase;
   letter-spacing: 0.04em;
@@ -671,8 +660,8 @@ button:focus-visible {
 
 .blank-slot {
   display: inline-block;
-  min-width: 70px;
-  height: 16px;
+  min-width: 64px;
+  height: 14px;
   background: rgba(224, 173, 85, 0.16);
   border: 1px dashed var(--c-gold);
   border-radius: 3px;
@@ -688,14 +677,14 @@ button:focus-visible {
 .service-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 6px;
+  gap: 5px;
 }
 
 .param-cell {
   background: var(--bg-card-alt);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-sm);
-  padding: 5px 6px;
+  padding: 4px 5px;
   display: flex;
   flex-direction: column;
   gap: 1px;
@@ -707,14 +696,14 @@ button:focus-visible {
 }
 
 .param-key {
-  font-size: 0.55rem;
+  font-size: 0.52rem;
   font-weight: 700;
   color: var(--tx-muted);
   letter-spacing: 0.08em;
 }
 
 .param-val {
-  font-size: 0.72rem;
+  font-size: 0.68rem;
   font-weight: 600;
   color: var(--tx-secondary);
   white-space: nowrap;
@@ -723,26 +712,25 @@ button:focus-visible {
 }
 
 .card-footer-tip {
-  padding: 8px 14px;
+  padding: 6px 12px;
   background: rgba(0, 0, 0, 0.28);
   border-top: 1px solid var(--border-subtle);
-  font-size: 0.7rem;
+  font-size: 0.66rem;
   color: var(--tx-secondary);
-  line-height: 1.35;
+  line-height: 1.3;
 }
 
 .footnote-tag {
   color: var(--c-gold);
   font-weight: 700;
-  font-size: 0.62rem;
+  font-size: 0.58rem;
   margin-right: 3px;
 }
 
-/* Interaction Deck */
 .interaction-deck {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
   flex-shrink: 0;
 }
 
@@ -754,15 +742,15 @@ button:focus-visible {
 }
 
 .deck-prompt-text {
-  font-size: 0.76rem;
+  font-size: 0.72rem;
   font-weight: 600;
   color: var(--tx-secondary);
 }
 
 .text-hint-btn {
-  min-height: 32px;
-  padding: 2px 8px;
-  font-size: 0.7rem;
+  min-height: 30px;
+  padding: 2px 6px;
+  font-size: 0.66rem;
   font-weight: 700;
   color: var(--c-gold);
   display: inline-flex;
@@ -786,22 +774,22 @@ button:focus-visible {
 .choice-matrix {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 8px;
+  gap: 6px;
 }
 
 @media (max-width: 420px) {
   .choice-matrix {
     grid-template-columns: 1fr;
-    gap: 6px;
+    gap: 5px;
   }
 }
 
 .choice-btn {
-  min-height: 44px;
+  min-height: 40px;
   background: var(--bg-choice);
   border: 1px solid var(--border-card);
   border-radius: var(--radius-md);
-  padding: 8px 12px;
+  padding: 6px 10px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -821,21 +809,21 @@ button:focus-visible {
 }
 
 .choice-text {
-  font-size: 0.88rem;
+  font-size: 0.84rem;
   font-weight: 600;
   color: #FFF;
-  line-height: 1.25;
+  line-height: 1.2;
 }
 
 .choice-kbd {
   font-family: var(--font-mono);
-  font-size: 0.65rem;
+  font-size: 0.62rem;
   font-weight: 700;
   color: var(--tx-muted);
   background: var(--bg-surface);
   border: 1px solid var(--border-subtle);
   border-radius: 3px;
-  padding: 1px 5px;
+  padding: 1px 4px;
   margin-left: 6px;
   flex-shrink: 0;
 }
@@ -844,14 +832,14 @@ button:focus-visible {
   background: #193623 !important;
   border-color: var(--c-green-light) !important;
   color: #EFF8F2 !important;
-  box-shadow: 0 0 12px rgba(90, 209, 133, 0.3);
+  box-shadow: 0 0 10px rgba(90, 209, 133, 0.3);
 }
 
 .choice-btn.is-wrong {
   background: #3B1B18 !important;
   border-color: var(--c-red) !important;
   color: #FEEBEA !important;
-  box-shadow: 0 0 12px var(--c-red-glow);
+  box-shadow: 0 0 10px var(--c-red-glow);
 }
 
 .confidence-selector {
@@ -861,11 +849,11 @@ button:focus-visible {
   background: var(--bg-surface);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);
-  padding: 4px 8px;
+  padding: 3px 6px;
 }
 
 .conf-label {
-  font-size: 0.62rem;
+  font-size: 0.58rem;
   font-weight: 700;
   letter-spacing: 0.08em;
   color: var(--tx-muted);
@@ -873,14 +861,14 @@ button:focus-visible {
 
 .conf-buttons {
   display: flex;
-  gap: 3px;
+  gap: 2px;
 }
 
 .conf-btn {
-  min-height: 32px;
-  font-size: 0.68rem;
+  min-height: 28px;
+  font-size: 0.64rem;
   font-weight: 600;
-  padding: 4px 8px;
+  padding: 3px 6px;
   border-radius: var(--radius-sm);
   color: var(--tx-secondary);
   background: transparent;
@@ -897,16 +885,16 @@ button:focus-visible {
   background: var(--bg-surface);
   border: 1px solid var(--border-card);
   border-radius: var(--radius-md);
-  padding: 10px 14px;
+  padding: 8px 12px;
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  animation: traySlide 200ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  gap: 5px;
+  animation: traySlide 180ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
   box-shadow: var(--shadow-pop);
 }
 
 @keyframes traySlide {
-  from { opacity: 0; transform: translateY(8px); }
+  from { opacity: 0; transform: translateY(6px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
@@ -917,11 +905,11 @@ button:focus-visible {
 }
 
 .diag-badge {
-  font-size: 0.68rem;
+  font-size: 0.62rem;
   font-weight: 800;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  padding: 2px 6px;
+  padding: 2px 5px;
   border-radius: var(--radius-sm);
 }
 
@@ -939,32 +927,32 @@ button:focus-visible {
 
 .diag-score {
   font-family: var(--font-mono);
-  font-size: 0.82rem;
+  font-size: 0.78rem;
   font-weight: 700;
   color: var(--c-gold);
 }
 
 .diag-reason {
-  font-size: 0.78rem;
+  font-size: 0.74rem;
   color: var(--tx-primary);
-  line-height: 1.35;
+  line-height: 1.3;
 }
 
 .primary-action {
   width: 100%;
-  min-height: 42px;
+  min-height: 38px;
   background: linear-gradient(135deg, var(--c-orange) 0%, #9E431B 100%);
   color: #FFF;
   font-weight: 700;
-  font-size: 0.88rem;
+  font-size: 0.82rem;
   letter-spacing: 0.05em;
   border-radius: var(--radius-md);
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
+  gap: 5px;
   transition: var(--trans-fast);
-  box-shadow: 0 3px 10px rgba(206, 102, 53, 0.35);
+  box-shadow: 0 3px 8px rgba(206, 102, 53, 0.35);
 }
 
 .primary-action:hover {
@@ -972,7 +960,7 @@ button:focus-visible {
 }
 
 .kbd-sub {
-  font-size: 0.65rem;
+  font-size: 0.6rem;
   opacity: 0.8;
   font-family: var(--font-mono);
 }
@@ -989,8 +977,8 @@ button:focus-visible {
   z-index: 100;
   display: grid;
   place-items: center;
-  padding: 12px;
-  animation: fadeIn 180ms ease;
+  padding: 10px;
+  animation: fadeIn 160ms ease;
 }
 
 @keyframes fadeIn {
@@ -1000,9 +988,9 @@ button:focus-visible {
 
 .modal-dialog {
   width: 100%;
-  max-width: 580px;
-  height: 85vh;
-  max-height: 640px;
+  max-width: 540px;
+  height: 82vh;
+  max-height: 600px;
   background: var(--bg-surface);
   border: 1px solid var(--border-card);
   border-radius: var(--radius-lg);
@@ -1016,7 +1004,7 @@ button:focus-visible {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 16px;
+  padding: 10px 14px;
   border-bottom: 1px solid var(--border-subtle);
   background: #181412;
   flex-shrink: 0;
@@ -1024,7 +1012,7 @@ button:focus-visible {
 
 .modal-title {
   font-family: var(--font-serif);
-  font-size: 1.05rem;
+  font-size: 1rem;
   color: #FFF;
   letter-spacing: 0.04em;
 }
@@ -1038,9 +1026,9 @@ button:focus-visible {
 
 .subnav-btn {
   flex: 1;
-  min-height: 40px;
-  padding: 8px 4px;
-  font-size: 0.75rem;
+  min-height: 38px;
+  padding: 6px 2px;
+  font-size: 0.72rem;
   font-weight: 600;
   color: var(--tx-muted);
   border-bottom: 2px solid transparent;
@@ -1056,14 +1044,14 @@ button:focus-visible {
 .modal-content-scroll {
   flex: 1;
   overflow-y: auto;
-  padding: 14px 16px;
+  padding: 12px 14px;
   -webkit-overflow-scrolling: touch;
 }
 
 .modal-pane {
   display: none;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
 }
 
 .modal-pane.active {
@@ -1076,13 +1064,13 @@ button:focus-visible {
 
 .codex-input {
   width: 100%;
-  min-height: 40px;
-  padding: 8px 12px;
+  min-height: 38px;
+  padding: 6px 10px;
   background: var(--bg-card);
   border: 1px solid var(--border-card);
   border-radius: var(--radius-md);
   color: #FFF;
-  font-size: 0.85rem;
+  font-size: 0.82rem;
   outline: none;
 }
 
@@ -1093,18 +1081,17 @@ button:focus-visible {
 .codex-cards-grid {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 8px;
+  gap: 6px;
 }
 
 .codex-item {
   background: var(--bg-card);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);
-  padding: 10px 12px;
+  padding: 8px 10px;
   display: flex;
   flex-direction: column;
-  gap: 3px;
-  transition: var(--trans-fast);
+  gap: 2px;
 }
 
 .codex-top {
@@ -1115,13 +1102,13 @@ button:focus-visible {
 
 .codex-name {
   font-family: var(--font-serif);
-  font-size: 0.98rem;
+  font-size: 0.94rem;
   color: #FFF;
   font-weight: 700;
 }
 
 .codex-fam {
-  font-size: 0.6rem;
+  font-size: 0.58rem;
   color: var(--c-orange);
   font-weight: 700;
   letter-spacing: 0.08em;
@@ -1129,12 +1116,12 @@ button:focus-visible {
 }
 
 .codex-formula {
-  font-size: 0.78rem;
+  font-size: 0.74rem;
   color: var(--tx-secondary);
 }
 
 .codex-notes {
-  font-size: 0.7rem;
+  font-size: 0.66rem;
   color: var(--tx-muted);
   font-style: italic;
 }
@@ -1142,30 +1129,30 @@ button:focus-visible {
 .stats-overview-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 8px;
+  gap: 6px;
 }
 
 .stat-card {
   background: var(--bg-card);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);
-  padding: 10px;
+  padding: 8px;
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 1px;
   align-items: center;
   text-align: center;
 }
 
 .stat-num {
   font-family: var(--font-serif);
-  font-size: 1.3rem;
+  font-size: 1.2rem;
   font-weight: 700;
   color: var(--c-gold);
 }
 
 .stat-desc {
-  font-size: 0.58rem;
+  font-size: 0.55rem;
   font-weight: 700;
   letter-spacing: 0.08em;
   color: var(--tx-muted);
@@ -1173,19 +1160,19 @@ button:focus-visible {
 
 .deck-subtitle {
   font-family: var(--font-serif);
-  font-size: 0.88rem;
+  font-size: 0.84rem;
   letter-spacing: 0.04em;
   color: #FFF;
 }
 
 .guide-subtitle-spacing {
-  margin-top: 16px;
+  margin-top: 14px;
 }
 
 .family-meter-list {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 5px;
 }
 
 .fam-meter-row {
@@ -1197,13 +1184,13 @@ button:focus-visible {
 .fam-meter-info {
   display: flex;
   justify-content: space-between;
-  font-size: 0.7rem;
+  font-size: 0.68rem;
   font-weight: 600;
   color: var(--tx-secondary);
 }
 
 .fam-track {
-  height: 5px;
+  height: 4px;
   background: var(--bg-card);
   border-radius: var(--radius-pill);
   overflow: hidden;
@@ -1217,69 +1204,69 @@ button:focus-visible {
 }
 
 .storage-controls {
-  margin-top: 10px;
+  margin-top: 8px;
   display: flex;
   justify-content: flex-end;
 }
 
 .btn-text-danger {
-  min-height: 38px;
-  font-size: 0.72rem;
+  min-height: 36px;
+  font-size: 0.68rem;
   color: #E26D60;
   text-decoration: underline;
-  padding: 4px 8px;
+  padding: 3px 6px;
 }
 
 .glass-atlas-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
-  gap: 8px;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  gap: 6px;
 }
 
 .glass-card {
   background: var(--bg-card);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);
-  padding: 10px 8px;
+  padding: 8px 6px;
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
-  gap: 4px;
+  gap: 3px;
 }
 
 .glass-card-name {
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   font-weight: 700;
   color: var(--tx-primary);
 }
 
 .glass-card-desc {
-  font-size: 0.62rem;
+  font-size: 0.58rem;
   color: var(--tx-muted);
 }
 
 .guide-families-list {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
 }
 
 .guide-fam-box {
   background: var(--bg-card);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);
-  padding: 8px 10px;
+  padding: 6px 8px;
 }
 
 .guide-fam-head {
-  font-size: 0.78rem;
+  font-size: 0.74rem;
   font-weight: 700;
   color: var(--c-gold);
 }
 
 .guide-fam-body {
-  font-size: 0.7rem;
+  font-size: 0.66rem;
   color: var(--tx-secondary);
   margin-top: 1px;
 }
@@ -1287,14 +1274,14 @@ button:focus-visible {
 .settings-stack {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
 }
 
 .setting-row {
   background: var(--bg-card);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);
-  padding: 10px 12px;
+  padding: 8px 10px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -1307,40 +1294,37 @@ button:focus-visible {
 }
 
 .setting-name {
-  font-size: 0.85rem;
+  font-size: 0.82rem;
   font-weight: 700;
   color: #FFF;
 }
 
 .setting-desc {
-  font-size: 0.68rem;
+  font-size: 0.64rem;
   color: var(--tx-muted);
 }
 
 .setting-toggle-btn {
-  min-height: 32px;
-  padding: 4px 10px;
+  min-height: 30px;
+  padding: 3px 8px;
   background: var(--c-brown);
   color: #FFF;
   border-radius: var(--radius-sm);
-  font-size: 0.7rem;
+  font-size: 0.68rem;
   font-weight: 700;
   border: 1px solid rgba(224, 173, 85, 0.4);
 }
 
 .setting-badge-active {
-  font-size: 0.68rem;
+  font-size: 0.64rem;
   font-weight: 700;
   color: var(--c-green-light);
   background: rgba(90, 209, 133, 0.12);
-  padding: 3px 8px;
+  padding: 2px 6px;
   border-radius: var(--radius-sm);
   border: 1px solid rgba(90, 209, 133, 0.3);
 }
 
-/* ==========================================================================
-   DESKTOP VIEWPORT WRAPPER
-   ========================================================================== */
 @media (min-width: 681px) {
   body {
     padding: 20px 0;
