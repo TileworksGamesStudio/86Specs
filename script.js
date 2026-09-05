@@ -153,7 +153,7 @@
   const audio = new SoundEngine();
 
   /* ==========================================================================
-     3. SVG GLASSWARE ATLAS (Fixed Syntax Error with Template Strings)
+     3. SVG GLASSWARE ATLAS
      ========================================================================== */
   const GLASS_SVGS = {
     Coupe: `<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"> <path d="M6 14 C12 28 36 28 42 14 Z" /> <line x1="24" y1="26" x2="24" y2="40" /> <line x1="15" y1="40" x2="33" y2="40" /> </svg>`,
@@ -162,11 +162,15 @@
     Martini: `<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"> <polygon points="6,12 42,12 24,28" /> <line x1="24" y1="28" x2="24" y2="40" /> <line x1="14" y1="40" x2="34" y2="40" /> </svg>`,
     "Nick & Nora": `<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"> <path d="M12 12 C12 24 36 24 36 12 Z" /> <line x1="24" y1="24" x2="24" y2="40" /> <line x1="16" y1="40" x2="32" y2="40" /> </svg>`,
     Collins: `<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"> <polygon points="15,6 33,6 31,42 17,42" /> <line x1="16" y1="16" x2="32" y2="16" stroke-dasharray="2 2" opacity="0.6"/> </svg>`,
-    // --- 3 Newly Added Glassware Types ---
     "Champagne Flute": `<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"> <path d="M18 6 L30 6 L28 26 C28 30 24 32 24 32 C24 32 20 30 20 26 Z" /> <line x1="24" y1="32" x2="24" y2="42" /> <line x1="17" y1="42" x2="31" y2="42" /> </svg>`,
     "Julep Cup": `<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"> <polygon points="12,12 36,12 33,40 15,40" /> <line x1="10" y1="12" x2="38" y2="12" /> <line x1="13" y1="40" x2="35" y2="40" stroke-width="2.6" /> </svg>`,
     Snifter: `<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"> <path d="M16 10 C12 18 10 24 10 29 C10 36 16 38 24 38 C32 38 38 36 38 29 C38 24 36 18 32 10 Z" /> <line x1="24" y1="38" x2="24" y2="42" /> <line x1="18" y1="42" x2="30" y2="42" /> </svg>`
   };
+
+  /* ==========================================================================
+     4. COMPREHENSIVE COCKTAIL DATABASE
+     ========================================================================== */
+  // >>> KEEP YOUR COCKTAIL_DATABASE ARRAY HERE <<<
 
   /* ==========================================================================
      4. COMPREHENSIVE COCKTAIL DATABASE (33 HIGH-DETAIL CANONICAL SPECS)
@@ -2156,7 +2160,7 @@
     mode: persistentData.preferredMode || "classic",
     tickets: [],
     currentTicketIndex: 0,
-    totalTickets: 3,
+    totalTickets: 5,
     activeCocktail: null,
     activeChallenge: null,
     selectedConfidence: "certain",
@@ -2269,7 +2273,7 @@
   function generateTicketDeck(modeName) {
     const available = COCKTAIL_DATABASE.filter(c => c.modes && c.modes[modeName]);
     const shuffled = [...available].sort(() => Math.random() - 0.5);
-    return shuffled.slice(0, 3);
+    return shuffled.slice(0, 5);
   }
 
   function startShiftMode(modeName) {
@@ -2326,10 +2330,14 @@
     DOM.cardGlassCaption.textContent = cocktail.glass;
     DOM.glassSvgSlot.innerHTML = GLASS_SVGS[cocktail.glass] || GLASS_SVGS["Coupe"];
 
-    DOM.paramMethodCell.classList.remove("is-blank-target");
+    // Render Technique & Troubleshoot Technique Flags
+    DOM.paramMethodCell.classList.remove("is-blank-target", "is-flawed-target");
     if (challenge.type === "method") {
       DOM.paramMethodCell.classList.add("is-blank-target");
       DOM.paramMethodVal.innerHTML = `<span class="blank-slot" style="min-width:60px; height:14px;"></span>`;
+    } else if (challenge.type === "troubleshoot" && challenge.targetIndex === -1) {
+      DOM.paramMethodCell.classList.add("is-flawed-target");
+      DOM.paramMethodVal.textContent = (challenge.flawIngredientDisplay || "TECHNIQUE FLAW").toUpperCase();
     } else {
       DOM.paramMethodVal.textContent = cocktail.method.toUpperCase();
     }
@@ -2523,8 +2531,12 @@
     } else if (challenge.type === "method") {
       DOM.paramMethodVal.textContent = challenge.correctAnswer.toUpperCase();
     } else if (challenge.type === "troubleshoot") {
-      const el = DOM.ingredientList.querySelector(".is-flawed-target .spec-name");
-      if (el) el.textContent = `${challenge.correctIngredientName || challenge.correctAnswer} (AUDITED)`;
+      if (challenge.targetIndex === -1) {
+        DOM.paramMethodVal.textContent = `${challenge.correctIngredientName || state.activeCocktail.method} (AUDITED)`.toUpperCase();
+      } else {
+        const el = DOM.ingredientList.querySelector(".is-flawed-target .spec-name");
+        if (el) el.textContent = `${challenge.correctIngredientName || challenge.correctAnswer} (AUDITED)`;
+      }
     }
   }
 
@@ -2847,6 +2859,8 @@
         }
       } else {
         if (e.key === "Enter" || e.key === " ") {
+          // Prevent double fire if an on-screen button is actively focused
+          if (e.target && e.target.tagName === "BUTTON") return;
           e.preventDefault();
           advanceNextTicket();
         }
