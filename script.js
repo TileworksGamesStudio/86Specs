@@ -1,13 +1,14 @@
 /**
- * SPEC CARDS — COMPLETE GAME ENGINE & COCKTAIL KNOWLEDGE ARCHITECTURE
- * Fully continuous state, navigation, per-family tracking, and persistence engine.
+ * SPEC CARDS — COMPLETE ENGINE & ARCHITECTURAL LOGIC
+ * High-End Neubrutalist interface layer with robust state tracking, Web Audio,
+ * shift modes, career persistence, and canonical cocktail atlas.
  */
 
 (function () {
   "use strict";
 
   /* ==========================================================================
-     1. ROBUST LOCALSTORAGE PERSISTENCE ENGINE
+     1. LOCALSTORAGE PERSISTENCE ENGINE
      ========================================================================== */
   const STORAGE_KEY = "speccards_app_data_v2";
 
@@ -35,10 +36,6 @@
       const raw = localStorage.getItem(STORAGE_KEY);
       if (!raw) return JSON.parse(JSON.stringify(defaultStorageData));
       const parsed = JSON.parse(raw);
-      if (typeof parsed !== "object" || parsed === null) {
-        return JSON.parse(JSON.stringify(defaultStorageData));
-      }
-
       return {
         ...defaultStorageData,
         ...parsed,
@@ -56,7 +53,7 @@
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
     } catch {
-      /* In-memory fallback */
+      /* Fallback for sandbox */
     }
   }
 
@@ -96,9 +93,9 @@
         const osc = this.ctx.createOscillator();
         const gain = this.ctx.createGain();
         osc.type = "sine";
-        osc.frequency.setValueAtTime(620, this.ctx.currentTime);
+        osc.frequency.setValueAtTime(700, this.ctx.currentTime);
         osc.frequency.exponentialRampToValueAtTime(180, this.ctx.currentTime + 0.04);
-        gain.gain.setValueAtTime(0.1, this.ctx.currentTime);
+        gain.gain.setValueAtTime(0.12, this.ctx.currentTime);
         gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.04);
         osc.connect(gain);
         gain.connect(this.ctx.destination);
@@ -119,7 +116,7 @@
           osc.type = "triangle";
           osc.frequency.setValueAtTime(freq, t + idx * 0.05);
           gain.gain.setValueAtTime(0, t);
-          gain.gain.setValueAtTime(0.12, t + idx * 0.05);
+          gain.gain.setValueAtTime(0.14, t + idx * 0.05);
           gain.gain.exponentialRampToValueAtTime(0.001, t + idx * 0.05 + 0.28);
           osc.connect(gain);
           gain.connect(this.ctx.destination);
@@ -138,9 +135,9 @@
         const osc = this.ctx.createOscillator();
         const gain = this.ctx.createGain();
         osc.type = "sawtooth";
-        osc.frequency.setValueAtTime(145, t);
-        osc.frequency.exponentialRampToValueAtTime(80, t + 0.2);
-        gain.gain.setValueAtTime(0.14, t);
+        osc.frequency.setValueAtTime(140, t);
+        osc.frequency.exponentialRampToValueAtTime(75, t + 0.2);
+        gain.gain.setValueAtTime(0.16, t);
         gain.gain.exponentialRampToValueAtTime(0.001, t + 0.2);
         osc.connect(gain);
         gain.connect(this.ctx.destination);
@@ -153,7 +150,7 @@
   const audio = new SoundEngine();
 
   /* ==========================================================================
-     3. SVG GLASSWARE ATLAS
+     3. GLASSWARE SILHOUETTES
      ========================================================================== */
   const GLASS_SVGS = {
     Coupe: `<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"> <path d="M6 14 C12 28 36 28 42 14 Z" /> <line x1="24" y1="26" x2="24" y2="40" /> <line x1="15" y1="40" x2="33" y2="40" /> </svg>`,
@@ -2153,10 +2150,10 @@
   ];
 
   /* ==========================================================================
-     5. APPLICATION STATE ARCHITECTURE
+     5. APPLICATION STATE
      ========================================================================== */
   const state = {
-    currentView: "menu", // "menu" | "gameplay"
+    currentView: "menu",
     mode: persistentData.preferredMode || "classic",
     tickets: [],
     currentTicketIndex: 0,
@@ -2171,14 +2168,12 @@
   };
 
   /* ==========================================================================
-     6. DOM ELEMENT CACHE
+     6. DOM CACHE
      ========================================================================== */
   const DOM = {
-    // Views
     mainMenuView: document.getElementById("mainMenuView"),
     gameplayView: document.getElementById("gameplayView"),
 
-    // Menu Hub
     menuRankBadge: document.getElementById("menuRankBadge"),
     menuAccuracyPill: document.getElementById("menuAccuracyPill"),
     menuHighscoreVal: document.getElementById("menuHighscoreVal"),
@@ -2192,7 +2187,6 @@
     menuSoundIcon: document.getElementById("menuSoundIcon"),
     menuSoundLabel: document.getElementById("menuSoundLabel"),
 
-    // Active Station Header / HUD
     btnBackToMenu: document.getElementById("btnBackToMenu"),
     streakVal: document.getElementById("streakVal"),
     scoreVal: document.getElementById("scoreVal"),
@@ -2205,7 +2199,6 @@
     roundCounter: document.getElementById("roundCounter"),
     diffBadge: document.getElementById("diffBadge"),
 
-    // Spec Card
     specCard: document.getElementById("specCard"),
     cardFamily: document.getElementById("cardFamily"),
     cardTitle: document.getElementById("cardTitle"),
@@ -2220,7 +2213,6 @@
     paramMethodCell: document.getElementById("paramMethodCell"),
     footnoteText: document.getElementById("footnoteText"),
 
-    // Interaction Deck
     deckPrompt: document.getElementById("deckPrompt"),
     btnHint: document.getElementById("btnHint"),
     choiceMatrix: document.getElementById("choiceMatrix"),
@@ -2234,7 +2226,6 @@
     btnNextText: document.getElementById("btnNextText"),
     btnReplayShift: document.getElementById("btnReplayShift"),
 
-    // Modal Drawer
     modalBackdrop: document.getElementById("modalBackdrop"),
     btnCloseModal: document.getElementById("btnCloseModal"),
     subnavButtons: document.querySelectorAll(".subnav-btn"),
@@ -2252,7 +2243,7 @@
   };
 
   /* ==========================================================================
-     7. VIEW NAVIGATION & TRANSITIONS
+     7. TRANSITIONS & FLOW
      ========================================================================== */
   function showView(viewName) {
     state.currentView = viewName;
@@ -2303,7 +2294,7 @@
   }
 
   /* ==========================================================================
-     8. SPECIFICATION TICKET RENDERING
+     8. SPEC TICKET RENDERING
      ========================================================================== */
   function renderTicket() {
     state.answered = false;
@@ -2330,7 +2321,6 @@
     DOM.cardGlassCaption.textContent = cocktail.glass;
     DOM.glassSvgSlot.innerHTML = GLASS_SVGS[cocktail.glass] || GLASS_SVGS["Coupe"];
 
-    // Render Technique & Troubleshoot Technique Flags
     DOM.paramMethodCell.classList.remove("is-blank-target", "is-flawed-target");
     if (challenge.type === "method") {
       DOM.paramMethodCell.classList.add("is-blank-target");
@@ -2452,7 +2442,7 @@
   }
 
   /* ==========================================================================
-     9. ANSWER EVALUATION & PROGRESSION ENGINE
+     9. EVALUATION & PROGRESSION
      ========================================================================== */
   function handleAnswer(chosenText, chosenButton) {
     if (state.answered) return;
@@ -2606,7 +2596,7 @@
   }
 
   /* ==========================================================================
-     10. MENU SUMMARY & CODEX / STATS RENDERING
+     10. MENU SUMMARY & ATLAS/CODEX RENDERING
      ========================================================================== */
   function updateMenuSummary() {
     const total = persistentData.totalAttempts;
@@ -2646,7 +2636,8 @@
     if (matched.length === 0) {
       const emptyMsg = document.createElement("p");
       emptyMsg.style.color = "var(--tx-muted)";
-      emptyMsg.style.fontSize = "0.8rem";
+      emptyMsg.style.fontSize = "0.85rem";
+      emptyMsg.style.fontWeight = "700";
       emptyMsg.style.padding = "10px 0";
       emptyMsg.textContent = "No matching cocktail specifications found in atlas.";
       DOM.codexGrid.appendChild(emptyMsg);
@@ -2713,7 +2704,7 @@
       const card = document.createElement("div");
       card.className = "glass-card";
       card.innerHTML = `
-        <div class="glass-svg-wrap" style="width:32px; height:36px;">${GLASS_SVGS[glassName]}</div>
+        <div class="glass-svg-wrap" style="width:34px; height:36px;">${GLASS_SVGS[glassName]}</div>
         <span class="glass-card-name">${glassName}</span>
         <span class="glass-card-desc">Prescribed Stemware</span>
       `;
@@ -2722,8 +2713,8 @@
 
     const FAMILY_DEFINITIONS = [
       { name: "The Sour (2 : 0.75 : 0.75)", desc: "2 oz Spirit + 0.75 oz Fresh Citrus + 0.75 oz Sweetener. Shaken hard for aeration and emulsification." },
-      { name: "The Daisy (Citrus + Cordial)", desc: "A sour sweetened by a cordial or orange liqueur (e.g. Cointreau in the Margarita, Sidecar, or Corpse Reviver)." },
-      { name: "The Old Fashioned (Spirit Forward)", desc: "2 oz Spirit + Demerara or Rich Syrup + Aromatic Bitters stirred gently over dense ice to velvet chill." },
+      { name: "The Daisy (Citrus + Cordial)", desc: "A sour sweetened by a cordial or orange liqueur (e.g. Cointreau in the Margarita or Sidecar)." },
+      { name: "The Old Fashioned (Spirit Forward)", desc: "2 oz Spirit + Demerara or Rich Syrup + Aromatic Bitters stirred gently over dense ice to velvety chill." },
       { name: "The Aperitivo / Equal Parts (1 : 1 : 1)", desc: "Equal parts harmony of spirit, bitter gentian aperitif, and vermouth (e.g. Negroni, Boulevardier)." },
       { name: "The Martini (High-Proof + Fortified)", desc: "High-proof spirit tempered by dry aromatized wine (e.g. 5:1 Dry Gin to French Vermouth)." },
       { name: "The Highball & Collins (Lengthened Sour)", desc: "Base spirit and citrus lengthened by effervescent club soda over clear column ice spears." }
@@ -2780,26 +2771,22 @@
   }
 
   /* ==========================================================================
-     11. EVENT LISTENERS SETUP
+     11. EVENT LISTENERS
      ========================================================================== */
   function setupEventListeners() {
-    // Mode launches
     DOM.btnStartClassic.addEventListener("click", () => startShiftMode("classic"));
     DOM.btnStartRepair.addEventListener("click", () => startShiftMode("repair"));
     DOM.btnStartFamily.addEventListener("click", () => startShiftMode("family"));
 
-    // Gameplay tabs
     DOM.modeTabs.forEach(tab => {
       tab.addEventListener("click", () => startShiftMode(tab.dataset.mode));
     });
 
-    // Navigation back to menu
     DOM.btnBackToMenu.addEventListener("click", () => {
       audio.playClick();
       showView("menu");
     });
 
-    // Audio toggles
     const handleAudioToggle = () => {
       audio.toggleMute();
       updateMenuSummary();
@@ -2807,7 +2794,6 @@
     DOM.btnAudioToggle.addEventListener("click", handleAudioToggle);
     DOM.btnMenuSoundToggle.addEventListener("click", handleAudioToggle);
 
-    // Modal triggers
     DOM.btnOpenMenu.addEventListener("click", openModal);
     DOM.btnMenuOpenCodex.addEventListener("click", openModal);
     DOM.btnCloseModal.addEventListener("click", closeModal);
@@ -2815,20 +2801,16 @@
       if (e.target === DOM.modalBackdrop) closeModal();
     });
 
-    // Modal tabs
     DOM.subnavButtons.forEach(btn => {
       btn.addEventListener("click", () => switchModalPane(btn.dataset.pane));
     });
 
-    // Codex live search
     DOM.codexSearch.addEventListener("input", (e) => {
       renderCodex(e.target.value);
     });
 
-    // Reset progress
     DOM.btnResetProgress.addEventListener("click", resetCareerData);
 
-    // Confidence radio selector
     DOM.confButtons.forEach(btn => {
       btn.addEventListener("click", () => {
         audio.playClick();
@@ -2842,7 +2824,6 @@
       });
     });
 
-    // Shift progress buttons
     DOM.btnNextTicket.addEventListener("click", advanceNextTicket);
     DOM.btnReplayShift.addEventListener("click", replayCurrentShift);
     DOM.btnHint.addEventListener("click", handleHint);
@@ -2868,7 +2849,6 @@
         }
       } else {
         if (e.key === "Enter" || e.key === " ") {
-          // Prevent double fire if an on-screen button is actively focused
           if (e.target && e.target.tagName === "BUTTON") return;
           e.preventDefault();
           advanceNextTicket();
@@ -2877,7 +2857,6 @@
     });
   }
 
-  // Application bootstrap
   function init() {
     updateMenuSummary();
     setupEventListeners();

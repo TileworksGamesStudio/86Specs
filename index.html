@@ -4,8 +4,11 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta name="description" content="Spec Cards — Professional cocktail specification engine, recipe troubleshooting drill, and bartender intuition trainer." />
-  <meta name="theme-color" content="#14110F" />
-  <title>SPEC CARDS // Professional Cocktail Spec Engine</title>
+  <meta name="theme-color" content="#CE6635" />
+  <title>SPEC CARDS // High-Performance Cocktail Engine</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700;800&family=Space+Mono:wght@700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
@@ -19,8 +22,8 @@
         <!-- Brand Masthead -->
         <header class="menu-brand-header">
           <div class="menu-logo-mark" aria-hidden="true">
-            <svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M8 22h8M12 15v7M5 3h14l-4 8a4 4 0 0 1-6 0L5 3z" />
+            <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="square" stroke-linejoin="miter">
+              <path d="M8 22h8M12 15v7M4 3h16l-4 9a4 4 0 0 1-8 0L4 3z" />
             </svg>
           </div>
           <div class="menu-brand-titles">
@@ -113,7 +116,7 @@
       <!-- TOP HUD BAR -->
       <header class="bar-header" role="banner">
         <button id="btnBackToMenu" class="nav-back-btn" aria-label="Return to Main Menu" title="Return to Main Menu">
-          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="square" stroke-linejoin="miter" aria-hidden="true">
             <polyline points="15 18 9 12 15 6"></polyline>
           </svg>
           <span class="nav-back-text">MENU</span>
@@ -129,18 +132,18 @@
             <span class="hud-val" id="scoreVal">0</span>
           </div>
           <button id="btnAudioToggle" class="icon-btn" aria-label="Toggle Sound Effects" title="Toggle Sound">
-            <svg id="iconSoundOn" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <svg id="iconSoundOn" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
               <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
               <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
             </svg>
-            <svg id="iconSoundOff" class="hidden" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <svg id="iconSoundOff" class="hidden" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
               <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
               <line x1="23" y1="9" x2="17" y2="15"></line>
               <line x1="17" y1="9" x2="23" y2="15"></line>
             </svg>
           </button>
           <button id="btnOpenMenu" class="icon-btn" aria-label="Open Spec Codex and Career Data" title="Open Codex">
-            <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="square" aria-hidden="true">
               <line x1="3" y1="6" x2="21" y2="6"></line>
               <line x1="3" y1="12" x2="21" y2="12"></line>
               <line x1="3" y1="18" x2="21" y2="18"></line>
@@ -186,7 +189,7 @@
             </div>
           </div>
 
-          <!-- Recipe Body (Contained Scroll Area for Safety across screen sizes) -->
+          <!-- Recipe Body -->
           <div class="spec-body-scrollable" id="specBody">
             <div class="section-rule">
               <span class="rule-label">SPECIFICATION FORMULA</span>
@@ -232,7 +235,7 @@
             </button>
           </div>
 
-          <!-- 4 Balanced Mobile Choice Buttons -->
+          <!-- 4 Balanced Neubrutalist Choice Buttons -->
           <div class="choice-matrix" id="choiceMatrix" role="group" aria-label="Specification options">
             <!-- Dynamically populated touch targets -->
           </div>
@@ -292,7 +295,7 @@
           <div class="modal-pane active" id="paneCodex" role="tabpanel" aria-labelledby="tabCodexPane">
             <div class="filter-bar">
               <label for="codexSearch" class="sr-only">Filter cocktail library</label>
-              <input type="search" id="codexSearch" class="codex-input" placeholder="Search by cocktail, base spirit, or family..." autocomplete="off" />
+              <input type="search" id="codexSearch" class="codex-input" placeholder="Search cocktail, spirit, or family..." autocomplete="off" />
             </div>
             <div class="codex-cards-grid" id="codexGrid">
               <!-- Rendered cocktail library -->
@@ -329,7 +332,7 @@
             </div>
 
             <div class="storage-controls">
-              <button id="btnResetProgress" type="button" class="btn-text-danger">Reset Stored Career Data</button>
+              <button id="btnResetProgress" type="button" class="btn-text-danger">RESET STORED CAREER DATA</button>
             </div>
           </div>
 
