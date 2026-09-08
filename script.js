@@ -1,2866 +1,1255 @@
 /**
- * SPEC CARDS — COMPLETE ENGINE & ARCHITECTURAL LOGIC
- * High-End Neubrutalist interface layer with robust state tracking, Web Audio,
- * shift modes, career persistence, and canonical cocktail atlas.
+ * ============================================================================
+ * COCKTAIL SPECS CARD CHALLENGE — GAME & PLATFORM ENGINE
+ * File: script.js
+ * ============================================================================
+ * 
+ * Architectural Highlights:
+ * - Dedicated Main Menu Screen with standard hierarchy: TODAY > VAULT > HOME > SOUND.
+ * - Deterministic Calendar Engine: 8 SEPTEMBER 2026 is Day 0 (Day #1).
+ *   On Day 0, Today is puzzle #1 and Vault contains zero historical items.
+ *   On Day 1, Today is puzzle #2 and Vault contains Day 0.
+ * - Append-Protected Scheduling: Stable date-to-puzzle assignment preserves past shifts.
+ * - Future Puzzle Privacy: Future days and content are strictly inaccessible.
+ * - SVG Garnish Background: Botanical gold line art with subtle floating motion & lower light.
+ *   Density automatically throttled (2–5 in Menu, 1–2 in active Gameplay).
+ * - Web Audio API Synthetic Sound Engine (no external media files).
+ * - Versioned LocalStorage with graceful corrupted-data recovery.
+ * - Mobile-first touch drop & keyboard-accessible tab navigation.
  */
 
 (function () {
   "use strict";
 
-  /* ==========================================================================
-     1. LOCALSTORAGE PERSISTENCE ENGINE
-     ========================================================================== */
-  const STORAGE_KEY = "speccards_app_data_v2";
+  // --- 1. CONSTANTS & SPECIFICATION CONTRACT ---
+  const STORAGE_KEY = "cocktail_specs_data_v1";
+  const STORAGE_VERSION = 1;
+  const MAX_ATTEMPTS = 4;
+  const SLOTS_COUNT = 5;
 
-  const defaultStorageData = {
-    version: 2,
-    sound: "on",
-    preferredMode: "classic",
-    highScore: 0,
-    bestStreak: 0,
-    totalCompleted: 0,
-    correctCount: 0,
-    totalAttempts: 0,
-    familyMastery: {
-      "Sour": { attempts: 0, correct: 0 },
-      "Daisy": { attempts: 0, correct: 0 },
-      "Old Fashioned": { attempts: 0, correct: 0 },
-      "Bitter / Aperitivo": { attempts: 0, correct: 0 },
-      "Martini": { attempts: 0, correct: 0 },
-      "Highball / Collins": { attempts: 0, correct: 0 }
-    }
-  };
+  // Day 0 Canonical Epoch: 8 September 2026 (Section 65–67)
+  const EPOCH_DATE_STR = "2026-09-08T00:00:00Z";
 
-  function loadStoredState() {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (!raw) return JSON.parse(JSON.stringify(defaultStorageData));
-      const parsed = JSON.parse(raw);
-      return {
-        ...defaultStorageData,
-        ...parsed,
-        familyMastery: {
-          ...defaultStorageData.familyMastery,
-          ...(parsed.familyMastery || {})
-        }
-      };
-    } catch {
-      return JSON.parse(JSON.stringify(defaultStorageData));
-    }
-  }
-
-  function saveStoredState(data) {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-    } catch {
-      /* Fallback for sandbox */
-    }
-  }
-
-  const persistentData = loadStoredState();
-
-  /* ==========================================================================
-     2. SYNTHETIC AUDIO ENGINE (Web Audio API)
-     ========================================================================== */
+  // --- 2. SYNTHETIC AUDIO ENGINE (Web Audio API) ---
   class SoundEngine {
     constructor() {
       this.ctx = null;
-      this.muted = persistentData.sound === "off";
+      this.enabled = true;
     }
 
     init() {
-      if (!this.ctx && (window.AudioContext || window.webkitAudioContext)) {
+      if (!this.ctx) {
         const AudioCtx = window.AudioContext || window.webkitAudioContext;
-        this.ctx = new AudioCtx();
+        if (AudioCtx) {
+          this.ctx = new AudioCtx();
+        }
       }
       if (this.ctx && this.ctx.state === "suspended") {
-        this.ctx.resume().catch(() => {});
+        this.ctx.resume();
       }
     }
 
-    toggleMute() {
-      this.muted = !this.muted;
-      persistentData.sound = this.muted ? "off" : "on";
-      saveStoredState(persistentData);
-      return this.muted;
-    }
-
-    playClick() {
-      if (this.muted) return;
+    playTileTap() {
+      if (!this.enabled) return;
       this.init();
       if (!this.ctx) return;
-      try {
+
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(440, this.ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(880, this.ctx.currentTime + 0.04);
+      gain.gain.setValueAtTime(0.08, this.ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.05);
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+      osc.start();
+      osc.stop(this.ctx.currentTime + 0.05);
+    }
+
+    playLockSuccess() {
+      if (!this.enabled) return;
+      this.init();
+      if (!this.ctx) return;
+
+      const now = this.ctx.currentTime;
+      [523.25, 659.25, 783.99, 1046.50].forEach((freq, i) => {
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = "triangle";
+        osc.frequency.setValueAtTime(freq, now + i * 0.06);
+        gain.gain.setValueAtTime(0.09, now + i * 0.06);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.06 + 0.28);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(now + i * 0.06);
+        osc.stop(now + i * 0.06 + 0.3);
+      });
+    }
+
+    playMiss() {
+      if (!this.enabled) return;
+      this.init();
+      if (!this.ctx) return;
+
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = "sawtooth";
+      osc.frequency.setValueAtTime(160, this.ctx.currentTime);
+      osc.frequency.linearRampToValueAtTime(80, this.ctx.currentTime + 0.18);
+      gain.gain.setValueAtTime(0.12, this.ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.18);
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+      osc.start();
+      osc.stop(this.ctx.currentTime + 0.18);
+    }
+
+    playVictoryChord() {
+      if (!this.enabled) return;
+      this.init();
+      if (!this.ctx) return;
+
+      const now = this.ctx.currentTime;
+      const notes = [440, 554.37, 659.25, 880, 1108.73];
+      notes.forEach((freq, idx) => {
         const osc = this.ctx.createOscillator();
         const gain = this.ctx.createGain();
         osc.type = "sine";
-        osc.frequency.setValueAtTime(700, this.ctx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(180, this.ctx.currentTime + 0.04);
-        gain.gain.setValueAtTime(0.12, this.ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.04);
+        osc.frequency.setValueAtTime(freq, now + idx * 0.08);
+        gain.gain.setValueAtTime(0.12, now + idx * 0.08);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.08 + 0.6);
         osc.connect(gain);
         gain.connect(this.ctx.destination);
-        osc.start();
-        osc.stop(this.ctx.currentTime + 0.04);
-      } catch {}
-    }
-
-    playCorrect() {
-      if (this.muted) return;
-      this.init();
-      if (!this.ctx) return;
-      try {
-        const t = this.ctx.currentTime;
-        [523.25, 659.25, 783.99, 1046.5].forEach((freq, idx) => {
-          const osc = this.ctx.createOscillator();
-          const gain = this.ctx.createGain();
-          osc.type = "triangle";
-          osc.frequency.setValueAtTime(freq, t + idx * 0.05);
-          gain.gain.setValueAtTime(0, t);
-          gain.gain.setValueAtTime(0.14, t + idx * 0.05);
-          gain.gain.exponentialRampToValueAtTime(0.001, t + idx * 0.05 + 0.28);
-          osc.connect(gain);
-          gain.connect(this.ctx.destination);
-          osc.start(t + idx * 0.05);
-          osc.stop(t + idx * 0.05 + 0.3);
-        });
-      } catch {}
-    }
-
-    playWrong() {
-      if (this.muted) return;
-      this.init();
-      if (!this.ctx) return;
-      try {
-        const t = this.ctx.currentTime;
-        const osc = this.ctx.createOscillator();
-        const gain = this.ctx.createGain();
-        osc.type = "sawtooth";
-        osc.frequency.setValueAtTime(140, t);
-        osc.frequency.exponentialRampToValueAtTime(75, t + 0.2);
-        gain.gain.setValueAtTime(0.16, t);
-        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.2);
-        osc.connect(gain);
-        gain.connect(this.ctx.destination);
-        osc.start(t);
-        osc.stop(t + 0.2);
-      } catch {}
+        osc.start(now + idx * 0.08);
+        osc.stop(now + idx * 0.08 + 0.65);
+      });
     }
   }
 
   const audio = new SoundEngine();
 
-  /* ==========================================================================
-     3. GLASSWARE SILHOUETTES
-     ========================================================================== */
-  const GLASS_SVGS = {
-    Coupe: `<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"> <path d="M6 14 C12 28 36 28 42 14 Z" /> <line x1="24" y1="26" x2="24" y2="40" /> <line x1="15" y1="40" x2="33" y2="40" /> </svg>`,
-    Rocks: `<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"> <polygon points="10,10 38,10 35,40 13,40" /> <line x1="14" y1="20" x2="34" y2="20" stroke-dasharray="2 2" opacity="0.6"/> </svg>`,
-    Highball: `<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"> <polygon points="14,8 34,8 32,42 16,42" /> <line x1="15" y1="18" x2="33" y2="18" stroke-dasharray="2 2" opacity="0.6"/> </svg>`,
-    Martini: `<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"> <polygon points="6,12 42,12 24,28" /> <line x1="24" y1="28" x2="24" y2="40" /> <line x1="14" y1="40" x2="34" y2="40" /> </svg>`,
-    "Nick & Nora": `<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"> <path d="M12 12 C12 24 36 24 36 12 Z" /> <line x1="24" y1="24" x2="24" y2="40" /> <line x1="16" y1="40" x2="32" y2="40" /> </svg>`,
-    Collins: `<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"> <polygon points="15,6 33,6 31,42 17,42" /> <line x1="16" y1="16" x2="32" y2="16" stroke-dasharray="2 2" opacity="0.6"/> </svg>`,
-    "Champagne Flute": `<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"> <path d="M18 6 L30 6 L28 26 C28 30 24 32 24 32 C24 32 20 30 20 26 Z" /> <line x1="24" y1="32" x2="24" y2="42" /> <line x1="17" y1="42" x2="31" y2="42" /> </svg>`,
-    "Julep Cup": `<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"> <polygon points="12,12 36,12 33,40 15,40" /> <line x1="10" y1="12" x2="38" y2="12" /> <line x1="13" y1="40" x2="35" y2="40" stroke-width="2.6" /> </svg>`,
-    Snifter: `<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"> <path d="M16 10 C12 18 10 24 10 29 C10 36 16 38 24 38 C32 38 38 36 38 29 C38 24 36 18 32 10 Z" /> <line x1="24" y1="38" x2="24" y2="42" /> <line x1="18" y1="42" x2="30" y2="42" /> </svg>`
+  // --- 3. DETERMINISTIC DAILY SCHEDULING (Section 65–78) ---
+  /**
+   * Calculates the current day index relative to Day 0 (8 Sept 2026).
+   * Pre-launch preview environments safely default to Day 0 (First puzzle, empty vault).
+   */
+  function getCurrentDayIndex() {
+    const epochDate = new Date(EPOCH_DATE_STR);
+    const now = new Date();
+    const todayLocalMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const epochMidnight = new Date(epochDate.getUTCFullYear(), epochDate.getUTCMonth(), epochDate.getUTCDate());
+    const diffMs = todayLocalMidnight.getTime() - epochMidnight.getTime();
+    const dayDiff = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+    return Math.max(0, dayDiff);
+  }
+
+  /**
+   * Deterministically retrieves the puzzle for a given day index.
+   * Uses persistent history to prevent retroactive remapping when new puzzles are appended.
+   */
+  function getPuzzleForDay(dayIndex, persistentHistory = {}) {
+  if (!COCKTAIL_PUZZLES || COCKTAIL_PUZZLES.length === 0) return null;
+  const puzzles = COCKTAIL_PUZZLES;
+
+    // 1. Check if this day index already has an assigned puzzle ID recorded
+    if (persistentHistory && persistentHistory[dayIndex]) {
+      const assignedId = persistentHistory[dayIndex];
+      const found = puzzles.find(p => p.id === assignedId);
+      if (found) return found;
+    }
+
+    // 2. Stable fallback assignment
+    const puzzleIdx = dayIndex % puzzles.length;
+    return puzzles[puzzleIdx];
+  }
+
+  // --- 4. PERSISTENT STORAGE MANAGER ---
+  function loadStorageData() {
+    const fallback = {
+      version: STORAGE_VERSION,
+      soundEnabled: true,
+      stats: {
+        played: 0,
+        won: 0,
+        currentStreak: 0,
+        maxStreak: 0,
+        distribution: { 1: 0, 2: 0, 3: 0, 4: 0 }
+      },
+      dailyScheduleMap: {}, // dayIndex -> puzzleId
+      puzzleHistory: {}     // puzzleId -> progress record
+    };
+
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return fallback;
+      const parsed = JSON.parse(raw);
+      if (!parsed || parsed.version !== STORAGE_VERSION) {
+        return Object.assign(fallback, parsed || {});
+      }
+      return Object.assign(fallback, parsed);
+    } catch (e) {
+      console.warn("Notice: LocalStorage read failed or corrupted. Starting fresh profile.", e);
+      return fallback;
+    }
+  }
+
+  function saveStorageData(data) {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    } catch (e) {
+      console.warn("Notice: Unable to save to localStorage.", e);
+    }
+  }
+
+  // Global Application State
+  const AppState = {
+    store: loadStorageData(),
+    currentDay: getCurrentDayIndex(),
+    activePuzzle: null,
+    activeDayIndex: 0,
+    isVaultMode: false,
+    selectedSlot: 0,
+    currentDraft: [null, null, null, null, null],
+    lockedSlots: [false, false, false, false, false],
+    attemptsUsed: 0,
+    isCompleted: false,
+    isWon: false,
+    historyGrid: []
   };
 
-  /* ==========================================================================
-     4. COMPREHENSIVE COCKTAIL DATABASE
-     ========================================================================== */
-  // >>> KEEP YOUR COCKTAIL_DATABASE ARRAY HERE <<<
+  audio.enabled = AppState.store.soundEnabled;
 
-  /* ==========================================================================
-     4. COMPREHENSIVE COCKTAIL DATABASE (33 HIGH-DETAIL CANONICAL SPECS)
-     ========================================================================== */
-  const COCKTAIL_DATABASE = [
-    {
-      id: "whiskey-sour",
-      name: "Whiskey Sour",
-      family: "Sour",
-      era: "1860s • American Classic",
-      baseSpirit: "Bourbon or Rye Whiskey",
-      glass: "Coupe",
-      ice: "None / Served Up",
-      method: "Dry Shake, then Shake with Ice",
-      garnish: "Angostura Drops & Lemon Twist",
-      footnote: "Dry shaking without ice emulsifies the egg white proteins prior to cold dilution.",
-      spec: [
-        { measure: "2.0 oz", name: "Bourbon or Rye Whiskey", role: "Base Spirit" },
-        { measure: "0.75 oz", name: "Fresh Lemon Juice", role: "Sour Element" },
-        { measure: "0.75 oz", name: "Rich Simple Syrup (2:1)", role: "Sweet Modifier" },
-        { measure: "0.5 oz", name: "Egg White (Optional)", role: "Textural Agent" }
-      ],
-      modes: {
-        classic: {
-          type: "ingredient",
-          targetIndex: 0,
-          prompt: "Specify the core base spirit required for the Whiskey Sour:",
-          correctAnswer: "Bourbon or Rye Whiskey",
-          options: ["Bourbon or Rye Whiskey", "London Dry Gin", "Blanco Tequila", "Aged Rum"],
-          hint: "Provides the barrel proof and oak tannins necessary to balance tart lemon.",
-          diagnosis: "Bourbon or rye whiskey supplies the proof and vanilla-oak structure to balance 0.75 oz lemon and rich syrup."
-        },
-        repair: {
-          type: "troubleshoot",
-          targetIndex: 1,
-          flawIngredientDisplay: "Bottled Sweet & Sour Powder Mix (FLAW)",
-          correctIngredientName: "Fresh Lemon Juice & Simple Syrup",
-          prompt: "RECIPE AUDIT: Identify the fatal flaw ruining this Whiskey Sour spec:",
-          correctAnswer: "Powdered sour mix ruins natural citrus brightness and foaming texture",
-          options: [
-            "Powdered sour mix ruins natural citrus brightness and foaming texture",
-            "Bourbon must never be combined with citrus",
-            "Egg whites must be cooked prior to mixing",
-            "Whiskey Sours must be served hot in a mug"
-          ],
-          hint: "Commercial powdered mixes introduce synthetic preservatives and chemical astringency.",
-          diagnosis: "Fresh lemon juice balanced with pure sucrose is mandatory; commercial sour powders destroy natural acidity and foam."
-        },
-        family: {
-          type: "measure",
-          targetIndex: 1,
-          prompt: "Identify the canonical acid pour in the standard 2:0.75:0.75 Sour template:",
-          correctAnswer: "0.75 oz",
-          options: ["0.75 oz", "0.25 oz", "1.25 oz", "1.5 oz"],
-          hint: "The golden sour ratio balances 2 oz spirit with equal parts acid and 2:1 sugar.",
-          diagnosis: "Standard craft sour ratio employs 0.75 oz fresh citrus to temper 2.0 oz 80-100 proof spirit."
-        }
-      }
-    },
-    {
-      id: "negroni",
-      name: "Negroni",
-      family: "Bitter / Aperitivo",
-      era: "1919 • Florence, Italy",
-      baseSpirit: "London Dry Gin",
-      glass: "Rocks",
-      ice: "Large Clear Ice Cube",
-      method: "Stir Thoroughly",
-      garnish: "Expressed Orange Peel",
-      footnote: "Equal-parts construction relying on chilling and controlled thermal dilution over dense ice.",
-      spec: [
-        { measure: "1.0 oz", name: "London Dry Gin", role: "Base Spirit" },
-        { measure: "1.0 oz", name: "Campari", role: "Bitter Aperitif" },
-        { measure: "1.0 oz", name: "Sweet Red Vermouth", role: "Fortified Modifier" }
-      ],
-      modes: {
-        classic: {
-          type: "measure",
-          targetIndex: 1,
-          prompt: "Specify the canonical pour measure for Campari in a classic Negroni:",
-          correctAnswer: "1.0 oz",
-          options: ["1.0 oz", "0.5 oz", "1.5 oz", "2.0 oz"],
-          hint: "The classic Negroni is built on strict equal-parts harmony.",
-          diagnosis: "A canonical Negroni demands equal parts (1.0 oz each) of gin, Campari, and sweet vermouth."
-        },
-        repair: {
-          type: "troubleshoot",
-          targetIndex: 1,
-          flawIngredientDisplay: "Campari 2.0 oz (FLAW)",
-          correctIngredientName: "Campari (Equal Parts 1.0 oz)",
-          prompt: "RECIPE AUDIT: Identify the flaw that breaks Negroni harmony:",
-          correctAnswer: "Over-Bitter: Campari is poured at 2.0 oz instead of 1.0 oz",
-          options: [
-            "Over-Bitter: Campari is poured at 2.0 oz instead of 1.0 oz",
-            "Base Spirit: Should use peated Scotch whisky",
-            "Service Method: Must be shaken with crushed ice",
-            "Glassware: Must be served in a Champagne flute"
-          ],
-          hint: "Look at the proportions—the aperitif overpoweringly exceeds the gin and vermouth.",
-          diagnosis: "Equal parts is essential to the Negroni. Doubling the bitter modifier masks the botanicals and destroys balance."
-        },
-        family: {
-          type: "ingredient",
-          targetIndex: 2,
-          prompt: "Which aromatized wine completes the Negroni 1:1:1 formula?",
-          correctAnswer: "Sweet Red Vermouth",
-          options: ["Sweet Red Vermouth", "Dry French Vermouth", "Fino Sherry", "Ruby Port"],
-          hint: "This Italian Torino vermouth provides sweetness and herbal bitterness.",
-          diagnosis: "Sweet red (Torino) vermouth balances the assertive gentian bitterness of Campari and the dry juniper of gin."
-        }
-      }
-    },
-    {
-      id: "old-fashioned",
-      name: "Old Fashioned",
-      family: "Old Fashioned",
-      era: "1880s • Pendennis Club / Louisville",
-      baseSpirit: "Rye or Bourbon Whiskey",
-      glass: "Rocks",
-      ice: "Large Clear Ice Cube",
-      method: "Stir Thoroughly",
-      garnish: "Expressed Orange & Brandied Cherry",
-      footnote: "The primogenitor cocktail: spirit, sugar, water (ice dilution), and aromatic bitters.",
-      spec: [
-        { measure: "2.0 oz", name: "Rye or Bourbon Whiskey", role: "Base Spirit" },
-        { measure: "1 barspoon", name: "Demerara Syrup (2:1)", role: "Sweet Modifier" },
-        { measure: "2 dashes", name: "Angostura Aromatic Bitters", role: "Bitter Accent" }
-      ],
-      modes: {
-        classic: {
-          type: "method",
-          targetIndex: -1,
-          prompt: "Specify the proper technique and service parameter for an Old Fashioned:",
-          correctAnswer: "Stir Thoroughly",
-          options: [
-            "Stir Thoroughly",
-            "Hard Shake & Fine Strain",
-            "Build in Glass & Top with Club Soda",
-            "Muddle Citrus Flesh & Flash Blend"
-          ],
-          hint: "Spirit-forward drinks without citrus juice require gentle stirring to prevent cloudiness.",
-          diagnosis: "Stirring gently incorporates cold dilution without chipping ice or introducing aerated bubbles."
-        },
-        repair: {
-          type: "troubleshoot",
-          targetIndex: 1,
-          flawIngredientDisplay: "Muddled Maraschino Cherry & Orange Slice in Pint Glass (FLAW)",
-          correctIngredientName: "Demerara Syrup & Expressed Citrus Peel",
-          prompt: "RECIPE AUDIT: Identify the Prohibition-era flaw distorting the classic Old Fashioned:",
-          correctAnswer: "Muddling fruit pulp creates an over-diluted fruit compote",
-          options: [
-            "Muddling fruit pulp creates an over-diluted fruit compote",
-            "Rye whiskey is too spicy and should be replaced by vodka",
-            "Bitters should never be used in an Old Fashioned",
-            "It must be served boiling hot in a mug"
-          ],
-          hint: "Muddling fruit slices with granulated sugar was an old trick to mask bathtub whiskey.",
-          diagnosis: "Craft practice avoids pulverizing fruit pulp into the drink. Expressing oils over the glass provides clean aroma without muddy fruit residue."
-        },
-        family: {
-          type: "ingredient",
-          targetIndex: 2,
-          prompt: "What indispensable accent bridges the whiskey and sweetener in this family?",
-          correctAnswer: "Aromatic Bitters (Angostura)",
-          options: [
-            "Aromatic Bitters (Angostura)",
-            "Heavy Whipping Cream",
-            "Fresh Lime Juice",
-            "Sparkling Mineral Water"
-          ],
-          hint: "Bitters are defined as the seasoning that makes an Old Fashioned a 'cocktail'.",
-          diagnosis: "Bitters tie together the proof of the spirit and the richness of the sugar."
-        }
-      }
-    },
-    {
-      id: "margarita",
-      name: "Margarita",
-      family: "Daisy",
-      era: "1930s • Mexican Classic",
-      baseSpirit: "Blanco Tequila (100% Agave)",
-      glass: "Coupe",
-      ice: "None / Served Up",
-      method: "Hard Shake & Double Strain",
-      garnish: "Lime Wheel & Half-Salt Rim",
-      footnote: "A classic Daisy: spirit, citrus acid, and an orange liqueur modifier.",
-      spec: [
-        { measure: "2.0 oz", name: "Blanco Tequila", role: "Base Spirit" },
-        { measure: "1.0 oz", name: "Cointreau / Orange Liqueur", role: "Orange Cordial Modifier" },
-        { measure: "0.75 oz", name: "Fresh Lime Juice", role: "Sour Element" }
-      ],
-      modes: {
-        classic: {
-          type: "ingredient",
-          targetIndex: 1,
-          prompt: "Identify the orange cordial modifier that defines the Margarita as a Daisy:",
-          correctAnswer: "Cointreau / Orange Liqueur",
-          options: ["Cointreau / Orange Liqueur", "Maraschino Liqueur", "Sweet Vermouth", "Crème de Violette"],
-          hint: "A Daisy cocktail swaps plain simple syrup for a fruit cordial or liqueur.",
-          diagnosis: "A Daisy template balances base spirit with fresh citrus and an orange liqueur like Cointreau."
-        },
-        repair: {
-          type: "troubleshoot",
-          targetIndex: 2,
-          flawIngredientDisplay: "Bottled Sweet & Sour Margarita Mix (FLAW)",
-          correctIngredientName: "Fresh Lime Juice",
-          prompt: "RECIPE AUDIT: Identify the chemical shortcut compromising this Margarita:",
-          correctAnswer: "Commercial sour mix replaces real freshly squeezed lime juice",
-          options: [
-            "Commercial sour mix replaces real freshly squeezed lime juice",
-            "Tequila must be substituted with unaged rum",
-            "Salt should never touch glassware rims",
-            "Margaritas are traditionally stirred in a beaker"
-          ],
-          hint: "The acid must originate entirely from cold-pressed fresh citrus fruit.",
-          diagnosis: "Bottled mixes introduce artificial citric acid powders and preservatives that mask agave terroir."
-        },
-        family: {
-          type: "ingredient",
-          targetIndex: 0,
-          prompt: "Which spirit provides the herbaceous, vegetal backbone of the Margarita?",
-          correctAnswer: "Blanco Tequila",
-          options: ["Blanco Tequila", "Cognac", "London Dry Gin", "White Rum"],
-          hint: "An unaged blue agave distillate from Jalisco.",
-          diagnosis: "Blanco tequila provides clean, peppery agave character that sings alongside lime and triple sec."
-        }
-      }
-    },
-    {
-      id: "dry-martini",
-      name: "Dry Martini",
-      family: "Martini",
-      era: "Turn of 20th Century • American Classic",
-      baseSpirit: "London Dry Gin",
-      glass: "Martini",
-      ice: "None (Pre-chilled Stemware)",
-      method: "Stir Thoroughly & Strain",
-      garnish: "Lemon Twist or Castelvetrano Olive",
-      footnote: "Stirring protects botanical clarity and produces a silky, crystal-clear texture without aeration.",
-      spec: [
-        { measure: "2.5 oz", name: "London Dry Gin", role: "Base Spirit" },
-        { measure: "0.5 oz", name: "Dry French Vermouth", role: "Fortified Modifier" },
-        { measure: "1 dash", name: "Orange Bitters", role: "Aromatic Accent" }
-      ],
-      modes: {
-        classic: {
-          type: "ingredient",
-          targetIndex: 1,
-          prompt: "Specify the fortified wine modifier that completes the Dry Martini:",
-          correctAnswer: "Dry French Vermouth",
-          options: ["Dry French Vermouth", "Sweet Red Vermouth", "Green Chartreuse", "Maraschino Liqueur"],
-          hint: "This dry, herbal aromatized wine softens juniper proof without adding sugar.",
-          diagnosis: "Dry French vermouth imparts herbal acidity to round out high-proof gin without cloying sweetness."
-        },
-        repair: {
-          type: "troubleshoot",
-          targetIndex: -1,
-          flawIngredientDisplay: "Violently Shaken until Frothy with Ice Shards (FLAW)",
-          correctIngredientName: "Gently Stirred to Velvety Clarity",
-          prompt: "RECIPE AUDIT: Identify the technique error on this classic Martini ticket:",
-          correctAnswer: "Shaking creates unwanted ice shards and cloudy aeration",
-          options: [
-            "Shaking creates unwanted ice shards and cloudy aeration",
-            "A Martini should never contain gin",
-            "Vermouth must be boiled in a copper pan first",
-            "The glass should be warmed under hot water"
-          ],
-          hint: "Spirit-forward cocktails without juice should remain crystal-clear and un-aerated.",
-          diagnosis: "Shaking introduces air bubbles, clouds the drink, and breaks tiny ice chips that over-dilute the palate."
-        },
-        family: {
-          type: "measure",
-          targetIndex: 1,
-          prompt: "What is the standard ratio of dry vermouth to 2.5 oz gin in a balanced 5:1 Dry Martini?",
-          correctAnswer: "0.5 oz",
-          options: ["0.5 oz", "1.5 oz", "2.0 oz", "0.0 oz (None)"],
-          hint: "5 parts gin (2.5 oz) to 1 part dry vermouth.",
-          diagnosis: "A 5:1 proportion translates to 2.5 oz gin and 0.5 oz dry vermouth."
-        }
-      }
-    },
-    {
-      id: "daiquiri",
-      name: "Daiquiri",
-      family: "Sour",
-      era: "1898 • Daiquiri, Cuba",
-      baseSpirit: "White Rum",
-      glass: "Coupe",
-      ice: "None / Served Up",
-      method: "Hard Shake & Fine Strain",
-      garnish: "Dehydrated Lime Wheel",
-      footnote: "The purest expression of the sour: sugar cane distillate, crisp lime acid, and sucrose.",
-      spec: [
-        { measure: "2.0 oz", name: "White Rum", role: "Base Spirit" },
-        { measure: "0.75 oz", name: "Fresh Lime Juice", role: "Sour Element" },
-        { measure: "0.75 oz", name: "Rich Simple Syrup (2:1)", role: "Sweet Modifier" }
-      ],
-      modes: {
-        classic: {
-          type: "ingredient",
-          targetIndex: 0,
-          prompt: "Identify the base spirit that defines the Cuban Daiquiri:",
-          correctAnswer: "White Rum",
-          options: ["White Rum", "Bourbon Whiskey", "Blanco Tequila", "Mezcal"],
-          hint: "A clean, lightly aged and charcoal-filtered sugarcane distillate.",
-          diagnosis: "White rum provides clean grassy and cane sugar notes that marry with fresh lime and sucrose."
-        },
-        repair: {
-          type: "troubleshoot",
-          targetIndex: 2,
-          flawIngredientDisplay: "Industrial Frozen Strawberry Slush Puree (FLAW)",
-          correctIngredientName: "Rich Simple Syrup (2:1)",
-          prompt: "RECIPE AUDIT: Identify the deviation from authentic Daiquiri spec:",
-          correctAnswer: "Synthetic strawberry slush replaces the classic 3-ingredient balance",
-          options: [
-            "Synthetic strawberry slush replaces the classic 3-ingredient balance",
-            "White rum should be swapped for spiced rum",
-            "Daiquiris should be served in a ceramic tiki mug",
-            "Lime juice must be heated before shaking"
-          ],
-          hint: "A true classic Daiquiri is never an electric-blender fruit slush.",
-          diagnosis: "The authentic classic Daiquiri is a shaken coupe cocktail of rum, lime, and simple syrup."
-        },
-        family: {
-          type: "measure",
-          targetIndex: 2,
-          prompt: "In a 2:0.75:0.75 Cuban Sour ratio, what measure of rich syrup balances 0.75 oz lime?",
-          correctAnswer: "0.75 oz",
-          options: ["0.75 oz", "0.25 oz", "1.5 oz", "2.0 oz"],
-          hint: "Equal parts balance with the 0.75 oz fresh lime.",
-          diagnosis: "0.75 oz of 2:1 simple syrup provides the exact density needed to balance 0.75 oz lime juice."
-        }
-      }
-    },
-    {
-      id: "tom-collins",
-      name: "Tom Collins",
-      family: "Highball / Collins",
-      era: "1870s • Jerry Thomas Classic",
-      baseSpirit: "Old Tom or London Dry Gin",
-      glass: "Collins",
-      ice: "Column Ice Spears",
-      method: "Shake Core, Strain over Ice, Top with Club Soda",
-      garnish: "Lemon Wheel & Maraschino Cherry",
-      footnote: "An elongated sour: botanical spirit, citrus, sugar, topped with effervescent carbonated water.",
-      spec: [
-        { measure: "2.0 oz", name: "Old Tom or London Dry Gin", role: "Base Spirit" },
-        { measure: "0.75 oz", name: "Fresh Lemon Juice", role: "Sour Element" },
-        { measure: "0.75 oz", name: "Simple Syrup", role: "Sweet Modifier" },
-        { measure: "2.5 oz", name: "Club Soda", role: "Effervescent Lengthener" }
-      ],
-      modes: {
-        classic: {
-          type: "ingredient",
-          targetIndex: 3,
-          prompt: "Which lengthener transforms a gin sour into a Tom Collins?",
-          correctAnswer: "Club Soda",
-          options: ["Club Soda", "Tonic Water", "Ginger Beer", "Champagne"],
-          hint: "Unflavored carbonated water provides effervescence without altering sugar balance.",
-          diagnosis: "Club soda lengthens the sour into a tall, refreshing highball without adding sweetness."
-        },
-        repair: {
-          type: "troubleshoot",
-          targetIndex: 3,
-          flawIngredientDisplay: "Club Soda Shaken Inside Sealed Tin with Ice (FLAW)",
-          correctIngredientName: "Club Soda Poured Gently as Top",
-          prompt: "RECIPE AUDIT: Identify the technique hazard on this Collins ticket:",
-          correctAnswer: "Shaking carbonated soda inside a sealed shaker causes violent pressure release",
-          options: [
-            "Shaking carbonated soda inside a sealed shaker causes violent pressure release",
-            "Gin cannot be mixed with lemon juice",
-            "Tom Collins must be served boiling warm",
-            "Lemon wheels must be caramelized"
-          ],
-          hint: "Never shake carbonated liquids inside a cocktail shaker.",
-          diagnosis: "Effervescent toppers must always be built on top after shaking the sour core, never shaken in the tin."
-        },
-        family: {
-          type: "measure",
-          targetIndex: 0,
-          prompt: "Specify the standard spirit pour for a classic Collins build:",
-          correctAnswer: "2.0 oz",
-          options: ["2.0 oz", "0.5 oz", "3.5 oz", "1.0 oz"],
-          hint: "Full base spirit pour ensures botanical presence survives soda dilution.",
-          diagnosis: "2.0 oz base spirit ensures gin botanicals remain distinct after adding club soda."
-        }
-      }
-    },
-    {
-      id: "manhattan",
-      name: "Manhattan",
-      family: "Old Fashioned",
-      era: "1870s • Manhattan Club, NYC",
-      baseSpirit: "Rye Whiskey",
-      glass: "Coupe",
-      ice: "None / Served Up",
-      method: "Stir Thoroughly & Strain",
-      garnish: "Brandied Cherry",
-      footnote: "The classic 2:1 formula: American rye whiskey balanced by Italian vermouth and aromatic bitters.",
-      spec: [
-        { measure: "2.0 oz", name: "Rye Whiskey", role: "Base Spirit" },
-        { measure: "1.0 oz", name: "Sweet Red Vermouth", role: "Fortified Modifier" },
-        { measure: "2 dashes", name: "Angostura Bitters", role: "Aromatic Accent" }
-      ],
-      modes: {
-        classic: {
-          type: "measure",
-          targetIndex: 1,
-          prompt: "Specify the classic pour of sweet vermouth in a standard 2:1 Manhattan:",
-          correctAnswer: "1.0 oz",
-          options: ["1.0 oz", "0.25 oz", "2.0 oz", "0.5 oz"],
-          hint: "Standard 2:1 rye-to-vermouth architectural ratio.",
-          diagnosis: "The canonical Manhattan formula pairs 2 parts rye (2.0 oz) with 1 part sweet vermouth (1.0 oz)."
-        },
-        repair: {
-          type: "troubleshoot",
-          targetIndex: 0,
-          flawIngredientDisplay: "Neutral Grain Vodka 2.0 oz (FLAW)",
-          correctIngredientName: "Rye Whiskey 2.0 oz",
-          prompt: "RECIPE AUDIT: Identify the base spirit flaw on this Manhattan ticket:",
-          correctAnswer: "Neutral vodka lacks the barrel oak and rye grain spice needed to carry vermouth",
-          options: [
-            "Neutral vodka lacks the barrel oak and rye grain spice needed to carry vermouth",
-            "Manhattans must only be made with dark rum",
-            "Sweet vermouth is illegal in Manhattan builds",
-            "Bitters must be omitted completely"
-          ],
-          hint: "A Manhattan requires the barrel age and spicy grain bill of American rye whiskey.",
-          diagnosis: "Rye whiskey provides the high proof and spicy tannins necessary to balance sweet vermouth."
-        },
-        family: {
-          type: "ingredient",
-          targetIndex: 1,
-          prompt: "Identify the fortified wine modifier in the standard Manhattan:",
-          correctAnswer: "Sweet Red Vermouth",
-          options: ["Sweet Red Vermouth", "Dry French Vermouth", "Triple Sec", "Apricot Brandy"],
-          hint: "An Italian Torino vermouth bringing caramel and botanical complexity.",
-          diagnosis: "Sweet red vermouth introduces herbal depth and round sucrose to temper high-proof whiskey."
-        }
-      }
-    },
-    {
-      id: "sazerac",
-      name: "Sazerac",
-      family: "Old Fashioned",
-      era: "1850s • New Orleans Classic",
-      baseSpirit: "Rye Whiskey",
-      glass: "Rocks",
-      ice: "None (Served Neat Chilled)",
-      method: "Stir Whiskey & Bitters; Strain into Absinthe-Rinsed Glass",
-      garnish: "Expressed Lemon Peel (Discarded)",
-      footnote: "The absinthe rinse lines the chilled glass with anethole aromas without overwhelming the whiskey.",
-      spec: [
-        { measure: "2.0 oz", name: "Rye Whiskey", role: "Base Spirit" },
-        { measure: "1 barspoon", name: "Demerara Syrup", role: "Sweet Modifier" },
-        { measure: "3 dashes", name: "Peychaud's Bitters", role: "Anise/Floral Bitters" },
-        { measure: "1 rinse", name: "Absinthe", role: "Aromatic Glass Rinse" }
-      ],
-      modes: {
-        classic: {
-          type: "ingredient",
-          targetIndex: 2,
-          prompt: "Which specific bitters are essential to an authentic New Orleans Sazerac?",
-          correctAnswer: "Peychaud's Bitters",
-          options: ["Peychaud's Bitters", "Orange Bitters", "Celery Bitters", "Walnut Bitters"],
-          hint: "Bright red, gentian-and-anise bitters created by Antoine Peychaud.",
-          diagnosis: "Peychaud's bitters impart bright floral anise notes and the signature ruby hue."
-        },
-        repair: {
-          type: "troubleshoot",
-          targetIndex: 3,
-          flawIngredientDisplay: "1.0 oz Absinthe Poured Directly into Shaker (FLAW)",
-          correctIngredientName: "Absinthe Glass Rinse (Discarded)",
-          prompt: "RECIPE AUDIT: Identify the severe flavor flaw in this Sazerac preparation:",
-          correctAnswer: "Excess absinthe drowns out the rye whiskey and bitters",
-          options: [
-            "Excess absinthe drowns out the rye whiskey and bitters",
-            "Sazeracs should be made with dry gin",
-            "Glass must be packed with warm tap water",
-            "Peychaud's bitters should be swapped for chocolate syrup"
-          ],
-          hint: "Absinthe should only coat the interior glass wall as an aromatic wash.",
-          diagnosis: "Absinthe has tremendous flavor intensity; pouring a full ounce overpowers the drink completely."
-        },
-        family: {
-          type: "ingredient",
-          targetIndex: 3,
-          prompt: "Which anise spirit is swirled and discarded to coat the chilled rocks glass?",
-          correctAnswer: "Absinthe",
-          options: ["Absinthe", "Chartreuse", "Campari", "Sambuca"],
-          hint: "Wormwood and fennel based spirit with high ABV and powerful aromatics.",
-          diagnosis: "An absinthe wash provides an aromatic frame without dominating the palate."
-        }
-      }
-    },
-    {
-      id: "mai-tai",
-      name: "Mai Tai",
-      family: "Daisy",
-      era: "1944 • Trader Vic, Oakland",
-      baseSpirit: "Aged Jamaican & Martinique Rums",
-      glass: "Rocks",
-      ice: "Crushed Ice",
-      method: "Short Shake & Dump onto Crushed Ice",
-      garnish: "Fresh Mint Sprig & Spent Lime Half",
-      footnote: "Created to showcase aged rum; orgeat provides rich nutty almond sweetness and mouthfeel.",
-      spec: [
-        { measure: "2.0 oz", name: "Blended Aged Rum", role: "Base Spirit" },
-        { measure: "0.5 oz", name: "Orange Curaçao", role: "Citrus Liqueur" },
-        { measure: "0.5 oz", name: "Orgeat Syrup", role: "Almond Emulsion" },
-        { measure: "0.75 oz", name: "Fresh Lime Juice", role: "Sour Element" }
-      ],
-      modes: {
-        classic: {
-          type: "ingredient",
-          targetIndex: 2,
-          prompt: "Which almond syrup emulsion gives the Mai Tai its distinctive rich mouthfeel?",
-          correctAnswer: "Orgeat Syrup",
-          options: ["Orgeat Syrup", "Grenadine", "Falernum", "Honey Syrup"],
-          hint: "A French almond, sugar, and orange flower water emulsion.",
-          diagnosis: "Orgeat supplies creamy almond sweetness and floral complexity essential to the 1944 Trader Vic formula."
-        },
-        repair: {
-          type: "troubleshoot",
-          targetIndex: 1,
-          flawIngredientDisplay: "Pineapple Juice 4.0 oz & Grenadine Float (FLAW)",
-          correctIngredientName: "Fresh Lime Juice & Orange Curaçao",
-          prompt: "RECIPE AUDIT: Identify the tourist resort corruption of the 1944 Mai Tai spec:",
-          correctAnswer: "Commercial fruit juice blend replaces the clean lime, curacao, and orgeat profile",
-          options: [
-            "Commercial fruit juice blend replaces the clean lime, curacao, and orgeat profile",
-            "Rum is never used in Polynesian drinks",
-            "Mai Tais must be served warm without ice",
-            "Mint sprig should be muddled into paste"
-          ],
-          hint: "The original Mai Tai contains zero pineapple or orange juice.",
-          diagnosis: "Adding pineapple juice and grenadine is an artificial resort shortcut that dilutes the aged rum profile."
-        },
-        family: {
-          type: "measure",
-          targetIndex: 3,
-          prompt: "What is the proper measure of fresh lime juice in a canonical 1944 Mai Tai?",
-          correctAnswer: "0.75 oz",
-          options: ["0.75 oz", "0.25 oz", "1.5 oz", "2.0 oz"],
-          hint: "Balances the combined sweetness of curaçao and orgeat.",
-          diagnosis: "0.75 oz lime juice cuts through the rich nutty syrups and proof of the aged rum."
-        }
-      }
-    },
-    {
-      id: "french-75",
-      name: "French 75",
-      family: "Highball / Collins",
-      era: "1915 • New York Bar, Paris",
-      baseSpirit: "London Dry Gin",
-      glass: "Champagne Flute",
-      ice: "None / Served Up",
-      method: "Shake Gin, Citrus, & Sugar; Strain into Flute; Top with Champagne",
-      garnish: "Long Lemon Twist",
-      footnote: "Named after the French 75mm field gun for its clean, explosive kick.",
-      spec: [
-        { measure: "1.0 oz", name: "London Dry Gin", role: "Base Spirit" },
-        { measure: "0.5 oz", name: "Fresh Lemon Juice", role: "Sour Element" },
-        { measure: "0.5 oz", name: "Simple Syrup", role: "Sweet Modifier" },
-        { measure: "3.0 oz", name: "Brut Champagne", role: "Effervescent Lengthener" }
-      ],
-      modes: {
-        classic: {
-          type: "ingredient",
-          targetIndex: 3,
-          prompt: "Which sparkling wine provides dry effervescence in a classic French 75?",
-          correctAnswer: "Brut Champagne",
-          options: ["Brut Champagne", "Sweet Asti Spumante", "Ginger Ale", "Club Soda"],
-          hint: "Dry French sparkling wine crafted via traditional bottle fermentation.",
-          diagnosis: "Brut Champagne provides dry acidity and fine carbonation that elevates the gin and citrus core."
-        },
-        repair: {
-          type: "troubleshoot",
-          targetIndex: 3,
-          flawIngredientDisplay: "Champagne Shaken Directly Inside Shaker Tin (FLAW)",
-          correctIngredientName: "Champagne Topped Gently After Straining",
-          prompt: "RECIPE AUDIT: Identify the physical technique disaster here:",
-          correctAnswer: "Shaking sparkling wine destroys bubbles and risks violent tin separation",
-          options: [
-            "Shaking sparkling wine destroys bubbles and risks violent tin separation",
-            "Gin must never touch citrus",
-            "Flute glass must be coated in salt",
-            "Syrup should be replaced with brown gravy"
-          ],
-          hint: "Effervescent ingredients should never be agitated in a sealed shaker.",
-          diagnosis: "Carbonated wine should always be topped over the chilled base to preserve effervescence and avoid messes."
-        },
-        family: {
-          type: "measure",
-          targetIndex: 0,
-          prompt: "Specify the balanced gin base measurement in a classic flute French 75:",
-          correctAnswer: "1.0 oz",
-          options: ["1.0 oz", "2.5 oz", "0.25 oz", "3.0 oz"],
-          hint: "Keeps room for 3 oz of brut champagne in a standard flute.",
-          diagnosis: "1.0 oz gin provides crisp botanical proof while leaving proper headspace for Champagne."
-        }
-      }
-    },
-    {
-      id: "aviation",
-      name: "Aviation",
-      family: "Sour",
-      era: "1916 • Hugo Ensslin Classic",
-      baseSpirit: "London Dry Gin",
-      glass: "Coupe",
-      ice: "None / Served Up",
-      method: "Hard Shake & Fine Strain",
-      garnish: "Brandied Cherry in Bottom",
-      footnote: "Crème de violette imparts an ethereal sky-blue hue and delicate floral aromatics.",
-      spec: [
-        { measure: "2.0 oz", name: "London Dry Gin", role: "Base Spirit" },
-        { measure: "0.5 oz", name: "Maraschino Liqueur", role: "Stone-Fruit Modifier" },
-        { measure: "0.25 oz", name: "Crème de Violette", role: "Floral Modifier" },
-        { measure: "0.75 oz", name: "Fresh Lemon Juice", role: "Sour Element" }
-      ],
-      modes: {
-        classic: {
-          type: "ingredient",
-          targetIndex: 2,
-          prompt: "Which botanical liqueur grants the Aviation its signature pale violet hue?",
-          correctAnswer: "Crème de Violette",
-          options: ["Crème de Violette", "Blue Curaçao", "Crème de Menthe", "Galliano"],
-          hint: "A delicate floral liqueur infused with alpine violet petals.",
-          diagnosis: "Crème de violette provides subtle floral aromatics and the sky-blue color reminiscent of dawn flight."
-        },
-        repair: {
-          type: "troubleshoot",
-          targetIndex: 2,
-          flawIngredientDisplay: "Crème de Violette 1.5 oz (FLAW)",
-          correctIngredientName: "Crème de Violette 0.25 oz (A Quarter Ounce)",
-          prompt: "RECIPE AUDIT: Identify the modifier proportion error in this ticket:",
-          correctAnswer: "Excess Crème de Violette creates a soapy, potpourri-like profile",
-          options: [
-            "Excess Crème de Violette creates a soapy, potpourri-like profile",
-            "Gin must be substituted with scotch",
-            "Aviation cocktails should be served over crushed ice",
-            "Lemon juice should be boiled with cloves"
-          ],
-          hint: "Violette is exceptionally potent and must be metered in dashes or a quarter ounce.",
-          diagnosis: "More than a quarter ounce of violette completely overwhelms the gin botanicals with soapy floral tones."
-        },
-        family: {
-          type: "ingredient",
-          targetIndex: 1,
-          prompt: "Which cherry cordial imparts earthy, herbal stone-fruit dryness?",
-          correctAnswer: "Maraschino Liqueur",
-          options: ["Maraschino Liqueur", "Cherry Heering", "Grenadine", "Amaretto"],
-          hint: "Distilled from sour Marasca cherries, including their crushed pits.",
-          diagnosis: "Maraschino liqueur provides bone-dry herbal cherry and nutty pit flavors that bridge gin and citrus."
-        }
-      }
-    },
-    {
-      id: "last-word",
-      name: "The Last Word",
-      family: "Sour",
-      era: "1920s • Detroit Athletic Club",
-      baseSpirit: "London Dry Gin",
-      glass: "Nick & Nora",
-      ice: "None / Served Up",
-      method: "Hard Shake & Double Strain",
-      garnish: "Brandied Cherry",
-      footnote: "A legendary 1:1:1:1 formula rediscovery by Murray Stenson at Seattle's Zig Zag Café.",
-      spec: [
-        { measure: "0.75 oz", name: "London Dry Gin", role: "Base Spirit" },
-        { measure: "0.75 oz", name: "Green Chartreuse", role: "Herbal Modifier" },
-        { measure: "0.75 oz", name: "Maraschino Liqueur", role: "Stone-Fruit Modifier" },
-        { measure: "0.75 oz", name: "Fresh Lime Juice", role: "Sour Element" }
-      ],
-      modes: {
-        classic: {
-          type: "ingredient",
-          targetIndex: 1,
-          prompt: "Which 110-proof French herbal liqueur defines The Last Word?",
-          correctAnswer: "Green Chartreuse",
-          options: ["Green Chartreuse", "Yellow Chartreuse", "Bénédictine", "Absinthe"],
-          hint: "Monastic liqueur macerated with 130 botanicals.",
-          diagnosis: "Green Chartreuse contributes 55% ABV proof and intense alpine herbal notes."
-        },
-        repair: {
-          type: "troubleshoot",
-          targetIndex: 3,
-          flawIngredientDisplay: "Fresh Lemon Juice 1.5 oz (FLAW)",
-          correctIngredientName: "Fresh Lime Juice 0.75 oz (Equal Parts)",
-          prompt: "RECIPE AUDIT: Identify the formula deviation breaking this drink:",
-          correctAnswer: "Incorrect citrus type and doubled volume breaks the 1:1:1:1 harmony",
-          options: [
-            "Incorrect citrus type and doubled volume breaks the 1:1:1:1 harmony",
-            "Maraschino should be swapped for maple syrup",
-            "Green Chartreuse must be boiled first",
-            "Last Word drinks must be topped with ginger beer"
-          ],
-          hint: "The Last Word is strictly equal parts (0.75 oz each) and uses lime, not lemon.",
-          diagnosis: "Equal parts lime juice is required; lemon changes the acid profile, and doubling it overpowers the spirits."
-        },
-        family: {
-          type: "measure",
-          targetIndex: 0,
-          prompt: "What is the equal pour measure for all 4 ingredients in The Last Word?",
-          correctAnswer: "0.75 oz",
-          options: ["0.75 oz", "1.5 oz", "0.25 oz", "1.25 oz"],
-          hint: "Classic four-part harmony yields a 3.0 oz pre-shake volume.",
-          diagnosis: "Four equal parts of 0.75 oz create the ideal balance between proof, acid, and herbal sugars."
-        }
-      }
-    },
-    {
-      id: "corpse-reviver-no-2",
-      name: "Corpse Reviver No. 2",
-      family: "Sour",
-      era: "1930 • Harry Craddock, Savoy Hotel",
-      baseSpirit: "London Dry Gin",
-      glass: "Coupe",
-      ice: "None / Served Up",
-      method: "Shake Hard & Strain into Absinthe-Rinsed Glass",
-      garnish: "Lemon Twist",
-      footnote: "'Four of these taken in swift succession will un-revive the corpse again.'",
-      spec: [
-        { measure: "0.75 oz", name: "London Dry Gin", role: "Base Spirit" },
-        { measure: "0.75 oz", name: "Cointreau", role: "Orange Modifier" },
-        { measure: "0.75 oz", name: "Lillet Blanc / Cocchi Americano", role: "Aromatized Wine" },
-        { measure: "0.75 oz", name: "Fresh Lemon Juice", role: "Sour Element" },
-        { measure: "1 rinse", name: "Absinthe", role: "Aromatic Accent" }
-      ],
-      modes: {
-        classic: {
-          type: "ingredient",
-          targetIndex: 2,
-          prompt: "Which quinquina/aromatized wine modifier balances the citrus in this recipe?",
-          correctAnswer: "Lillet Blanc / Cocchi Americano",
-          options: ["Lillet Blanc / Cocchi Americano", "Dry Vermouth", "Sweet Vermouth", "Dubonnet Rouge"],
-          hint: "Originally called for Kina Lillet; Cocchi Americano preserves the original cinchona bitterness.",
-          diagnosis: "Lillet Blanc or Cocchi Americano rounds out the sharp citrus with herbal wine sweetness and gentle cinchona bark bitterness."
-        },
-        repair: {
-          type: "troubleshoot",
-          targetIndex: 4,
-          flawIngredientDisplay: "1.0 oz Absinthe Poured in Shaker Tin (FLAW)",
-          correctIngredientName: "Absinthe Glass Rinse (Discarded)",
-          prompt: "RECIPE AUDIT: Identify the execution flaw on this Corpse Reviver ticket:",
-          correctAnswer: "Absinthe should only coat the glass, not drown the equal-parts sour core",
-          options: [
-            "Absinthe should only coat the glass, not drown the equal-parts sour core",
-            "Gin should be swapped for heavy stout beer",
-            "Cointreau is forbidden in classic European recipes",
-            "Glass must be packed with crushed sea salt"
-          ],
-          hint: "Absinthe is intended strictly as an aromatic rinse on the coupe walls.",
-          diagnosis: "Pouring a full ounce of absinthe inside the tin destroys the delicate 1:1:1:1 balance."
-        },
-        family: {
-          type: "measure",
-          targetIndex: 3,
-          prompt: "Specify the lemon juice pour in this classic equal-parts recipe:",
-          correctAnswer: "0.75 oz",
-          options: ["0.75 oz", "1.5 oz", "0.25 oz", "1.0 oz"],
-          hint: "Equal parts with the gin, Cointreau, and aromatized wine.",
-          diagnosis: "0.75 oz of lemon juice perfectly cuts through the Cointreau and wine modifier."
-        }
-      }
-    },
-    {
-      id: "mint-julep",
-      name: "Mint Julep",
-      family: "Old Fashioned",
-      era: "Early 1800s • American South",
-      baseSpirit: "Kentucky Bourbon Whiskey",
-      glass: "Julep Cup",
-      ice: "Pebble or Crushed Ice Mound",
-      method: "Gently Press Mint in Syrup, Add Bourbon, Churn with Crushed Ice",
-      garnish: "Abundant Fresh Mint Bouquet & Powdered Sugar",
-      footnote: "Metallic cup conducts cold rapidly, forming an exterior frost coat that locks in temperature.",
-      spec: [
-        { measure: "2.5 oz", name: "Kentucky Straight Bourbon", role: "Base Spirit" },
-        { measure: "0.5 oz", name: "Rich Turbinado Syrup (2:1)", role: "Sweet Modifier" },
-        { measure: "8-10 leaves", name: "Fresh Spearmint", role: "Aromatic Herb" }
-      ],
-      modes: {
-        classic: {
-          type: "method",
-          targetIndex: -1,
-          prompt: "What is the proper treatment of mint leaves when building a Julep?",
-          correctAnswer: "Gently press mint to express oils without shredding or bruising stems",
-          options: [
-            "Gently press mint to express oils without shredding or bruising stems",
-            "Muddle mint aggressively into fine shreds",
-            "Boil mint in bourbon over high heat",
-            "Puree mint in an electric blender with ice"
-          ],
-          hint: "Aggressive muddling tears the plant cell walls and releases bitter chlorophyll.",
-          diagnosis: "Pressing the leaves extracts aromatic essential oils from surface veins without releasing astringent chlorophyll."
-        },
-        repair: {
-          type: "troubleshoot",
-          targetIndex: 0,
-          flawIngredientDisplay: "London Dry Gin 2.5 oz (FLAW)",
-          correctIngredientName: "Kentucky Straight Bourbon 2.5 oz",
-          prompt: "RECIPE AUDIT: Identify the base spirit failure in this Southern classic:",
-          correctAnswer: "Bourbon whiskey is the canonical foundation of the Kentucky Mint Julep",
-          options: [
-            "Bourbon whiskey is the canonical foundation of the Kentucky Mint Julep",
-            "Mint must be substituted with oregano",
-            "A Julep must be served in a warm ceramic mug",
-            "Turbinado syrup must be substituted with honey"
-          ],
-          hint: "Think Churchill Downs and the Kentucky Derby.",
-          diagnosis: "The Mint Julep is historically rooted in rich, oaky Kentucky straight bourbon."
-        },
-        family: {
-          type: "ingredient",
-          targetIndex: 1,
-          prompt: "Which raw sugar syrup pairs best with bourbon's barrel oak profile?",
-          correctAnswer: "Rich Turbinado / Demerara Syrup",
-          options: ["Rich Turbinado / Demerara Syrup", "Grenadine", "Agave Nectar", "Raspberry Syrup"],
-          hint: "Unrefined cane sugar with high molasses content.",
-          diagnosis: "Turbinado or demerara syrups offer molasses depth that amplifies bourbon char and caramel."
-        }
-      }
-    },
-    {
-      id: "gimlet",
-      name: "Gimlet",
-      family: "Sour",
-      era: "1920s • Royal Navy Classic",
-      baseSpirit: "London Dry Gin or Navy Strength Gin",
-      glass: "Coupe",
-      ice: "None / Served Up",
-      method: "Hard Shake & Fine Strain",
-      garnish: "Lime Wheel",
-      footnote: "Historically concocted with lime cordial to prevent scurvy among British sailors.",
-      spec: [
-        { measure: "2.0 oz", name: "London Dry Gin", role: "Base Spirit" },
-        { measure: "0.75 oz", name: "Fresh Lime Juice", role: "Sour Element" },
-        { measure: "0.75 oz", name: "Rich Simple Syrup", role: "Sweet Modifier" }
-      ],
-      modes: {
-        classic: {
-          type: "ingredient",
-          targetIndex: 0,
-          prompt: "Specify the botanical spirit grounding the classic naval Gimlet:",
-          correctAnswer: "London Dry Gin",
-          options: ["London Dry Gin", "Bourbon Whiskey", "Tequila Blanco", "Dark Rum"],
-          hint: "Juniper-led spirit historically rationed in the British Royal Navy.",
-          diagnosis: "London Dry Gin provides the sharp pine and coriander spice that cuts through the sweetened lime juice."
-        },
-        repair: {
-          type: "troubleshoot",
-          targetIndex: 1,
-          flawIngredientDisplay: "Bottled Commercial Preserved Lime Cordial (FLAW)",
-          correctIngredientName: "Fresh Lime Juice & Rich Simple Syrup",
-          prompt: "RECIPE AUDIT: Identify the flaw common in historic Gimlet specs:",
-          correctAnswer: "Old-style artificial preserved cordial delivers a flat, cloying sweetness",
-          options: [
-            "Old-style artificial preserved cordial delivers a flat, cloying sweetness",
-            "Gin must be replaced with vodka",
-            "Drink must be stirred in a copper vessel",
-            "Gimlets must be topped with soda water"
-          ],
-          hint: "Modern craft bartending prefers fresh lime juice and syrup over preserved cordial.",
-          diagnosis: "Commercial shelf-stable cordial contains high-fructose corn syrup and artificial preservatives; fresh lime ensures crisp balance."
-        },
-        family: {
-          type: "measure",
-          targetIndex: 1,
-          prompt: "In a balanced craft Gimlet, what measure of lime juice balances 0.75 oz simple syrup?",
-          correctAnswer: "0.75 oz",
-          options: ["0.75 oz", "0.25 oz", "1.5 oz", "2.0 oz"],
-          hint: "Equal parts balance against the sweet syrup.",
-          diagnosis: "A 2:0.75:0.75 sour balance prevents the gin from tasting overly sharp or overly sugary."
-        }
-      }
-    },
-    {
-      id: "sidecar",
-      name: "Sidecar",
-      family: "Daisy",
-      era: "1920s • Ritz Hotel, Paris",
-      baseSpirit: "Cognac / French Brandy",
-      glass: "Coupe",
-      ice: "None / Served Up",
-      method: "Shake Hard & Double Strain",
-      garnish: "Orange Peel & Optional Sugared Rim",
-      footnote: "The definitive brandy sour: grape brandy elevated with triple sec and fresh lemon.",
-      spec: [
-        { measure: "2.0 oz", name: "Cognac or Armagnac", role: "Base Spirit" },
-        { measure: "0.75 oz", name: "Cointreau / Triple Sec", role: "Orange Liqueur Modifier" },
-        { measure: "0.75 oz", name: "Fresh Lemon Juice", role: "Sour Element" }
-      ],
-      modes: {
-        classic: {
-          type: "ingredient",
-          targetIndex: 0,
-          prompt: "Which French oak-aged grape spirit anchors the classic Sidecar?",
-          correctAnswer: "Cognac or Armagnac",
-          options: ["Cognac or Armagnac", "London Dry Gin", "White Rum", "Bourbon Whiskey"],
-          hint: "Distilled wine aged in French Limousin oak casks.",
-          diagnosis: "Cognac provides rich dried fruit, spice, and wood tones that bridge with citrus."
-        },
-        repair: {
-          type: "troubleshoot",
-          targetIndex: 2,
-          flawIngredientDisplay: "Fresh Grapefruit Juice 2.0 oz (FLAW)",
-          correctIngredientName: "Fresh Lemon Juice 0.75 oz",
-          prompt: "RECIPE AUDIT: Identify the acid component error:",
-          correctAnswer: "Grapefruit juice lacks the acidity required to balance orange liqueur",
-          options: [
-            "Grapefruit juice lacks the acidity required to balance orange liqueur",
-            "Cognac must never be shaken with citrus",
-            "Sidecars must be served warm in an Irish Coffee mug",
-            "Cointreau should be swapped for crème de menthe"
-          ],
-          hint: "Sidecars require the sharp citric acid profile of fresh lemons.",
-          diagnosis: "Grapefruit has insufficient citric acid to cut through the proof and sugar of Cointreau and brandy; lemon is required."
-        },
-        family: {
-          type: "ingredient",
-          targetIndex: 1,
-          prompt: "Which orange modifier defines the Sidecar within the Daisy template?",
-          correctAnswer: "Cointreau / Triple Sec",
-          options: ["Cointreau / Triple Sec", "Maraschino Liqueur", "Sweet Vermouth", "Campari"],
-          hint: "A dry, clear orange peel liqueur.",
-          diagnosis: "Triple sec or Cointreau provides sweet citrus oils that sweeten the brandy without muddying color."
-        }
-      }
-    },
-    {
-      id: "boulevardier",
-      name: "Boulevardier",
-      family: "Bitter / Aperitivo",
-      era: "1927 • Erskine Gwynne, Paris",
-      baseSpirit: "Bourbon or Rye Whiskey",
-      glass: "Rocks",
-      ice: "Large Clear Ice Cube",
-      method: "Stir Thoroughly & Strain",
-      garnish: "Expressed Orange Peel",
-      footnote: "The whiskey-lover's Negroni: swaps gin for American whiskey, offering rounder vanilla-oak warmth.",
-      spec: [
-        { measure: "1.25 oz", name: "Bourbon or Rye Whiskey", role: "Base Spirit" },
-        { measure: "1.0 oz", name: "Campari", role: "Bitter Aperitif" },
-        { measure: "1.0 oz", name: "Sweet Red Vermouth", role: "Fortified Modifier" }
-      ],
-      modes: {
-        classic: {
-          type: "ingredient",
-          targetIndex: 0,
-          prompt: "Which spirit replaces gin to turn a Negroni into a Boulevardier?",
-          correctAnswer: "Bourbon or Rye Whiskey",
-          options: ["Bourbon or Rye Whiskey", "Blanco Tequila", "Dark Rum", "Apple Brandy"],
-          hint: "American whiskey aged in charred new oak containers.",
-          diagnosis: "Whiskey introduces vanilla, oak char, and caramel that warm up the bitter gentian notes of Campari."
-        },
-        repair: {
-          type: "troubleshoot",
-          targetIndex: -1,
-          flawIngredientDisplay: "Hard Shaken with Crushed Ice in Pint Glass (FLAW)",
-          correctIngredientName: "Stirred Gently with Dense Ice Cube",
-          prompt: "RECIPE AUDIT: Identify the technique error destroying drink texture:",
-          correctAnswer: "Shaking spirits and aromatized wines creates cloudy aeration and over-dilution",
-          options: [
-            "Shaking spirits and aromatized wines creates cloudy aeration and over-dilution",
-            "Bourbon should never touch Campari",
-            "Sweet vermouth must be distilled twice before service",
-            "Drink must be served boiling hot"
-          ],
-          hint: "Drinks composed entirely of spirits, bitters, and wines should be stirred.",
-          diagnosis: "Stirring produces a dense, glossy texture and prevents rapid melting of ice shards."
-        },
-        family: {
-          type: "ingredient",
-          targetIndex: 1,
-          prompt: "Which Italian amaro provides the red hue and bitter gentian profile?",
-          correctAnswer: "Campari",
-          options: ["Campari", "Aperol", "Fernet Branca", "Cynar"],
-          hint: "Vibrant red Italian aperitivo with notes of bitter orange and gentian.",
-          diagnosis: "Campari's crisp bitterness cuts through sweet vermouth and high-proof whiskey."
-        }
-      }
-    },
-    {
-      id: "clover-club",
-      name: "Clover Club",
-      family: "Sour",
-      era: "1890s • Bellevue-Stratford Hotel, Philadelphia",
-      baseSpirit: "London Dry Gin",
-      glass: "Coupe",
-      ice: "None / Served Up",
-      method: "Dry Shake, then Shake Hard with Ice & Double Strain",
-      garnish: "Fresh Raspberries or Lemon Twist",
-      footnote: "Named after the Philadelphia men's club; raspberry syrup provides fruit acids and vibrant pink tint.",
-      spec: [
-        { measure: "2.0 oz", name: "London Dry Gin", role: "Base Spirit" },
-        { measure: "0.5 oz", name: "Raspberry Syrup", role: "Fruit/Sweet Modifier" },
-        { measure: "0.5 oz", name: "Fresh Lemon Juice", role: "Sour Element" },
-        { measure: "0.5 oz", name: "Dry Vermouth", role: "Wine Modifier" },
-        { measure: "1 dash", name: "Egg White", role: "Textural Agent" }
-      ],
-      modes: {
-        classic: {
-          type: "ingredient",
-          targetIndex: 1,
-          prompt: "Which fruit syrup creates the signature pink color and tart berry profile?",
-          correctAnswer: "Raspberry Syrup",
-          options: ["Raspberry Syrup", "Grenadine", "Blackberry Liqueur", "Strawberry Puree"],
-          hint: "Macerated fresh red raspberries with pure cane sugar.",
-          diagnosis: "Raspberry syrup delivers vibrant natural acid, berry aroma, and pastel pink foam."
-        },
-        repair: {
-          type: "troubleshoot",
-          targetIndex: 4,
-          flawIngredientDisplay: "Egg White Omitted & Shaken Without Emulsification (FLAW)",
-          correctIngredientName: "Egg White Added and Dry Shaken",
-          prompt: "RECIPE AUDIT: Identify the textural failure in this Clover Club:",
-          correctAnswer: "Omitting the egg white eliminates the velvety, meringue head",
-          options: [
-            "Omitting the egg white eliminates the velvety, meringue head",
-            "Gin must be swapped for peated Scotch",
-            "Dry vermouth must be boiled with cinnamon",
-            "Glass rim must be encrusted with coarse black pepper"
-          ],
-          hint: "A Clover Club is defined by its thick, cloud-like foam crown.",
-          diagnosis: "Egg white provides albumen proteins that trap air microbubbles, creating a dense, silky foam head."
-        },
-        family: {
-          type: "ingredient",
-          targetIndex: 3,
-          prompt: "Which dry aromatized wine is included in historic Clover Club recipes to dry out the palate?",
-          correctAnswer: "Dry Vermouth",
-          options: ["Dry Vermouth", "Sweet Vermouth", "Port Wine", "Marsala"],
-          hint: "French style pale vermouth.",
-          diagnosis: "Dry vermouth tempers the sweetness of the raspberry syrup and keeps the gin botanicals bright."
-        }
-      }
-    },
-    {
-      id: "moscow-mule",
-      name: "Moscow Mule",
-      family: "Highball / Collins",
-      era: "1941 • Cock 'n Bull / Smirnoff, Hollywood",
-      baseSpirit: "Vodka",
-      glass: "Julep Cup",
-      ice: "Crushed Ice",
-      method: "Build over Ice in Copper Mug, Stir Gently",
-      garnish: "Lime Wheel & Fresh Mint Sprig",
-      footnote: "The cocktail that introduced vodka to mid-century America; copper cup rapidly creates a frosty rim.",
-      spec: [
-        { measure: "2.0 oz", name: "Vodka", role: "Base Spirit" },
-        { measure: "0.5 oz", name: "Fresh Lime Juice", role: "Sour Element" },
-        { measure: "4.0 oz", name: "Spicy Ginger Beer", role: "Spicy Lengthener" }
-      ],
-      modes: {
-        classic: {
-          type: "ingredient",
-          targetIndex: 2,
-          prompt: "Which effervescent lengthener provides the pungent kick in a Mule?",
-          correctAnswer: "Spicy Ginger Beer",
-          options: ["Spicy Ginger Beer", "Ginger Ale", "Club Soda", "Tonic Water"],
-          hint: "Brewed, spicy, fermented or carbonated ginger soda.",
-          diagnosis: "Ginger beer contains real ginger root heat, which cuts through citrus and alcohol."
-        },
-        repair: {
-          type: "troubleshoot",
-          targetIndex: 2,
-          flawIngredientDisplay: "Sweet Ginger Ale (FLAW)",
-          correctIngredientName: "Spicy Craft Ginger Beer",
-          prompt: "RECIPE AUDIT: Identify the common soda gun substitution flaw:",
-          correctAnswer: "Ginger ale is too sweet and lacks the fiery bite of brewed ginger beer",
-          options: [
-            "Ginger ale is too sweet and lacks the fiery bite of brewed ginger beer",
-            "Vodka should be swapped for smoky mezcal",
-            "Mules should only be served warm",
-            "Lime juice must be heated"
-          ],
-          hint: "Ginger ale produces a watery, overly sweet profile without heat.",
-          diagnosis: "Ginger beer supplies cloudy, peppery capsicum/gingerol heat necessary to balance the lime."
-        },
-        family: {
-          type: "ingredient",
-          targetIndex: 0,
-          prompt: "What spirit family was popularized in the USA through the creation of the Mule?",
-          correctAnswer: "Vodka",
-          options: ["Vodka", "Bourbon", "Gin", "Tequila"],
-          hint: "Neutral grain spirit heavily promoted by Smirnoff in the 1940s.",
-          diagnosis: "The Moscow Mule was explicitly engineered to move cases of Smirnoff vodka in California."
-        }
-      }
-    },
-    {
-      id: "dark-n-stormy",
-      name: "Dark 'n Stormy",
-      family: "Highball / Collins",
-      era: "Post-WWI • Bermuda",
-      baseSpirit: "Goslings Black Seal Rum",
-      glass: "Highball",
-      ice: "Rocks",
-      method: "Build Ginger Beer & Lime over Ice, Float Dark Rum on Top",
-      garnish: "Lime Wheel",
-      footnote: "Goslings owns the trademark; the dense, molasses-heavy dark rum floats like a storm cloud atop ginger beer.",
-      spec: [
-        { measure: "2.0 oz", name: "Goslings Black Seal Rum", role: "Base Spirit (Float)" },
-        { measure: "0.5 oz", name: "Fresh Lime Juice", role: "Sour Element" },
-        { measure: "4.0 oz", name: "Ginger Beer", role: "Spicy Lengthener" }
-      ],
-      modes: {
-        classic: {
-          type: "ingredient",
-          targetIndex: 0,
-          prompt: "Which trademarked Bermudian black rum is canonically required for a Dark 'n Stormy?",
-          correctAnswer: "Goslings Black Seal Rum",
-          options: ["Goslings Black Seal Rum", "White Overproof Rum", "Spiced Rum", "Agave Reposado"],
-          hint: "Molasses-heavy, dark Bermudian rum.",
-          diagnosis: "Goslings Black Seal provides the distinctive treacle, caramel, and molasses profile that defines the drink."
-        },
-        repair: {
-          type: "troubleshoot",
-          targetIndex: 0,
-          flawIngredientDisplay: "Clear Light Rum Stirred In (FLAW)",
-          correctIngredientName: "Black Seal Rum Floated on Top",
-          prompt: "RECIPE AUDIT: Identify the visual and textural failure:",
-          correctAnswer: "Light rum destroys both the molasses spice profile and the stormy cloud visual",
-          options: [
-            "Light rum destroys both the molasses spice profile and the stormy cloud visual",
-            "Ginger beer should be replaced with milk",
-            "Lime should never be served with rum",
-            "Cocktail must be blended with crushed nuts"
-          ],
-          hint: "The cocktail requires dark rum floated on top to emulate a storm cloud over turbulent seas.",
-          diagnosis: "Light rum lacks the density and dark molasses weight needed to float atop ginger beer and create the cloud effect."
-        },
-        family: {
-          type: "method",
-          targetIndex: -1,
-          prompt: "How is the rum added to create the signature stormy appearance?",
-          correctAnswer: "Gently floated on top of the ginger beer",
-          options: [
-            "Gently floated on top of the ginger beer",
-            "Vigorously shaken in a tin",
-            "Boiled in a copper pan",
-            "Whisked with an electric mixer"
-          ],
-          hint: "Poured carefully over a barspoon so it rests on surface density.",
-          diagnosis: "Floating the dark rum on top creates the dramatic visual division between pale ginger beer and dark rum."
-        }
-      }
-    },
-    {
-      id: "espresso-martini",
-      name: "Espresso Martini",
-      family: "Martini",
-      era: "1983 • Dick Bradsell, London",
-      baseSpirit: "Vodka",
-      glass: "Coupe",
-      ice: "None / Served Up",
-      method: "Violent Hard Shake with Ice & Double Strain",
-      garnish: "Three Espresso Beans (Health, Wealth, Happiness)",
-      footnote: "Requires freshly pulled hot espresso; temperature contrast and oils produce a dense crema foam head.",
-      spec: [
-        { measure: "1.5 oz", name: "Vodka", role: "Base Spirit" },
-        { measure: "1.0 oz", name: "Fresh Hot Espresso", role: "Coffee Foundation" },
-        { measure: "0.75 oz", name: "Coffee Liqueur", role: "Sweet Modifier" },
-        { measure: "0.25 oz", name: "Rich Simple Syrup", role: "Sweet Balance" }
-      ],
-      modes: {
-        classic: {
-          type: "ingredient",
-          targetIndex: 1,
-          prompt: "What form of coffee is required to achieve the signature dense crema foam?",
-          correctAnswer: "Fresh Hot Espresso",
-          options: ["Fresh Hot Espresso", "Cold Drip Coffee", "Instant Powder Water", "Decaf Filter Coffee"],
-          hint: "Freshly pulled with pressurized hot water, rich in emulsified coffee oils.",
-          diagnosis: "Fresh espresso oils emulsify under hard shaking with ice to create the rich crema foam layer."
-        },
-        repair: {
-          type: "troubleshoot",
-          targetIndex: -1,
-          flawIngredientDisplay: "Stirred Gently in Beaker and Strained Flat (FLAW)",
-          correctIngredientName: "Violently Shaken to Form Thick Crema Head",
-          prompt: "RECIPE AUDIT: Identify the technique error on this ticket:",
-          correctAnswer: "Stirring fails to aerate coffee lipids, leaving the cocktail flat and lifeless",
-          options: [
-            "Stirring fails to aerate coffee lipids, leaving the cocktail flat and lifeless",
-            "Vodka must be swapped for absinthe",
-            "Coffee beans should be crushed into coarse gravel inside glass",
-            "Drink must be served in a ceramic coffee mug"
-          ],
-          hint: "An Espresso Martini demands a thick, pale brown crema layer.",
-          diagnosis: "Violent aeration during the shake is mandatory to whip the coffee oils and syrup into a tight foam crown."
-        },
-        family: {
-          type: "ingredient",
-          targetIndex: 2,
-          prompt: "Which modifier reinforces roasted coffee notes while contributing sweetness?",
-          correctAnswer: "Coffee Liqueur",
-          options: ["Coffee Liqueur", "Triple Sec", "Blue Curaçao", "Crème de Menthe"],
-          hint: "Liqueur made with rum or neutral spirit macerated with roasted coffee beans.",
-          diagnosis: "Coffee liqueur provides sweetness and rich roasted bean flavors to round out espresso acidity."
-        }
-      }
-    },
-    {
-      id: "bramble",
-      name: "Bramble",
-      family: "Sour",
-      era: "1984 • Dick Bradsell, Fred's Club, London",
-      baseSpirit: "London Dry Gin",
-      glass: "Rocks",
-      ice: "Mounded Crushed Ice",
-      method: "Shake Gin, Lemon, Syrup; Strain over Crushed Ice; Bleed Mûre Over Top",
-      garnish: "Fresh Blackberry & Lemon Half-Wheel",
-      footnote: "Bleeding the dark blackberry liqueur over crushed ice creates a stunning gradient effect resembling a bramble bush.",
-      spec: [
-        { measure: "2.0 oz", name: "London Dry Gin", role: "Base Spirit" },
-        { measure: "0.75 oz", name: "Fresh Lemon Juice", role: "Sour Element" },
-        { measure: "0.5 oz", name: "Simple Syrup", role: "Sweet Modifier" },
-        { measure: "0.5 oz", name: "Crème de Mûre", role: "Blackberry Float" }
-      ],
-      modes: {
-        classic: {
-          type: "ingredient",
-          targetIndex: 3,
-          prompt: "Which French fruit liqueur is drizzled over crushed ice to crown the Bramble?",
-          correctAnswer: "Crème de Mûre",
-          options: ["Crème de Mûre", "Crème de Cassis", "Chambord", "Grenadine"],
-          hint: "A rich, dark French blackberry liqueur.",
-          diagnosis: "Crème de Mûre introduces rich tart-sweet blackberry aromatics that bleed through the sour ice mound."
-        },
-        repair: {
-          type: "troubleshoot",
-          targetIndex: 3,
-          flawIngredientDisplay: "Crème de Mûre Shaken Inside Tin with Lemon and Gin (FLAW)",
-          correctIngredientName: "Crème de Mûre Drizzled Over Packed Crushed Ice",
-          prompt: "RECIPE AUDIT: Identify the presentation flaw on this Bramble ticket:",
-          correctAnswer: "Shaking the mûre inside the tin destroys the signature bleeding gradient effect",
-          options: [
-            "Shaking the mûre inside the tin destroys the signature bleeding gradient effect",
-            "Gin must be replaced with tequila",
-            "Drink must be served completely hot",
-            "Crushed ice should be replaced with warm tap water"
-          ],
-          hint: "The dark blackberry liqueur must cascade slowly down from the peak of the crushed ice.",
-          diagnosis: "Bleeding the blackberry liqueur over crushed ice gives the cocktail its distinctive ombre visual."
-        },
-        family: {
-          type: "ingredient",
-          targetIndex: 0,
-          prompt: "Which spirit style forms the crisp botanical base of the Bramble?",
-          correctAnswer: "London Dry Gin",
-          options: ["London Dry Gin", "Bourbon Whiskey", "White Rum", "Mezcal"],
-          hint: "Juniper-rich spirit that balances berry and citrus.",
-          diagnosis: "London Dry Gin delivers crisp pine and citrus botanical notes that frame the blackberry cordial."
-        }
-      }
-    },
-    {
-      id: "penicillin",
-      name: "Penicillin",
-      family: "Sour",
-      era: "2005 • Sam Ross, Milk & Honey, NYC",
-      baseSpirit: "Blended Scotch Whisky",
-      glass: "Rocks",
-      ice: "Large Clear Ice Cube",
-      method: "Shake Blended Scotch, Lemon, Honey-Ginger; Strain; Float Peated Scotch",
-      garnish: "Candied Ginger Slice",
-      footnote: "Honey-ginger syrup provides spicy soothing sweetness; peated Islay Scotch float delivers an aromatic smoke bomb.",
-      spec: [
-        { measure: "2.0 oz", name: "Blended Scotch Whisky", role: "Base Spirit" },
-        { measure: "0.75 oz", name: "Fresh Lemon Juice", role: "Sour Element" },
-        { measure: "0.75 oz", name: "Honey-Ginger Syrup (3:1)", role: "Sweet & Spicy Modifier" },
-        { measure: "0.25 oz", name: "Peated Islay Single Malt Scotch", role: "Aromatic Float" }
-      ],
-      modes: {
-        classic: {
-          type: "ingredient",
-          targetIndex: 3,
-          prompt: "Which whisky style is floated on top to give the Penicillin its smoky aroma?",
-          correctAnswer: "Peated Islay Single Malt Scotch",
-          options: ["Peated Islay Single Malt Scotch", "Bourbon Whiskey", "Irish Grain Whiskey", "Canadian Rye"],
-          hint: "Heavily smoked Scottish single malt malted over peat fires.",
-          diagnosis: "Peated Islay Scotch delivers medicinal, iodine smoke aromas on the nose before each sip."
-        },
-        repair: {
-          type: "troubleshoot",
-          targetIndex: 2,
-          flawIngredientDisplay: "Refined White Sugar Syrup (FLAW)",
-          correctIngredientName: "Spicy Fresh Ginger-Honey Syrup",
-          prompt: "RECIPE AUDIT: Identify the flavor shortcut weakening this Penicillin:",
-          correctAnswer: "Plain sugar syrup lacks the vital ginger heat and floral wildflower honey depth",
-          options: [
-            "Plain sugar syrup lacks the vital ginger heat and floral wildflower honey depth",
-            "Scotch must be substituted with light vodka",
-            "Lemon juice should be boiled with mint",
-            "Drink must be built warm in a teacup"
-          ],
-          hint: "Penicillin requires the medicinal warmth of fresh ginger root juice combined with honey.",
-          diagnosis: "Honey-ginger syrup is essential; plain simple syrup leaves the cocktail flat and removes its core personality."
-        },
-        family: {
-          type: "measure",
-          targetIndex: 3,
-          prompt: "Specify the float volume of smoky peated whisky needed on the surface:",
-          correctAnswer: "0.25 oz",
-          options: ["0.25 oz", "1.5 oz", "2.0 oz", "0.0 oz (Omit)"],
-          hint: "A gentle barspoon-drizzle float to coat the top.",
-          diagnosis: "A 0.25 oz float delivers maximum smoky aromatics without overpowering the palate."
-        }
-      }
-    },
-    {
-      id: "ramos-gin-fizz",
-      name: "Ramos Gin Fizz",
-      family: "Highball / Collins",
-      era: "1888 • Henry C. Ramos, New Orleans",
-      baseSpirit: "Old Tom or London Dry Gin",
-      glass: "Collins",
-      ice: "None / Chilled Glass",
-      method: "Dry Shake 5 mins, Wet Shake Hard, Strain, Rest in Glass, Upward Soda Push",
-      garnish: "Orange Blossom Mist",
-      footnote: "Creates an impenetrable foam pillar that rises dramatically above the rim of the glass.",
-      spec: [
-        { measure: "2.0 oz", name: "Old Tom or London Dry Gin", role: "Base Spirit" },
-        { measure: "0.5 oz", name: "Fresh Lemon Juice", role: "Sour Element" },
-        { measure: "0.5 oz", name: "Fresh Lime Juice", role: "Sour Element" },
-        { measure: "0.75 oz", name: "Simple Syrup", role: "Sweet Modifier" },
-        { measure: "1.0 oz", name: "Heavy Cream", role: "Dairy Emulsion" },
-        { measure: "1.0 oz", name: "Club Soda", role: "Effervescent Lift" }
-      ],
-      modes: {
-        classic: {
-          type: "ingredient",
-          targetIndex: 4,
-          prompt: "Which dairy ingredient gives the Ramos its thick, decadent mouthfeel?",
-          correctAnswer: "Heavy Cream",
-          options: ["Heavy Cream", "Whole Milk", "Condensed Milk", "Almond Milk"],
-          hint: "High-fat dairy that whips into a rich foam with citrus and egg albumen.",
-          diagnosis: "Heavy cream provides the high butterfat content necessary to achieve a velvety soufflé foam."
-        },
-        repair: {
-          type: "troubleshoot",
-          targetIndex: -1,
-          flawIngredientDisplay: "Quick 5-second Lazy Shake with Ice and Strained Immediately (FLAW)",
-          correctIngredientName: "Exhaustive Dry Shake & Wet Shake to Create Rigid Soufflé Head",
-          prompt: "RECIPE AUDIT: Identify the catastrophic technique failure on this Ramos ticket:",
-          correctAnswer: "Insufficient shaking fails to emulsify heavy cream and egg white into a rigid soufflé",
-          options: [
-            "Insufficient shaking fails to emulsify heavy cream and egg white into a rigid soufflé",
-            "Gin must be replaced with tequila",
-            "Citrus juice is strictly forbidden in New Orleans fizzes",
-            "Drink must be served in an open shallow saucer"
-          ],
-          hint: "The Ramos requires long, vigorous agitation to build a stable foam tower.",
-          diagnosis: "Cream and egg white require extensive agitation to bond and rise over the rim of the glass without collapsing."
-        },
-        family: {
-          type: "ingredient",
-          targetIndex: 0,
-          prompt: "What spirit style anchors the Ramos Gin Fizz?",
-          correctAnswer: "Old Tom or London Dry Gin",
-          options: ["Old Tom or London Dry Gin", "Bourbon", "White Rum", "Tequila"],
-          hint: "A botanical, juniper-forward spirit.",
-          diagnosis: "Gin cuts through the rich dairy fats with pine, citrus, and coriander aromatics."
-        }
-      }
-    },
-    {
-      id: "paloma",
-      name: "Paloma",
-      family: "Highball / Collins",
-      era: "1950s • Don Javier Delgado Corona, Tequila, Mexico",
-      baseSpirit: "Blanco or Reposado Tequila",
-      glass: "Collins",
-      ice: "Column Ice Spears",
-      method: "Build Tequila, Lime & Pinch of Salt over Ice; Top with Grapefruit Soda",
-      garnish: "Grapefruit Wedge & Salted Rim",
-      footnote: "Mexico's most popular tequila highball; tart grapefruit soda cuts through vegetal agave.",
-      spec: [
-        { measure: "2.0 oz", name: "Blanco or Reposado Tequila", role: "Base Spirit" },
-        { measure: "0.5 oz", name: "Fresh Lime Juice", role: "Sour Element" },
-        { measure: "1 pinch", name: "Sea Salt", role: "Flavor Enhancer" },
-        { measure: "4.0 oz", name: "Grapefruit Soda", role: "Citrus Lengthener" }
-      ],
-      modes: {
-        classic: {
-          type: "ingredient",
-          targetIndex: 3,
-          prompt: "Which Mexican carbonated soda is canonical in an authentic Paloma?",
-          correctAnswer: "Grapefruit Soda",
-          options: ["Grapefruit Soda", "Cola", "Lemon-Lime Soda", "Tonic Water"],
-          hint: "Fizzy citrus soda made with pink or white grapefruit.",
-          diagnosis: "Grapefruit soda provides bittersweet effervescence that balances tequila's earthy agave tones."
-        },
-        repair: {
-          type: "troubleshoot",
-          targetIndex: 2,
-          flawIngredientDisplay: "Sea Salt Omitted Completely (FLAW)",
-          correctIngredientName: "Pinch of Salt Built into Glass",
-          prompt: "RECIPE AUDIT: Identify the seasoning flaw in this Paloma build:",
-          correctAnswer: "Omitting salt prevents grapefruit bitterness from softening into fruit sweetness",
-          options: [
-            "Omitting salt prevents grapefruit bitterness from softening into fruit sweetness",
-            "Tequila must be replaced with scotch",
-            "Palomas must be boiled and served hot",
-            "Drink must be garnished with grated cheddar cheese"
-          ],
-          hint: "Sodium ions suppress bitterness and elevate tart citrus flavors.",
-          diagnosis: "Salt suppresses the astringent bitter edges of grapefruit while amplifying crisp agave sweetness."
-        },
-        family: {
-          type: "ingredient",
-          targetIndex: 0,
-          prompt: "Which blue agave spirit anchors the Paloma?",
-          correctAnswer: "Blanco or Reposado Tequila",
-          options: ["Blanco or Reposado Tequila", "White Rum", "Bourbon Whiskey", "London Dry Gin"],
-          hint: "Distillate produced in Jalisco, Mexico.",
-          diagnosis: "Tequila delivers vegetal, peppery agave qualities that harmonize with bitter citrus soda."
-        }
-      }
-    },
-    {
-      id: "blood-and-sand",
-      name: "Blood and Sand",
-      family: "Sour",
-      era: "1930 • Savoy Cocktail Book",
-      baseSpirit: "Scotch Whisky",
-      glass: "Coupe",
-      ice: "None / Served Up",
-      method: "Hard Shake & Fine Strain",
-      garnish: "Expressed Orange Peel & Brandied Cherry",
-      footnote: "Named after Rudolph Valentino's 1922 bullfighter movie; four equal parts of smoke, sweet, cherry, and citrus.",
-      spec: [
-        { measure: "0.75 oz", name: "Blended Scotch Whisky", role: "Base Spirit" },
-        { measure: "0.75 oz", name: "Sweet Red Vermouth", role: "Fortified Modifier" },
-        { measure: "0.75 oz", name: "Cherry Heering Liqueur", role: "Cherry Cordial" },
-        { measure: "0.75 oz", name: "Fresh Orange Juice", role: "Fruit Element" }
-      ],
-      modes: {
-        classic: {
-          type: "ingredient",
-          targetIndex: 2,
-          prompt: "Which rich Danish cherry liqueur is canonical in a Blood and Sand?",
-          correctAnswer: "Cherry Heering Liqueur",
-          options: ["Cherry Heering Liqueur", "Maraschino Liqueur", "Kirschwasser", "Amaretto"],
-          hint: "Deep ruby liqueur made from steeped Danish cherries and spices.",
-          diagnosis: "Cherry Heering provides deep garnet color and rich cherry sweetness to balance Scotch smoke."
-        },
-        repair: {
-          type: "troubleshoot",
-          targetIndex: 3,
-          flawIngredientDisplay: "Bottled Pasteurized Sweet Orange Juice (FLAW)",
-          correctIngredientName: "Freshly Squeezed Acidic Orange Juice",
-          prompt: "RECIPE AUDIT: Identify the fruit juice mistake spoiling this balance:",
-          correctAnswer: "Bottled orange juice is overly sweet and lacks fresh citric acidity",
-          options: [
-            "Bottled orange juice is overly sweet and lacks fresh citric acidity",
-            "Scotch should be swapped for unaged grappa",
-            "Drink must be served in a copper beer stein",
-            "Sweet vermouth must be replaced with dark beer"
-          ],
-          hint: "Orange juice already has low acidity; pasteurized versions make the drink cloying.",
-          diagnosis: "Freshly squeezed juice provides bright acidity and fresh pulp oils essential to cutting through vermouth and cherry liqueur."
-        },
-        family: {
-          type: "measure",
-          targetIndex: 0,
-          prompt: "What is the proportion of each ingredient in the classic 4-part Blood and Sand formula?",
-          correctAnswer: "0.75 oz (Equal Parts)",
-          options: ["0.75 oz (Equal Parts)", "1.5 oz spirit to 0.5 oz modifiers", "0.25 oz each", "2.0 oz spirit to dashes of modifiers"],
-          hint: "Classic equal-parts quartet.",
-          diagnosis: "The drink relies on an equal 0.75 oz quartet of Scotch, vermouth, cherry liqueur, and orange juice."
-        }
-      }
-    },
-    {
-      id: "vieux-carre",
-      name: "Vieux Carré",
-      family: "Old Fashioned",
-      era: "1938 • Walter Bergeron, Hotel Monteleone, New Orleans",
-      baseSpirit: "Rye Whiskey & Cognac",
-      glass: "Rocks",
-      ice: "Large Clear Ice Cube",
-      method: "Stir Thoroughly with Dense Ice & Strain",
-      garnish: "Lemon Twist & Brandied Cherry",
-      footnote: "Named after the French Quarter; a split-base masterpiece combining French brandy and American rye.",
-      spec: [
-        { measure: "0.75 oz", name: "Rye Whiskey", role: "Spicy Grain Base" },
-        { measure: "0.75 oz", name: "Cognac", role: "Fruity Grape Base" },
-        { measure: "0.75 oz", name: "Sweet Red Vermouth", role: "Fortified Modifier" },
-        { measure: "1 barspoon", name: "Bénédictine D.O.M.", role: "Herbal Honey Modifier" },
-        { measure: "1 dash", name: "Peychaud's Bitters", role: "Anise Bitters" }
-      ],
-      modes: {
-        classic: {
-          type: "ingredient",
-          targetIndex: 3,
-          prompt: "Which herbal French honey liqueur is vital to the Vieux Carré profile?",
-          correctAnswer: "Bénédictine D.O.M.",
-          options: ["Bénédictine D.O.M.", "Chartreuse", "Drambuie", "Galliano"],
-          hint: "Herbal elixir produced by monks featuring saffron, honey, and botanicals.",
-          diagnosis: "Bénédictine provides rich honey sweetness and herbal aromatics that bridge rye and cognac."
-        },
-        repair: {
-          type: "troubleshoot",
-          targetIndex: 1,
-          flawIngredientDisplay: "Tequila Blanco 0.75 oz (FLAW)",
-          correctIngredientName: "Cognac (French Brandy) 0.75 oz",
-          prompt: "RECIPE AUDIT: Identify the base spirit violation:",
-          correctAnswer: "Tequila violates the historic French-American split base of Cognac and Rye",
-          options: [
-            "Tequila violates the historic French-American split base of Cognac and Rye",
-            "Bénédictine should never be consumed cold",
-            "Peychaud's bitters are forbidden in New Orleans cocktails",
-            "Drink must be topped with sparkling water"
-          ],
-          hint: "The Vieux Carré honors New Orleans' French heritage via Cognac.",
-          diagnosis: "Cognac delivers rich grape tannins and fruit that balance rye whiskey's dry grain spice."
-        },
-        family: {
-          type: "ingredient",
-          targetIndex: 0,
-          prompt: "Which American whiskey style provides grain spice to the Vieux Carré base?",
-          correctAnswer: "Rye Whiskey",
-          options: ["Rye Whiskey", "Vodka", "White Rum", "Corn Whiskey"],
-          hint: "High-rye mashbill whiskey from the American Northeast.",
-          diagnosis: "Rye whiskey supplies sharp pepper and oak to balance sweet vermouth and Bénédictine."
-        }
-      }
-    },
-    {
-      id: "brandy-crusta",
-      name: "Brandy Crusta",
-      family: "Daisy",
-      era: "1850s • Joseph Santini, New Orleans",
-      baseSpirit: "Cognac / French Brandy",
-      glass: "Nick & Nora",
-      ice: "None / Served Up",
-      method: "Shake Hard & Strain into Sugar-Crusted Glass with Curled Lemon Jacket",
-      garnish: "Full Lemon Peel Lining Rim & Sugar Crust",
-      footnote: "The precursor to the Sidecar and Margarita; notable for the entire pared peel of a lemon lining the glass.",
-      spec: [
-        { measure: "2.0 oz", name: "Cognac", role: "Base Spirit" },
-        { measure: "0.25 oz", name: "Cointreau / Triple Sec", role: "Orange Modifier" },
-        { measure: "0.25 oz", name: "Maraschino Liqueur", role: "Stone-Fruit Modifier" },
-        { measure: "0.5 oz", name: "Fresh Lemon Juice", role: "Sour Element" }
-      ],
-      modes: {
-        classic: {
-          type: "ingredient",
-          targetIndex: 2,
-          prompt: "Which stone-fruit liqueur pairs with Cointreau in the classic Crusta modifier blend?",
-          correctAnswer: "Maraschino Liqueur",
-          options: ["Maraschino Liqueur", "Cassis", "Peach Schnapps", "Apricot Cordial"],
-          hint: "Dry sour marasca cherry liqueur.",
-          diagnosis: "Maraschino liqueur gives the Crusta its signature dry, floral cherry-stone undertone."
-        },
-        repair: {
-          type: "troubleshoot",
-          targetIndex: 0,
-          flawIngredientDisplay: "Neutral Vodka 2.0 oz (FLAW)",
-          correctIngredientName: "Cognac / Aged Brandy 2.0 oz",
-          prompt: "RECIPE AUDIT: Identify the base spirit failure:",
-          correctAnswer: "Neutral vodka lacks the rich grape character and barrel aging of aged Cognac",
-          options: [
-            "Neutral vodka lacks the rich grape character and barrel aging of aged Cognac",
-            "Lemon juice should never touch sugar rims",
-            "Maraschino liqueur must be boiled",
-            "Bitters are strictly prohibited in Crustas"
-          ],
-          hint: "Santini originally formulated the drink using high-grade French grape brandy.",
-          diagnosis: "Cognac provides wood tannins and dried stone fruit that balance lemon juice and maraschino liqueur."
-        },
-        family: {
-          type: "ingredient",
-          targetIndex: 1,
-          prompt: "Which orange modifier qualifies the Crusta as a Daisy ancestor?",
-          correctAnswer: "Cointreau / Triple Sec",
-          options: ["Cointreau / Triple Sec", "Campari", "Sweet Vermouth", "Crème de Menthe"],
-          hint: "Clear orange peel triple sec liqueur.",
-          diagnosis: "Triple sec provides the citrus cordial sweetening element defining the Daisy lineage."
-        }
-      }
-    },
-    {
-      id: "pisco-sour",
-      name: "Pisco Sour",
-      family: "Sour",
-      era: "1920s • Victor Morris, Lima, Peru",
-      baseSpirit: "Pisco (Peruvian Grape Distillate)",
-      glass: "Coupe",
-      ice: "None / Served Up",
-      method: "Dry Shake, Wet Shake Hard & Double Strain",
-      garnish: "3 Drops Angostura Bitters on Foam",
-      footnote: "Unaged South American grape spirit delivers floral, earthy brightness held aloft by an egg white cap.",
-      spec: [
-        { measure: "2.0 oz", name: "Pisco", role: "Base Spirit" },
-        { measure: "1.0 oz", name: "Fresh Key Lime Juice", role: "Sour Element" },
-        { measure: "0.75 oz", name: "Simple Syrup", role: "Sweet Modifier" },
-        { measure: "0.5 oz", name: "Egg White", role: "Textural Agent" }
-      ],
-      modes: {
-        classic: {
-          type: "ingredient",
-          targetIndex: 0,
-          prompt: "What is Pisco, the mandatory base spirit of this classic sour?",
-          correctAnswer: "Unaged South American grape brandy",
-          options: [
-            "Unaged South American grape brandy",
-            "Fermented blue agave distillate",
-            "Smoked Scottish barley spirit",
-            "Sugarcane molasses spirit"
-          ],
-          hint: "Distilled from fermented grape must in copper pot stills without oak aging.",
-          diagnosis: "Pisco is an aromatic, unaged grape distillate with vibrant floral and fruit notes."
-        },
-        repair: {
-          type: "troubleshoot",
-          targetIndex: -1,
-          flawIngredientDisplay: "Angostura Bitters Shaken Inside Tin with Spirit and Citrus (FLAW)",
-          correctIngredientName: "Angostura Dropped Artfully on Top of Foam",
-          prompt: "RECIPE AUDIT: Identify the garnish technique error:",
-          correctAnswer: "Shaking bitters inside turns the white foam a muddy brown and loses aromatic nose",
-          options: [
-            "Shaking bitters inside turns the white foam a muddy brown and loses aromatic nose",
-            "Pisco must be warmed before shaking",
-            "Egg white must be replaced with warm milk",
-            "Lime juice must be left out"
-          ],
-          hint: "Bitters provide an aromatic barrier against the sulfur smell of egg white on the foam surface.",
-          diagnosis: "Dropping bitters onto the dense foam delivers aromatics to the nose while preserving the drink's stark white appearance."
-        },
-        family: {
-          type: "measure",
-          targetIndex: 1,
-          prompt: "What is the standard tart lime measurement in an authentic Peruvian spec?",
-          correctAnswer: "1.0 oz",
-          options: ["1.0 oz", "0.25 oz", "2.0 oz", "0.5 oz"],
-          hint: "Peruvian Pisco Sours run slightly more tart than American whiskey sours.",
-          diagnosis: "1.0 oz tart lime juice matches Pisco's high proof and floral profile."
-        }
-      }
-    },
-    {
-      id: "singapore-sling",
-      name: "Singapore Sling",
-      family: "Highball / Collins",
-      era: "1915 • Ngiam Tong Boon, Raffles Hotel",
-      baseSpirit: "London Dry Gin",
-      glass: "Collins",
-      ice: "Rocks",
-      method: "Shake Hard with Ice & Strain into Glass over Ice; Top with Soda Splash",
-      garnish: "Pineapple Spear, Brandied Cherry & Mint Sprig",
-      footnote: "Created so colonial women could discreetly drink alcohol masquerading as fruit punch at the Long Bar.",
-      spec: [
-        { measure: "1.5 oz", name: "London Dry Gin", role: "Base Spirit" },
-        { measure: "0.5 oz", name: "Cherry Heering", role: "Cherry Modifier" },
-        { measure: "0.25 oz", name: "Bénédictine", role: "Herbal Modifier" },
-        { measure: "4.0 oz", name: "Fresh Pineapple Juice", role: "Fruit Lengthener" }
-      ],
-      modes: {
-        classic: {
-          type: "ingredient",
-          targetIndex: 2,
-          prompt: "Which French herbal liqueur gives the Singapore Sling its herbal undertone?",
-          correctAnswer: "Bénédictine",
-          options: ["Bénédictine", "Chartreuse", "Campari", "Anisette"],
-          hint: "Complex herbal liqueur infused with honey, angelica, and myrrh.",
-          diagnosis: "Bénédictine grounds the tropical fruit profile with rich herbal complexity."
-        },
-        repair: {
-          type: "troubleshoot",
-          targetIndex: 3,
-          flawIngredientDisplay: "Industrial Canned Corn-Syrup Punch Mix (FLAW)",
-          correctIngredientName: "Fresh Pineapple Juice Shaken to Froth",
-          prompt: "RECIPE AUDIT: Identify the modifier shortcut ruining this Sling:",
-          correctAnswer: "Artificial red punch mix completely destroys the pineapple foam and complex profile",
-          options: [
-            "Artificial red punch mix completely destroys the pineapple foam and complex profile",
-            "Gin must be replaced with warm scotch",
-            "Sling drinks should never be served cold",
-            "Cherry Heering should be swapped for soy sauce"
-          ],
-          hint: "Fresh pineapple juice creates a velvety, natural foam head when shaken hard.",
-          diagnosis: "Real pineapple juice contains bromelain enzymes that froth into a creamy head while providing balanced fruit acidity."
-        },
-        family: {
-          type: "ingredient",
-          targetIndex: 1,
-          prompt: "Which dark cherry liqueur gives the Sling its foundational rosy color?",
-          correctAnswer: "Cherry Heering",
-          options: ["Cherry Heering", "Maraschino Liqueur", "Crème de Violette", "Aperol"],
-          hint: "Danish spiced dark cherry liqueur.",
-          diagnosis: "Cherry Heering contributes the signature dark cherry and spice profile."
-        }
-      }
-    },
-    {
-      id: "vesper",
-      name: "Vesper",
-      family: "Martini",
-      era: "1953 • Ian Fleming, Casino Royale",
-      baseSpirit: "Gin & Vodka",
-      glass: "Martini",
-      ice: "None / Chilled Stemware",
-      method: "Shake Hard until Ice Cold & Fine Strain",
-      garnish: "Large Thin Lemon Peel",
-      footnote: "James Bond's original creation: 'Three measures of Gordon's, one of vodka, half a measure of Kina Lillet.'",
-      spec: [
-        { measure: "2.25 oz", name: "London Dry Gin", role: "Botanical Base" },
-        { measure: "0.75 oz", name: "100-Proof Grain Vodka", role: "Neutral Proof Base" },
-        { measure: "0.5 oz", name: "Cocchi Americano or Lillet Blanc", role: "Bitter Quinquina Modifier" }
-      ],
-      modes: {
-        classic: {
-          type: "ingredient",
-          targetIndex: 2,
-          prompt: "Why is Cocchi Americano preferred today over modern Lillet Blanc in a Vesper?",
-          correctAnswer: "Cocchi preserves the original bitter quinine (cinchona) bite lost in modern Lillet",
-          options: [
-            "Cocchi preserves the original bitter quinine (cinchona) bite lost in modern Lillet",
-            "Cocchi Americano is bright neon purple",
-            "Lillet Blanc contains 90% sugar by volume",
-            "Cocchi Americano is distilled from blue agave"
-          ],
-          hint: "Kina Lillet was reformulated in 1986 to remove bitter quinine bark.",
-          diagnosis: "Cocchi Americano contains the original quinine bitterness of vintage Kina Lillet, balancing the high alcohol proof."
-        },
-        repair: {
-          type: "troubleshoot",
-          targetIndex: 1,
-          flawIngredientDisplay: "Tequila Blanco 0.75 oz (FLAW)",
-          correctIngredientName: "Grain Vodka 0.75 oz",
-          prompt: "RECIPE AUDIT: Identify the ingredient violation on this Bond ticket:",
-          correctAnswer: "Tequila violates James Bond's exact grain vodka specification",
-          options: [
-            "Tequila violates James Bond's exact grain vodka specification",
-            "Vesper cocktails must be served boiling hot",
-            "Gin must never be shaken with ice",
-            "Lemon peel must be flambéed in butter"
-          ],
-          hint: "Bond specifically specifies grain vodka in Casino Royale.",
-          diagnosis: "High-proof grain vodka thins the gin's botanical weight while elevating overall proof and chilling capacity."
-        },
-        family: {
-          type: "measure",
-          targetIndex: 0,
-          prompt: "What is the gin-to-vodka-to-quinquina ratio specified in Casino Royale?",
-          correctAnswer: "3 : 1 : 0.5 (2.25 oz : 0.75 oz : 0.5 oz)",
-          options: [
-            "3 : 1 : 0.5 (2.25 oz : 0.75 oz : 0.5 oz)",
-            "1 : 1 : 1 (Equal Parts)",
-            "4 : 2 : 1",
-            "2 : 2 : 2"
-          ],
-          hint: "Three measures of Gordon's, one of vodka, half of Kina Lillet.",
-          diagnosis: "This exact 3:1:0.5 ratio yields a potent, cold, and razor-sharp drink."
-        }
-      }
-    },
-    {
-      id: "aperol-spritz",
-      name: "Aperol Spritz",
-      family: "Bitter / Aperitivo",
-      era: "1950s • Veneto, Italy",
-      baseSpirit: "Aperol",
-      glass: "Rocks",
-      ice: "Large Clear Ice Cube",
-      method: "Build Ice, Add Prosecco, Follow with Aperol, Top with Soda Splash",
-      garnish: "Half Orange Wheel & Castelvetrano Olive",
-      footnote: "The classic 3-2-1 formula: 3 parts Prosecco, 2 parts Aperol, 1 splash of soda to preserve sparkling lift.",
-      spec: [
-        { measure: "3.0 oz", name: "Dry Prosecco D.O.C.", role: "Effervescent Wine Base" },
-        { measure: "2.0 oz", name: "Aperol", role: "Bitter-Sweet Aperitivo" },
-        { measure: "1.0 oz", name: "Club Soda", role: "Mineral Effervescence" }
-      ],
-      modes: {
-        classic: {
-          type: "measure",
-          targetIndex: 0,
-          prompt: "What is the standard Venetian 3-2-1 proportion for the Prosecco pour?",
-          correctAnswer: "3.0 oz Prosecco",
-          options: ["3.0 oz Prosecco", "1.0 oz Prosecco", "5.0 oz Prosecco", "0.5 oz Prosecco"],
-          hint: "3 parts sparkling wine to 2 parts bitter aperitif.",
-          diagnosis: "3 parts Prosecco provides the crisp, dry effervescent body that keeps Aperol refreshing."
-        },
-        repair: {
-          type: "troubleshoot",
-          targetIndex: -1,
-          flawIngredientDisplay: "Violently Shaken in Cocktail Shaker with Ice (FLAW)",
-          correctIngredientName: "Built Gently in Chilled Glass with Dense Ice",
-          prompt: "RECIPE AUDIT: Identify the service execution error:",
-          correctAnswer: "Shaking in a tin destroys the effervescence of Prosecco and club soda",
-          options: [
-            "Shaking in a tin destroys the effervescence of Prosecco and club soda",
-            "Aperol must be cooked in an oven first",
-            "Spritzes should never contain ice",
-            "Prosecco must be replaced with warm stout"
-          ],
-          hint: "Never shake carbonated sparkling wine and soda in a cocktail shaker.",
-          diagnosis: "Spritzes are always built directly in a stem glass to preserve sparkle and aromatics."
-        },
-        family: {
-          type: "ingredient",
-          targetIndex: 1,
-          prompt: "Which Italian amaro provides the vibrant orange hue, gentian, and rhubarb notes?",
-          correctAnswer: "Aperol",
-          options: ["Aperol", "Campari", "Fernet Branca", "Cynar"],
-          hint: "Lower ABV (11%) bitter-sweet Italian aperitivo.",
-          diagnosis: "Aperol provides bright orange, gentian, and rhubarb notes at a sessionable alcohol proof."
-        }
-      }
-    },
-    {
-      id: "paper-plane",
-      name: "Paper Plane",
-      family: "Sour",
-      era: "2008 • Sam Ross, The Violet Hour, Chicago",
-      baseSpirit: "Bourbon Whiskey",
-      glass: "Nick & Nora",
-      ice: "None / Served Up",
-      method: "Shake Hard with Ice & Fine Strain",
-      garnish: "Miniature Paper Airplane on Rim",
-      footnote: "Modern riff on the Last Word formula using amaro, Aperol, and bourbon.",
-      spec: [
-        { measure: "0.75 oz", name: "Bourbon Whiskey", role: "Base Spirit" },
-        { measure: "0.75 oz", name: "Aperol", role: "Bitter-Sweet Aperitif" },
-        { measure: "0.75 oz", name: "Amaro Nonino Quintessentia", role: "Grappa-Based Herbal Amaro" },
-        { measure: "0.75 oz", name: "Fresh Lemon Juice", role: "Sour Element" }
-      ],
-      modes: {
-        classic: {
-          type: "ingredient",
-          targetIndex: 2,
-          prompt: "Which grappa-based amaro is mandatory for the authentic Paper Plane profile?",
-          correctAnswer: "Amaro Nonino Quintessentia",
-          options: ["Amaro Nonino Quintessentia", "Campari", "Fernet Branca", "Jägermeister"],
-          hint: "An elegant Italian amaro aged in oak barrels with alpine herbs and mountain gentian.",
-          diagnosis: "Amaro Nonino supplies notes of orange peel, dried fruit, and gentian bitterness on an aged grape distillate base."
-        },
-        repair: {
-          type: "troubleshoot",
-          targetIndex: 1,
-          flawIngredientDisplay: "Campari 1.5 oz (FLAW)",
-          correctIngredientName: "Aperol 0.75 oz (Equal Parts)",
-          prompt: "RECIPE AUDIT: Identify the modifier mistake unbalancing this spec:",
-          correctAnswer: "Campari is too bitter and heavy, breaking the delicate balance of Nonino and lemon",
-          options: [
-            "Campari is too bitter and heavy, breaking the delicate balance of Nonino and lemon",
-            "Bourbon should be replaced with white gin",
-            "Lemon juice must be heated to boiling",
-            "Drink must be served in a copper mug"
-          ],
-          hint: "The recipe requires Aperol's sweeter, lower-proof profile.",
-          diagnosis: "Campari's intense gentian bitterness overpowers the fragile alpine notes of Amaro Nonino; Aperol is non-negotiable."
-        },
-        family: {
-          type: "measure",
-          targetIndex: 0,
-          prompt: "What is the architectural proportion across all four ingredients?",
-          correctAnswer: "0.75 oz (Equal Parts)",
-          options: ["0.75 oz (Equal Parts)", "1.5 oz spirit to 0.5 oz modifiers", "0.25 oz each", "2.0 oz base to dashes of bitter"],
-          hint: "Inherited directly from the Last Word structural family.",
-          diagnosis: "The Paper Plane relies on strict equal parts (0.75 oz each) of bourbon, Aperol, Amaro Nonino, and lemon juice."
-        }
-      }
-    },
-    {
-      id: "bees-knees",
-      name: "Bee's Knees",
-      family: "Sour",
-      era: "1920s • Prohibition Classic",
-      baseSpirit: "London Dry Gin",
-      glass: "Coupe",
-      ice: "None / Served Up",
-      method: "Shake Hard with Ice & Double Strain",
-      garnish: "Lemon Twist",
-      footnote: "Wildflower honey and lemon masked the pungent aroma of crude 'bathtub gin' during Prohibition.",
-      spec: [
-        { measure: "2.0 oz", name: "London Dry Gin", role: "Base Spirit" },
-        { measure: "0.75 oz", name: "Fresh Lemon Juice", role: "Sour Element" },
-        { measure: "0.75 oz", name: "Honey Syrup (3:1 Honey to Water)", role: "Sweet Modifier" }
-      ],
-      modes: {
-        classic: {
-          type: "ingredient",
-          targetIndex: 2,
-          prompt: "Why must honey be diluted with water into a syrup before shaking?",
-          correctAnswer: "Raw honey seizes and solidifies into a rock upon contact with cocktail ice",
-          options: [
-            "Raw honey seizes and solidifies into a rock upon contact with cocktail ice",
-            "Honey is illegal to serve raw in bars",
-            "Water increases the alcohol content of honey",
-            "To make the drink turn neon green"
-          ],
-          hint: "Cold temperatures cause pure honey to stick to the bottom of the tin.",
-          diagnosis: "Diluting honey with warm water (3:1) ensures it stays liquid and integrates into cold cocktails."
-        },
-        repair: {
-          type: "troubleshoot",
-          targetIndex: 2,
-          flawIngredientDisplay: "Refined White Sugar Simple Syrup (FLAW)",
-          correctIngredientName: "Wildflower Honey Syrup (3:1)",
-          prompt: "RECIPE AUDIT: Identify the flavor substitution error:",
-          correctAnswer: "Plain simple syrup turns this into a Gin Sour, losing floral honey complexity",
-          options: [
-            "Plain simple syrup turns this into a Gin Sour, losing floral honey complexity",
-            "Gin must be replaced with warm scotch",
-            "Lemon juice should be boiled with cloves",
-            "Bee's Knees must be topped with hot tea"
-          ],
-          hint: "The name literally references the honey product produced by bees.",
-          diagnosis: "Wildflower honey provides floral and beeswax aromatics that distinguish this cocktail from a standard Gin Sour."
-        },
-        family: {
-          type: "measure",
-          targetIndex: 1,
-          prompt: "Specify the lemon juice pour that balances 0.75 oz honey syrup:",
-          correctAnswer: "0.75 oz",
-          options: ["0.75 oz", "0.25 oz", "1.5 oz", "2.0 oz"],
-          hint: "Standard golden ratio sour balancing acid to sweet.",
-          diagnosis: "0.75 oz lemon provides crisp acidity to balance the richness of rich honey syrup."
-        }
-      }
-    },
-    {
-      id: "jungle-bird",
-      name: "Jungle Bird",
-      family: "Sour",
-      era: "1978 • Aviary Bar, Kuala Lumpur Hilton",
-      baseSpirit: "Blackstrap or Dark Rum",
-      glass: "Rocks",
-      ice: "Large Clear Ice Cube",
-      method: "Shake Hard with Ice to Emulsify Pineapple; Strain over Fresh Ice",
-      garnish: "Pineapple Fronds & Orchid Flower",
-      footnote: "A rare tropical cocktail pairing dark molasses rum with Italian red bitter amaro.",
-      spec: [
-        { measure: "1.5 oz", name: "Blackstrap or Dark Jamaican Rum", role: "Molasses Base Spirit" },
-        { measure: "0.75 oz", name: "Campari", role: "Bitter Aperitif Modifier" },
-        { measure: "1.5 oz", name: "Fresh Pineapple Juice", role: "Foaming Tropical Element" },
-        { measure: "0.5 oz", name: "Fresh Lime Juice", role: "Sour Element" }
-      ],
-      modes: {
-        classic: {
-          type: "ingredient",
-          targetIndex: 1,
-          prompt: "Which red Italian amaro introduces bold bitterness to this tropical rum drink?",
-          correctAnswer: "Campari",
-          options: ["Campari", "Aperol", "Fernet Branca", "Suze"],
-          hint: "Bitter gentian and citrus aperitivo usually found in Negronis.",
-          diagnosis: "Campari's assertive bitterness cuts through the heavy molasses of blackstrap rum and sweet pineapple juice."
-        },
-        repair: {
-          type: "troubleshoot",
-          targetIndex: 0,
-          flawIngredientDisplay: "Vodka 1.5 oz (FLAW)",
-          correctIngredientName: "Blackstrap or Dark Jamaican Rum 1.5 oz",
-          prompt: "RECIPE AUDIT: Identify the base spirit failure:",
-          correctAnswer: "Vodka lacks the rich molasses, caramel, and funk to stand up to Campari",
-          options: [
-            "Vodka lacks the rich molasses, caramel, and funk to stand up to Campari",
-            "Pineapple juice must be cooked into a paste",
-            "Campari is strictly prohibited in tropical drinks",
-            "Jungle Birds must only be served warm"
-          ],
-          hint: "A heavy, dark molasses rum is required to counterbalance Campari.",
-          diagnosis: "Blackstrap or funky pot-still dark rum supplies the caramel weight needed to match Campari's intense bitterness."
-        },
-        family: {
-          type: "measure",
-          targetIndex: 2,
-          prompt: "What is the measure of fresh pineapple juice needed to create a rich foam head?",
-          correctAnswer: "1.5 oz",
-          options: ["1.5 oz", "0.25 oz", "4.0 oz", "0.0 oz"],
-          hint: "Equal in volume to the base rum.",
-          diagnosis: "1.5 oz of pineapple juice creates a creamy foam layer when shaken and softens the bitter edge."
-        }
-      }
+  // Lock today's puzzle identity in dailyScheduleMap for historical stability
+  (function lockTodaySchedule() {
+    const todayP = getPuzzleForDay(AppState.currentDay, AppState.store.dailyScheduleMap);
+    if (todayP) {
+      AppState.store.dailyScheduleMap[AppState.currentDay] = todayP.id;
+      saveStorageData(AppState.store);
     }
+  })();
+
+  // --- 5. DOM ELEMENT REFERENCES ---
+  const DOM = {
+    // Header & Views
+    platformHeader: document.getElementById("platform-header"),
+    btnBackToMenu: document.getElementById("btn-back-to-menu"),
+    navStatsBtn: document.getElementById("nav-stats-btn"),
+    navHelpBtn: document.getElementById("nav-help-btn"),
+    navSoundBtn: document.getElementById("nav-sound-btn"),
+    soundIcon: document.getElementById("sound-icon"),
+    
+    // Screens
+    viewMenu: document.getElementById("view-menu"),
+    viewGame: document.getElementById("view-game"),
+    viewVault: document.getElementById("view-vault"),
+
+    // Main Menu Elements
+    menuTodayCard: document.getElementById("menu-today-card"),
+    menuTodayBadge: document.getElementById("menu-today-badge"),
+    menuTodayDayNumber: document.getElementById("menu-today-day-number"),
+    menuTodayStatusBadge: document.getElementById("menu-today-status-badge"),
+    menuTodayCocktailName: document.getElementById("menu-today-cocktail-name"),
+    menuTodayCocktailClue: document.getElementById("menu-today-cocktail-clue"),
+    menuTodayActionText: document.getElementById("menu-today-action-text"),
+    menuShakersIndicator: document.getElementById("menu-shakers-indicator"),
+    menuBtnVault: document.getElementById("menu-btn-vault"),
+    menuVaultCountBadge: document.getElementById("menu-vault-count-badge"),
+    menuBtnStats: document.getElementById("menu-btn-stats"),
+    menuBtnHelp: document.getElementById("menu-btn-help"),
+    menuBtnSound: document.getElementById("menu-btn-sound"),
+    menuSoundIcon: document.getElementById("menu-sound-icon"),
+    menuSoundLabel: document.getElementById("menu-sound-label"),
+
+    // Active Game Elements
+    puzzleDayBadge: document.getElementById("puzzle-day-badge"),
+    puzzleCategoryBadge: document.getElementById("puzzle-category-badge"),
+    puzzleDiffBadge: document.getElementById("puzzle-difficulty-badge"),
+    ticketNumber: document.getElementById("ticket-number"),
+    cocktailEra: document.getElementById("cocktail-era"),
+    cocktailName: document.getElementById("cocktail-name"),
+    cocktailClue: document.getElementById("cocktail-historical-clue"),
+    shakerTokens: document.getElementById("shaker-tokens"),
+    slotsGrid: document.getElementById("spec-slots-grid"),
+    slots: document.querySelectorAll(".spec-slot"),
+    barRailTiles: document.getElementById("bar-rail-tiles"),
+    hintBox: document.getElementById("bartender-hint-box"),
+    hintText: document.getElementById("bartender-hint-text"),
+    btnClearDraft: document.getElementById("btn-clear-draft"),
+    btnSubmitSpec: document.getElementById("btn-submit-spec"),
+
+    // Vault Elements
+    vaultList: document.getElementById("vault-list"),
+    btnVaultBackMenu: document.getElementById("btn-vault-back-menu"),
+
+    // Result Modal Elements
+    modalResult: document.getElementById("modal-result"),
+    btnCloseResult: document.getElementById("btn-close-result"),
+    resultStatusBadge: document.getElementById("result-status-badge"),
+    modalResultTitle: document.getElementById("modal-result-title"),
+    resultCocktailName: document.getElementById("result-cocktail-name"),
+    shareGridPreview: document.getElementById("share-grid-preview"),
+    authoritativeSpecsList: document.getElementById("authoritative-specs-list"),
+    loreBodyText: document.getElementById("lore-body-text"),
+    loreCurriculumCategory: document.getElementById("lore-curriculum-category"),
+    btnShareResult: document.getElementById("btn-share-result"),
+    btnResultMenu: document.getElementById("btn-result-menu"),
+    btnResultVault: document.getElementById("btn-result-vault"),
+
+    // Help & Stats Modals
+    modalHelp: document.getElementById("modal-help"),
+    btnCloseHelp: document.getElementById("btn-close-help"),
+    btnHelpStart: document.getElementById("btn-help-start"),
+    modalStats: document.getElementById("modal-stats"),
+    btnCloseStats: document.getElementById("btn-close-stats"),
+    btnStatsClose: document.getElementById("btn-stats-close"),
+    statPlayed: document.getElementById("stat-played"),
+    statWinRate: document.getElementById("stat-win-rate"),
+    statCurrentStreak: document.getElementById("stat-current-streak"),
+    statMaxStreak: document.getElementById("stat-max-streak"),
+    statsDistribution: document.getElementById("stats-distribution"),
+
+    // Ambient & Toast
+    garnishContainer: document.getElementById("garnish-container"),
+    toastRegion: document.getElementById("toast-region")
+  };
+
+  // --- 6. ANIMATED GARNISH BACKGROUND SYSTEM (Section 27–36) ---
+  const GARNISH_SVGS = [
+    // 1. Mint Sprig
+    `<svg viewBox="0 0 64 64" fill="none" stroke="#E5C158" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M32 58 C32 40 32 20 32 6" />
+      <path d="M32 38 C20 36 12 28 14 18 C24 16 30 26 32 38 Z" />
+      <path d="M22 28 C26 26 28 24 30 22" />
+      <path d="M32 30 C44 28 52 20 50 10 C40 8 34 18 32 30 Z" />
+      <path d="M42 20 C38 18 36 16 34 14" />
+      <path d="M32 18 C26 12 28 4 32 2 C36 4 38 12 32 18 Z" />
+    </svg>`,
+
+    // 2. Citrus Spiral Twist
+    `<svg viewBox="0 0 64 64" fill="none" stroke="#E5C158" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 14 C24 2 46 6 50 20 C54 34 32 38 24 44 C16 50 24 60 38 58 C48 56 54 46 52 38" />
+      <path d="M16 18 C26 8 44 10 46 22 C48 32 32 36 26 42" stroke-dasharray="2 2" opacity="0.6" />
+    </svg>`,
+
+    // 3. Citrus Wheel
+    `<svg viewBox="0 0 64 64" fill="none" stroke="#E5C158" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="32" cy="32" r="28" />
+      <circle cx="32" cy="32" r="23" stroke-dasharray="2 3" opacity="0.7" />
+      <circle cx="32" cy="32" r="4" />
+      <path d="M32 8 L32 28 M32 36 L32 56 M8 32 L28 32 M36 32 L56 32" />
+      <path d="M15 15 L29 29 M35 35 L49 49 M49 15 L35 29 M29 35 L15 49" />
+    </svg>`,
+
+    // 4. Olive Pick
+    `<svg viewBox="0 0 64 64" fill="none" stroke="#E5C158" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <line x1="10" y1="54" x2="54" y2="10" />
+      <circle cx="56" cy="8" r="3" fill="#E5C158" />
+      <ellipse cx="28" cy="36" rx="9" ry="14" transform="rotate(-45 28 36)" />
+      <circle cx="28" cy="36" r="3" fill="#E5C158" />
+    </svg>`,
+
+    // 5. Cherries with Stem
+    `<svg viewBox="0 0 64 64" fill="none" stroke="#E5C158" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M22 42 C14 42 12 50 18 56 C24 62 32 56 30 48 C28 42 24 42 22 42 Z" />
+      <path d="M44 38 C36 38 34 46 40 52 C46 58 54 52 52 44 C50 38 46 38 44 38 Z" />
+      <path d="M24 42 C26 28 36 18 42 8" />
+      <path d="M44 38 C42 26 40 16 42 8" />
+      <path d="M42 8 C48 10 56 12 54 18 C50 18 46 14 42 8 Z" />
+    </svg>`,
+
+    // 6. Rosemary Sprig
+    `<svg viewBox="0 0 64 64" fill="none" stroke="#E5C158" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <line x1="16" y1="56" x2="48" y2="8" />
+      <line x1="22" y1="46" x2="14" y2="40" />
+      <line x1="26" y1="42" x2="36" y2="46" />
+      <line x1="30" y1="34" x2="20" y2="28" />
+      <line x1="34" y1="30" x2="44" y2="34" />
+      <line x1="38" y1="22" x2="28" y2="16" />
+      <line x1="42" y1="18" x2="52" y2="22" />
+    </svg>`
   ];
 
-  /* ==========================================================================
-     5. APPLICATION STATE
-     ========================================================================== */
-  const state = {
-    currentView: "menu",
-    mode: persistentData.preferredMode || "classic",
-    tickets: [],
-    currentTicketIndex: 0,
-    totalTickets: 5,
-    activeCocktail: null,
-    activeChallenge: null,
-    selectedConfidence: "certain",
-    shiftScore: 0,
-    streak: 0,
-    answered: false,
-    shiftFinished: false
-  };
+  class GarnishManager {
+    constructor(container) {
+      this.container = container;
+      this.activeElements = new Set();
+      this.timer = null;
+      this.isGameMode = false;
+      this.reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    }
 
-  /* ==========================================================================
-     6. DOM CACHE
-     ========================================================================== */
-  const DOM = {
-    mainMenuView: document.getElementById("mainMenuView"),
-    gameplayView: document.getElementById("gameplayView"),
+    start() {
+      if (this.reducedMotion) return;
+      this.scheduleNext();
+    }
 
-    menuRankBadge: document.getElementById("menuRankBadge"),
-    menuAccuracyPill: document.getElementById("menuAccuracyPill"),
-    menuHighscoreVal: document.getElementById("menuHighscoreVal"),
-    menuBestStreakVal: document.getElementById("menuBestStreakVal"),
-    menuCertifiedVal: document.getElementById("menuCertifiedVal"),
-    btnStartClassic: document.getElementById("btnStartClassic"),
-    btnStartRepair: document.getElementById("btnStartRepair"),
-    btnStartFamily: document.getElementById("btnStartFamily"),
-    btnMenuOpenCodex: document.getElementById("btnMenuOpenCodex"),
-    btnMenuSoundToggle: document.getElementById("btnMenuSoundToggle"),
-    menuSoundIcon: document.getElementById("menuSoundIcon"),
-    menuSoundLabel: document.getElementById("menuSoundLabel"),
+    setGameMode(isGame) {
+      this.isGameMode = isGame;
+      if (isGame) {
+        document.body.classList.add("game-active-mode");
+      } else {
+        document.body.classList.remove("game-active-mode");
+      }
+    }
 
-    btnBackToMenu: document.getElementById("btnBackToMenu"),
-    streakVal: document.getElementById("streakVal"),
-    scoreVal: document.getElementById("scoreVal"),
-    btnAudioToggle: document.getElementById("btnAudioToggle"),
-    iconSoundOn: document.getElementById("iconSoundOn"),
-    iconSoundOff: document.getElementById("iconSoundOff"),
-    btnOpenMenu: document.getElementById("btnOpenMenu"),
-    modeTabs: document.querySelectorAll(".mode-tab"),
-    modeBadge: document.getElementById("modeBadge"),
-    roundCounter: document.getElementById("roundCounter"),
-    diffBadge: document.getElementById("diffBadge"),
+    scheduleNext() {
+      // Menu target: 2–5 visible. Game target: 1–2 visible (Section 30 & 35)
+      const maxCount = this.isGameMode ? 2 : 4;
+      const interval = this.isGameMode 
+        ? Math.floor(Math.random() * 6000 + 7000) 
+        : Math.floor(Math.random() * 3000 + 2500);
 
-    specCard: document.getElementById("specCard"),
-    cardFamily: document.getElementById("cardFamily"),
-    cardTitle: document.getElementById("cardTitle"),
-    cardEra: document.getElementById("cardEra"),
-    glassSvgSlot: document.getElementById("glassSvgSlot"),
-    cardGlassCaption: document.getElementById("cardGlassCaption"),
-    specBody: document.getElementById("specBody"),
-    ingredientList: document.getElementById("ingredientList"),
-    paramMethodVal: document.getElementById("paramMethodVal"),
-    paramIceVal: document.getElementById("paramIceVal"),
-    paramGarnishVal: document.getElementById("paramGarnishVal"),
-    paramMethodCell: document.getElementById("paramMethodCell"),
-    footnoteText: document.getElementById("footnoteText"),
+      this.timer = setTimeout(() => {
+        if (this.activeElements.size < maxCount) {
+          this.spawnGarnish();
+        }
+        this.scheduleNext();
+      }, interval);
+    }
 
-    deckPrompt: document.getElementById("deckPrompt"),
-    btnHint: document.getElementById("btnHint"),
-    choiceMatrix: document.getElementById("choiceMatrix"),
-    confidenceBar: document.getElementById("confidenceBar"),
-    confButtons: document.querySelectorAll(".conf-btn"),
-    diagnosisTray: document.getElementById("diagnosisTray"),
-    diagBadge: document.getElementById("diagBadge"),
-    diagPoints: document.getElementById("diagPoints"),
-    diagReason: document.getElementById("diagReason"),
-    btnNextTicket: document.getElementById("btnNextTicket"),
-    btnNextText: document.getElementById("btnNextText"),
-    btnReplayShift: document.getElementById("btnReplayShift"),
+    spawnGarnish() {
+      const svgCode = GARNISH_SVGS[Math.floor(Math.random() * GARNISH_SVGS.length)];
+      const el = document.createElement("div");
+      el.className = "floating-garnish";
+      el.innerHTML = svgCode;
 
-    modalBackdrop: document.getElementById("modalBackdrop"),
-    btnCloseModal: document.getElementById("btnCloseModal"),
-    subnavButtons: document.querySelectorAll(".subnav-btn"),
-    modalPanes: document.querySelectorAll(".modal-pane"),
-    codexSearch: document.getElementById("codexSearch"),
-    codexGrid: document.getElementById("codexGrid"),
-    stMasteryRank: document.getElementById("stMasteryRank"),
-    stTotalPassed: document.getElementById("stTotalPassed"),
-    stAccuracy: document.getElementById("stAccuracy"),
-    stBestStreak: document.getElementById("stBestStreak"),
-    familyMeterList: document.getElementById("familyMeterList"),
-    glassAtlasGrid: document.getElementById("glassAtlasGrid"),
-    guideFamiliesList: document.getElementById("guideFamiliesList"),
-    btnResetProgress: document.getElementById("btnResetProgress")
-  };
+      const size = Math.floor(Math.random() * 22 + 46); // 46px to 68px
+      const leftPercent = Math.floor(Math.random() * 84 + 6); // 6% to 90%
+      const durationSec = Math.floor(Math.random() * 12 + 18); // 18s to 30s
+      const rotationDeg = Math.floor(Math.random() * 120 - 60);
 
-  /* ==========================================================================
-     7. TRANSITIONS & FLOW
-     ========================================================================== */
-  function showView(viewName) {
-    state.currentView = viewName;
-    if (viewName === "menu") {
-      DOM.gameplayView.classList.add("hidden-view");
-      DOM.gameplayView.classList.remove("active-view");
-      DOM.mainMenuView.classList.remove("hidden-view");
-      DOM.mainMenuView.classList.add("active-view");
-      updateMenuSummary();
-    } else {
-      DOM.mainMenuView.classList.add("hidden-view");
-      DOM.mainMenuView.classList.remove("active-view");
-      DOM.gameplayView.classList.remove("hidden-view");
-      DOM.gameplayView.classList.add("active-view");
+      el.style.width = `${size}px`;
+      el.style.height = `${size}px`;
+      el.style.left = `${leftPercent}%`;
+      el.style.bottom = "-80px";
+      el.style.transform = `rotate(${rotationDeg}deg)`;
+
+      // Upward floating animation
+      const anim = el.animate([
+        { transform: `translate(0, 0) rotate(${rotationDeg}deg)`, opacity: 0 },
+        { opacity: 0.38, offset: 0.15 },
+        { opacity: 0.45, offset: 0.45 },
+        { transform: `translate(${(Math.random() - 0.5) * 60}px, -115vh) rotate(${rotationDeg + 45}deg)`, opacity: 0 }
+      ], {
+        duration: durationSec * 1000,
+        easing: "cubic-bezier(0.25, 1, 0.5, 1)"
+      });
+
+      this.container.appendChild(el);
+      this.activeElements.add(el);
+
+      anim.onfinish = () => {
+        el.remove();
+        this.activeElements.delete(el);
+      };
     }
   }
 
-  function generateTicketDeck(modeName) {
-    const available = COCKTAIL_DATABASE.filter(c => c.modes && c.modes[modeName]);
-    const shuffled = [...available].sort(() => Math.random() - 0.5);
-    return shuffled.slice(0, 5);
+  const garnishes = new GarnishManager(DOM.garnishContainer);
+  garnishes.start();
+
+  // --- 7. TOAST NOTIFICATION SYSTEM ---
+  function showToast(message, duration = 2800) {
+    const toast = document.createElement("div");
+    toast.className = "toast";
+    toast.textContent = message;
+    DOM.toastRegion.appendChild(toast);
+    setTimeout(() => {
+      toast.style.opacity = "0";
+      toast.style.transition = "opacity 200ms ease";
+      setTimeout(() => toast.remove(), 200);
+    }, duration);
   }
 
-  function startShiftMode(modeName) {
-    audio.playClick();
-    state.mode = modeName;
-    persistentData.preferredMode = modeName;
-    saveStoredState(persistentData);
+  // --- 8. SCREEN NAVIGATION ROUTER ---
+  function showScreen(screenId) {
+    DOM.viewMenu.classList.add("hidden");
+    DOM.viewGame.classList.add("hidden");
+    DOM.viewVault.classList.add("hidden");
 
-    state.tickets = generateTicketDeck(modeName);
-    state.totalTickets = state.tickets.length;
-    state.currentTicketIndex = 0;
-    state.shiftScore = 0;
-    state.streak = 0;
-    state.shiftFinished = false;
+    if (screenId === "menu") {
+      DOM.viewMenu.classList.remove("hidden");
+      DOM.platformHeader.classList.add("hidden");
+      garnishes.setGameMode(false);
+      renderMainMenu();
+    } else if (screenId === "game") {
+      DOM.viewGame.classList.remove("hidden");
+      DOM.platformHeader.classList.remove("hidden");
+      garnishes.setGameMode(true);
+    } else if (screenId === "vault") {
+      DOM.viewVault.classList.remove("hidden");
+      DOM.platformHeader.classList.remove("hidden");
+      garnishes.setGameMode(false);
+      renderVaultView();
+    }
+    window.scrollTo(0, 0);
+  }
 
-    DOM.btnNextText.textContent = "NEXT TICKET";
-    DOM.btnReplayShift.classList.add("hidden");
+  // --- 9. MAIN MENU CONTROLLER (Section 12–15) ---
+  function renderMainMenu() {
+    const todayPuzzle = getPuzzleForDay(AppState.currentDay, AppState.store.dailyScheduleMap);
+    if (!todayPuzzle) return;
 
-    DOM.modeTabs.forEach(tab => {
-      const isMatch = (tab.dataset.mode === modeName);
-      tab.classList.toggle("active", isMatch);
-      tab.setAttribute("aria-selected", isMatch ? "true" : "false");
+    const record = AppState.store.puzzleHistory[todayPuzzle.id];
+    DOM.menuTodayDayNumber.textContent = `DAY #${AppState.currentDay + 1}`;
+    DOM.menuTodayCocktailName.textContent = todayPuzzle.name;
+    DOM.menuTodayCocktailClue.textContent = `"${todayPuzzle.clue}"`;
+
+    // Render Shakers Indicator in Menu
+    const attempts = record ? record.attemptsUsed : 0;
+    const miniShakers = DOM.menuShakersIndicator.querySelectorAll(".mini-shaker");
+    miniShakers.forEach((icon, i) => {
+      if (i < attempts) {
+        icon.classList.add("lost");
+      } else {
+        icon.classList.remove("lost");
+      }
     });
 
-    showView("gameplay");
-    renderTicket();
-  }
-
-  /* ==========================================================================
-     8. SPEC TICKET RENDERING
-     ========================================================================== */
-  function renderTicket() {
-    state.answered = false;
-    DOM.diagnosisTray.classList.add("hidden");
-    DOM.choiceMatrix.classList.remove("hidden");
-    DOM.confidenceBar.classList.remove("hidden");
-    DOM.btnHint.disabled = false;
-
-    DOM.specCard.classList.remove("card-enter");
-    void DOM.specCard.offsetWidth;
-    DOM.specCard.classList.add("card-enter");
-
-    const cocktail = state.tickets[state.currentTicketIndex];
-    state.activeCocktail = cocktail;
-    const challenge = cocktail.modes[state.mode];
-    state.activeChallenge = challenge;
-
-    DOM.specBody.scrollTop = 0;
-
-    DOM.cardFamily.textContent = `${cocktail.family.toUpperCase()} FAMILY`;
-    DOM.cardTitle.textContent = cocktail.name;
-    DOM.cardEra.textContent = cocktail.era;
-
-    DOM.cardGlassCaption.textContent = cocktail.glass;
-    DOM.glassSvgSlot.innerHTML = GLASS_SVGS[cocktail.glass] || GLASS_SVGS["Coupe"];
-
-    DOM.paramMethodCell.classList.remove("is-blank-target", "is-flawed-target");
-    if (challenge.type === "method") {
-      DOM.paramMethodCell.classList.add("is-blank-target");
-      DOM.paramMethodVal.innerHTML = `<span class="blank-slot" style="min-width:60px; height:14px;"></span>`;
-    } else if (challenge.type === "troubleshoot" && challenge.targetIndex === -1) {
-      DOM.paramMethodCell.classList.add("is-flawed-target");
-      DOM.paramMethodVal.textContent = (challenge.flawIngredientDisplay || "TECHNIQUE FLAW").toUpperCase();
+    if (record && record.completed) {
+      if (record.won) {
+        DOM.menuTodayStatusBadge.textContent = "SPEC APPROVED ✓";
+        DOM.menuTodayStatusBadge.className = "badge gold-badge";
+        DOM.menuTodayActionText.textContent = "VIEW SHIFT REPORT";
+      } else {
+        DOM.menuTodayStatusBadge.textContent = "RECIPE 86'D ✗";
+        DOM.menuTodayStatusBadge.className = "badge diff-badge";
+        DOM.menuTodayActionText.textContent = "REVIEW MASTER SPEC";
+      }
+    } else if (record && record.attemptsUsed > 0) {
+      DOM.menuTodayStatusBadge.textContent = `IN PROGRESS (${MAX_ATTEMPTS - record.attemptsUsed} REMAINING)`;
+      DOM.menuTodayStatusBadge.className = "badge tag-badge";
+      DOM.menuTodayActionText.textContent = "RESUME SERVICE";
     } else {
-      DOM.paramMethodVal.textContent = cocktail.method.toUpperCase();
+      DOM.menuTodayStatusBadge.textContent = "READY FOR SERVICE";
+      DOM.menuTodayStatusBadge.className = "badge diff-badge";
+      DOM.menuTodayActionText.textContent = "START SERVICE";
     }
 
-    DOM.paramIceVal.textContent = cocktail.ice.toUpperCase();
-    DOM.paramGarnishVal.textContent = cocktail.garnish.toUpperCase();
-    DOM.footnoteText.textContent = cocktail.footnote;
+    // Vault count badge: Past released days strictly < currentDay
+    const vaultCount = Math.max(0, AppState.currentDay);
+    DOM.menuVaultCountBadge.textContent = `${vaultCount} SHIFT${vaultCount === 1 ? "" : "S"}`;
+  }
 
-    DOM.ingredientList.innerHTML = "";
-    cocktail.spec.forEach((item, idx) => {
-      const li = document.createElement("li");
-      li.className = "spec-item";
+  // --- 10. PUZZLE SETUP & BOARD RENDERING ---
+  function loadPuzzle(puzzle, dayIndex, isVault = false) {
+    AppState.activePuzzle = puzzle;
+    AppState.activeDayIndex = dayIndex;
+    AppState.isVaultMode = isVault;
+    AppState.selectedSlot = 0;
 
-      const isTarget = (challenge.targetIndex === idx);
-      const isTroubleshoot = (challenge.type === "troubleshoot" && isTarget);
+    // Load past progress
+    const record = AppState.store.puzzleHistory[puzzle.id];
+    if (record) {
+      AppState.isCompleted = record.completed;
+      AppState.isWon = record.won;
+      AppState.attemptsUsed = record.attemptsUsed;
+      AppState.lockedSlots = record.lockedSlots.slice();
+      AppState.currentDraft = record.draftSlots ? record.draftSlots.slice() : [null, null, null, null, null];
+      AppState.historyGrid = record.historyGrid ? record.historyGrid.slice() : [];
+    } else {
+      AppState.isCompleted = false;
+      AppState.isWon = false;
+      AppState.attemptsUsed = 0;
+      AppState.lockedSlots = [false, false, false, false, false];
+      AppState.currentDraft = [null, null, null, null, null];
+      AppState.historyGrid = [];
+    }
 
-      if (isTroubleshoot) {
-        li.classList.add("is-flawed-target");
-      } else if (isTarget && challenge.type !== "method") {
-        li.classList.add("is-blank-target");
-      }
+    // Update Meta Headers
+    DOM.puzzleDayBadge.textContent = `DAY #${dayIndex + 1}`;
+    DOM.puzzleCategoryBadge.textContent = puzzle.curriculumCategory.split(":")[1]?.trim() || "COCKTAIL";
+    DOM.puzzleDiffBadge.textContent = puzzle.difficulty.toUpperCase();
+    DOM.ticketNumber.textContent = String(dayIndex + 1).padStart(3, "0");
+    DOM.cocktailEra.textContent = puzzle.era || "Savoy Canon";
+    DOM.cocktailName.textContent = puzzle.name;
+    DOM.cocktailClue.textContent = `"${puzzle.clue}"`;
 
-      const measureSpan = document.createElement("span");
-      measureSpan.className = "spec-measure";
-      if (isTarget && challenge.type === "measure") {
-        measureSpan.innerHTML = `<span class="blank-slot" style="min-width:44px;"></span>`;
+    renderShakers();
+    renderSlots();
+    renderBarRail();
+
+    // Tasting Log Hint (Unlocked at attempt 2+)
+    if (AppState.attemptsUsed >= 2 || AppState.isCompleted) {
+      DOM.hintBox.classList.remove("hidden");
+      DOM.hintText.textContent = puzzle.hint;
+    } else {
+      DOM.hintBox.classList.add("hidden");
+    }
+
+    updateControlButtons();
+    showScreen("game");
+  }
+
+  function renderShakers() {
+    const remaining = Math.max(0, MAX_ATTEMPTS - AppState.attemptsUsed);
+    const icons = DOM.shakerTokens.querySelectorAll(".shaker-icon");
+    icons.forEach((icon, i) => {
+      if (i < AppState.attemptsUsed) {
+        icon.classList.add("lost");
+        icon.setAttribute("title", `Shaker ${i + 1} (Used)`);
       } else {
-        measureSpan.textContent = item.measure;
+        icon.classList.remove("lost");
+        icon.setAttribute("title", `Shaker ${i + 1} (Ready)`);
       }
-
-      const nameRoleWrap = document.createElement("div");
-      nameRoleWrap.className = "spec-name-role";
-
-      const nameSpan = document.createElement("span");
-      nameSpan.className = "spec-name";
-
-      if (isTroubleshoot && challenge.flawIngredientDisplay) {
-        nameSpan.textContent = challenge.flawIngredientDisplay;
-      } else if (isTarget && challenge.type === "ingredient") {
-        nameSpan.innerHTML = `<span class="blank-slot"></span>`;
-      } else {
-        nameSpan.textContent = item.name;
-      }
-
-      const roleSpan = document.createElement("span");
-      roleSpan.className = "spec-role-tag";
-      roleSpan.textContent = item.role;
-
-      nameRoleWrap.appendChild(nameSpan);
-      nameRoleWrap.appendChild(roleSpan);
-
-      li.appendChild(measureSpan);
-      li.appendChild(nameRoleWrap);
-      DOM.ingredientList.appendChild(li);
     });
 
-    DOM.deckPrompt.textContent = challenge.prompt;
-    renderChoices(challenge.options);
-    updateHUD();
+    const submitSubtext = DOM.btnSubmitSpec.querySelector(".btn-subtext");
+    if (submitSubtext) {
+      submitSubtext.textContent = AppState.isCompleted 
+        ? "(SPEC COMPLETED)"
+        : `(${remaining} ATTEMPTS REMAINING)`;
+    }
   }
 
-  function renderChoices(options) {
-    DOM.choiceMatrix.innerHTML = "";
-    const shuffledOptions = [...options];
-    for (let index = shuffledOptions.length - 1; index > 0; index -= 1) {
-      const swapIndex = Math.floor(Math.random() * (index + 1));
-      [shuffledOptions[index], shuffledOptions[swapIndex]] = [
-        shuffledOptions[swapIndex],
-        shuffledOptions[index]
-      ];
-    }
+  function renderSlots() {
+    DOM.slots.forEach((slotEl, idx) => {
+      slotEl.classList.remove("selected", "locked");
+      const isLocked = AppState.lockedSlots[idx];
+      const drafted = AppState.currentDraft[idx];
+      const holder = slotEl.querySelector(".slot-content-holder");
+      holder.innerHTML = "";
 
-    shuffledOptions.forEach((optText, index) => {
+      if (isLocked) {
+        slotEl.classList.add("locked");
+        const correctTarget = AppState.activePuzzle.targetSlots[idx];
+        const span = document.createElement("span");
+        span.className = "slotted-tile-view";
+        span.textContent = correctTarget.component;
+        holder.appendChild(span);
+        slotEl.setAttribute("aria-label", `Slot ${idx + 1}: ${correctTarget.type}. Locked correct: ${correctTarget.component}`);
+      } else if (drafted) {
+        const span = document.createElement("span");
+        span.className = "slotted-tile-view";
+        span.textContent = drafted.text;
+        holder.appendChild(span);
+        slotEl.setAttribute("aria-label", `Slot ${idx + 1}: Filled with ${drafted.text}. Click to remove.`);
+      } else {
+        const ph = document.createElement("span");
+        ph.className = "slot-placeholder";
+        ph.textContent = `Tap to assign ${AppState.activePuzzle.targetSlots[idx].type}`;
+        holder.appendChild(ph);
+        slotEl.setAttribute("aria-label", `Slot ${idx + 1}: Empty. Tap to select.`);
+      }
+
+      if (!AppState.isCompleted && !isLocked && idx === AppState.selectedSlot) {
+        slotEl.classList.add("selected");
+      }
+    });
+  }
+
+  function renderBarRail() {
+    DOM.barRailTiles.innerHTML = "";
+    const pool = AppState.activePuzzle.barRailPool;
+
+    const placedTileIds = new Set();
+    AppState.currentDraft.forEach(t => {
+      if (t) placedTileIds.add(t.id);
+    });
+
+    pool.forEach(tile => {
       const btn = document.createElement("button");
-      btn.className = "choice-btn";
       btn.type = "button";
-      btn.dataset.choice = optText;
+      btn.className = "rail-tile";
+      btn.dataset.tileId = tile.id;
+
+      const cat = document.createElement("span");
+      cat.className = "rail-tile-category";
+      cat.textContent = tile.category;
 
       const label = document.createElement("span");
-      label.className = "choice-text";
-      label.textContent = optText;
+      label.textContent = tile.text;
 
-      const kbd = document.createElement("span");
-      kbd.className = "choice-kbd";
-      kbd.textContent = `${index + 1}`;
-
+      btn.appendChild(cat);
       btn.appendChild(label);
-      btn.appendChild(kbd);
 
-      btn.addEventListener("click", () => handleAnswer(optText, btn));
-      DOM.choiceMatrix.appendChild(btn);
+      if (placedTileIds.has(tile.id)) {
+        btn.classList.add("used");
+        btn.setAttribute("aria-disabled", "true");
+        btn.tabIndex = -1;
+      } else {
+        btn.addEventListener("click", () => handleTileSelection(tile));
+      }
+
+      DOM.barRailTiles.appendChild(btn);
     });
   }
 
-  function updateHUD() {
-    DOM.roundCounter.textContent = `TICKET #${state.currentTicketIndex + 1} / ${state.totalTickets}`;
-    DOM.streakVal.textContent = state.streak;
-    DOM.scoreVal.textContent = state.shiftScore;
-
-    if (state.mode === "repair") {
-      DOM.modeBadge.textContent = "TROUBLESHOOT";
-    } else if (state.mode === "family") {
-      DOM.modeBadge.textContent = "FAMILY DRILL";
+  function updateControlButtons() {
+    if (AppState.isCompleted) {
+      DOM.btnSubmitSpec.disabled = false;
+      DOM.btnSubmitSpec.querySelector(".btn-text").textContent = "VIEW SHIFT REPORT";
+      DOM.btnClearDraft.style.display = "none";
     } else {
-      DOM.modeBadge.textContent = "CLASSIC SHIFT";
+      DOM.btnSubmitSpec.disabled = false;
+      DOM.btnSubmitSpec.querySelector(".btn-text").textContent = "TEST SPECIFICATION";
+      DOM.btnClearDraft.style.display = "inline-block";
     }
-
-    if (state.streak >= 8) DOM.diffBadge.textContent = "GRANDMASTER";
-    else if (state.streak >= 4) DOM.diffBadge.textContent = "MIXOLOGIST";
-    else if (state.streak >= 2) DOM.diffBadge.textContent = "SENIOR";
-    else DOM.diffBadge.textContent = "APPRENTICE";
   }
 
-  /* ==========================================================================
-     9. EVALUATION & PROGRESSION
-     ========================================================================== */
-  function handleAnswer(chosenText, chosenButton) {
-    if (state.answered) return;
-    state.answered = true;
+  // --- 11. GAMEPLAY INTERACTIONS ---
+  function selectSlot(slotIndex) {
+    if (AppState.isCompleted) return;
+    if (AppState.lockedSlots[slotIndex]) {
+      const nextUnlocked = AppState.lockedSlots.findIndex(l => !l);
+      if (nextUnlocked !== -1) AppState.selectedSlot = nextUnlocked;
+    } else {
+      AppState.selectedSlot = slotIndex;
+    }
+    renderSlots();
+  }
 
-    persistentData.totalAttempts++;
+  function handleTileSelection(tile) {
+    if (AppState.isCompleted) return;
+    audio.playTileTap();
 
-    const cocktail = state.activeCocktail;
-    const challenge = state.activeChallenge;
-    const isCorrect = (chosenText === challenge.correctAnswer);
+    if (AppState.lockedSlots[AppState.selectedSlot]) {
+      const nextAvailable = AppState.lockedSlots.findIndex(l => !l);
+      if (nextAvailable === -1) return;
+      AppState.selectedSlot = nextAvailable;
+    }
 
-    const famKey = cocktail.family;
-    if (persistentData.familyMastery[famKey]) {
-      persistentData.familyMastery[famKey].attempts++;
-      if (isCorrect) {
-        persistentData.familyMastery[famKey].correct++;
+    AppState.currentDraft[AppState.selectedSlot] = tile;
+
+    // Advance to next unassigned and unlocked slot
+    let nextSlot = -1;
+    for (let i = 0; i < SLOTS_COUNT; i++) {
+      if (!AppState.lockedSlots[i] && !AppState.currentDraft[i]) {
+        nextSlot = i;
+        break;
+      }
+    }
+    if (nextSlot !== -1) {
+      AppState.selectedSlot = nextSlot;
+    }
+
+    renderSlots();
+    renderBarRail();
+  }
+
+  function handleSlotClick(slotIndex) {
+    if (AppState.isCompleted) return;
+    if (AppState.lockedSlots[slotIndex]) {
+      showToast("This slot is already authenticated and locked.");
+      return;
+    }
+
+    if (AppState.currentDraft[slotIndex]) {
+      audio.playTileTap();
+      AppState.currentDraft[slotIndex] = null;
+      AppState.selectedSlot = slotIndex;
+      renderSlots();
+      renderBarRail();
+      return;
+    }
+
+    selectSlot(slotIndex);
+  }
+
+  function clearUnlockedDraft() {
+    if (AppState.isCompleted) return;
+    audio.playTileTap();
+    for (let i = 0; i < SLOTS_COUNT; i++) {
+      if (!AppState.lockedSlots[i]) {
+        AppState.currentDraft[i] = null;
+      }
+    }
+    const firstUnlocked = AppState.lockedSlots.findIndex(l => !l);
+    AppState.selectedSlot = firstUnlocked !== -1 ? firstUnlocked : 0;
+    renderSlots();
+    renderBarRail();
+    showToast("Draft slots cleared.");
+  }
+
+  function submitSpecification() {
+    if (AppState.isCompleted) {
+      openResultModal();
+      return;
+    }
+
+    // Require all 5 slots to be populated
+    for (let i = 0; i < SLOTS_COUNT; i++) {
+      if (!AppState.lockedSlots[i] && !AppState.currentDraft[i]) {
+        showToast("Fill all 5 specification slots before testing.");
+        const missingSlotEl = DOM.slots[i];
+        missingSlotEl.classList.add("miss-flash");
+        setTimeout(() => missingSlotEl.classList.remove("miss-flash"), 420);
+        return;
       }
     }
 
-    const buttons = DOM.choiceMatrix.querySelectorAll(".choice-btn");
-    buttons.forEach(b => (b.disabled = true));
+    AppState.attemptsUsed++;
+    let newlyMatchedCount = 0;
+    const attemptRoundResult = [];
 
-    let confMultiplier = 1.0;
-    if (state.selectedConfidence === "certain") confMultiplier = 1.5;
-    if (state.selectedConfidence === "guess") confMultiplier = 0.5;
-
-    if (isCorrect) {
-      audio.playCorrect();
-      chosenButton.classList.add("is-correct");
-
-      state.streak++;
-      if (state.streak > persistentData.bestStreak) {
-        persistentData.bestStreak = state.streak;
-      }
-      persistentData.correctCount++;
-      persistentData.totalCompleted++;
-
-      const basePoints = 100;
-      const streakBonus = (state.streak - 1) * 25;
-      const pointsEarned = Math.round((basePoints + streakBonus) * confMultiplier);
-      state.shiftScore += pointsEarned;
-
-      if (state.shiftScore > persistentData.highScore) {
-        persistentData.highScore = state.shiftScore;
+    // Evaluate each slot against the canonical spec
+    for (let i = 0; i < SLOTS_COUNT; i++) {
+      if (AppState.lockedSlots[i]) {
+        attemptRoundResult.push("hit");
+        continue;
       }
 
-      fillCardBlank(challenge, true);
+      const placedTile = AppState.currentDraft[i];
+      if (placedTile && placedTile.correctSlot === i) {
+        AppState.lockedSlots[i] = true;
+        newlyMatchedCount++;
+        attemptRoundResult.push("hit");
+      } else {
+        attemptRoundResult.push("miss");
+        AppState.currentDraft[i] = null;
+        const slotEl = DOM.slots[i];
+        slotEl.classList.add("miss-flash");
+        setTimeout(() => slotEl.classList.remove("miss-flash"), 450);
+      }
+    }
 
-      DOM.diagBadge.className = "diag-badge correct";
-      DOM.diagBadge.textContent = "SPEC CERTIFIED ✓";
-      DOM.diagPoints.textContent = `+${pointsEarned} PTS (${state.selectedConfidence.toUpperCase()})`;
-      DOM.diagReason.textContent = challenge.diagnosis;
+    AppState.historyGrid.push(attemptRoundResult);
+
+    if (newlyMatchedCount > 0) {
+      audio.playLockSuccess();
     } else {
-      audio.playWrong();
-      chosenButton.classList.add("is-wrong");
+      audio.playMiss();
+    }
 
-      buttons.forEach(b => {
-        if (b.dataset.choice === challenge.correctAnswer) {
-          b.classList.add("is-correct");
+    renderShakers();
+    renderSlots();
+    renderBarRail();
+
+    const areAllLocked = AppState.lockedSlots.every(l => l === true);
+
+    // WIN
+    if (areAllLocked) {
+      AppState.isCompleted = true;
+      AppState.isWon = true;
+      audio.playVictoryChord();
+      saveGameProgress();
+      recordStats(true, AppState.attemptsUsed);
+      setTimeout(openResultModal, 700);
+      return;
+    }
+
+    // LOSS (Exhausted attempts)
+    if (AppState.attemptsUsed >= MAX_ATTEMPTS) {
+      AppState.isCompleted = true;
+      AppState.isWon = false;
+      audio.playMiss();
+      AppState.lockedSlots = [true, true, true, true, true];
+      renderSlots();
+      saveGameProgress();
+      recordStats(false, AppState.attemptsUsed);
+      setTimeout(openResultModal, 750);
+      return;
+    }
+
+    // Hint unlock on attempt 2
+    if (AppState.attemptsUsed >= 2) {
+      DOM.hintBox.classList.remove("hidden");
+      DOM.hintText.textContent = AppState.activePuzzle.hint;
+      showToast("Tasting hint unlocked in Bartender Log!");
+    } else {
+      showToast(`Spec tested: ${newlyMatchedCount} correct slots locked.`);
+    }
+
+    const firstFree = AppState.lockedSlots.findIndex(l => !l);
+    if (firstFree !== -1) AppState.selectedSlot = firstFree;
+    renderSlots();
+
+    saveGameProgress();
+  }
+
+  // --- 12. PERSISTENCE & STATS ---
+  function saveGameProgress() {
+    const puzzleId = AppState.activePuzzle.id;
+    AppState.store.puzzleHistory[puzzleId] = {
+      completed: AppState.isCompleted,
+      won: AppState.isWon,
+      attemptsUsed: AppState.attemptsUsed,
+      lockedSlots: AppState.lockedSlots.slice(),
+      draftSlots: AppState.currentDraft.slice(),
+      historyGrid: AppState.historyGrid.slice(),
+      updatedAt: Date.now()
+    };
+    saveStorageData(AppState.store);
+  }
+
+  function recordStats(won, attempts) {
+    if (AppState.isVaultMode) return; // Daily stats apply to today's scheduled challenge
+
+    const stats = AppState.store.stats;
+    stats.played++;
+    if (won) {
+      stats.won++;
+      stats.currentStreak++;
+      if (stats.currentStreak > stats.maxStreak) {
+        stats.maxStreak = stats.currentStreak;
+      }
+      if (stats.distribution[attempts] !== undefined) {
+        stats.distribution[attempts]++;
+      }
+    } else {
+      stats.currentStreak = 0;
+    }
+    saveStorageData(AppState.store);
+  }
+
+  // --- 13. RESULT MODAL & SOCIAL SHARING ---
+  function openResultModal() {
+    const p = AppState.activePuzzle;
+    DOM.resultCocktailName.textContent = p.name;
+
+    if (AppState.isWon) {
+      DOM.resultStatusBadge.textContent = "SPEC APPROVED ✓";
+      DOM.resultStatusBadge.className = "badge gold-badge";
+      DOM.modalResultTitle.textContent = "SERVICE CERTIFIED";
+    } else {
+      DOM.resultStatusBadge.textContent = "RECIPE 86'D ✗";
+      DOM.resultStatusBadge.className = "badge diff-badge";
+      DOM.modalResultTitle.textContent = "SHIFT RETIRED";
+    }
+
+    // Build Visual Attempt Dots Grid (NYT Style)
+    DOM.shareGridPreview.innerHTML = "";
+    AppState.historyGrid.forEach(round => {
+      const row = document.createElement("div");
+      row.className = "share-grid-row";
+      round.forEach(state => {
+        const dot = document.createElement("span");
+        dot.className = `share-dot ${state === "hit" ? "hit" : "miss"}`;
+        row.appendChild(dot);
+      });
+      DOM.shareGridPreview.appendChild(row);
+    });
+
+    // Populate Canonical Specs List
+    DOM.authoritativeSpecsList.innerHTML = "";
+    p.targetSlots.forEach(slot => {
+      const li = document.createElement("li");
+      const st = document.createElement("strong");
+      st.textContent = slot.type + ":";
+      const val = document.createElement("span");
+      val.textContent = slot.component;
+      li.appendChild(st);
+      li.appendChild(val);
+      DOM.authoritativeSpecsList.appendChild(li);
+    });
+
+    // Populate Lore & Curriculum
+    DOM.loreBodyText.textContent = p.lore;
+    DOM.loreCurriculumCategory.textContent = `Curriculum: ${p.curriculumCategory}`;
+
+    DOM.modalResult.classList.remove("hidden");
+  }
+
+  function generateShareSnippet() {
+    const dayDisplay = AppState.activeDayIndex + 1;
+    const scoreText = AppState.isWon ? `${AppState.attemptsUsed}/${MAX_ATTEMPTS}` : "X/4";
+    let text = `🍸 COCKTAIL SPECS CARD #${dayDisplay} — ${scoreText}\n`;
+
+    AppState.historyGrid.forEach(round => {
+      const rowEmoji = round.map(s => (s === "hit" ? "🟩" : "⬛")).join("");
+      text += `${rowEmoji}\n`;
+    });
+
+    text += `Test your bar knowledge: https://tileworksgamesstudio.github.io/86/`;
+    return text;
+  }
+
+  function handleShare() {
+    const snippet = generateShareSnippet();
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(snippet)
+        .then(() => showToast("Shift report copied to clipboard!"))
+        .catch(() => fallbackPromptShare(snippet));
+    } else {
+      fallbackPromptShare(snippet);
+    }
+  }
+
+  function fallbackPromptShare(text) {
+    window.prompt("Copy your specs report:", text);
+  }
+
+  // --- 14. VAULT ARCHIVE CONTROLLER (Section 18 & 19) ---
+  function renderVaultView() {
+    DOM.vaultList.innerHTML = "";
+    const pastDaysCount = AppState.currentDay;
+
+    if (pastDaysCount === 0) {
+      // Day 0 baseline state: Vault is empty (Section 66)
+      const emptyDiv = document.createElement("div");
+      emptyDiv.className = "vault-empty-notice";
+      emptyDiv.innerHTML = `
+        <span class="vault-empty-icon" aria-hidden="true">🗝️</span>
+        <h3>THE VAULT OPENS TOMORROW</h3>
+        <p>Day #1 is currently active behind the bar. Historical shifts will be preserved here starting on Day #2.</p>
+      `;
+      DOM.vaultList.appendChild(emptyDiv);
+      return;
+    }
+
+    // Render released historical puzzles strictly < currentDay
+    for (let day = pastDaysCount - 1; day >= 0; day--) {
+      const puzzle = getPuzzleForDay(day, AppState.store.dailyScheduleMap);
+      if (!puzzle) continue;
+
+      const record = AppState.store.puzzleHistory[puzzle.id];
+      const card = document.createElement("div");
+      card.className = "vault-card";
+      card.tabIndex = 0;
+      card.setAttribute("role", "button");
+
+      const left = document.createElement("div");
+      left.className = "vault-card-left";
+
+      const dayLabel = document.createElement("span");
+      dayLabel.className = "vault-card-day";
+      dayLabel.textContent = `DAY #${day + 1} • ${puzzle.curriculumCategory.split(":")[1]?.trim() || "COCKTAIL"}`;
+
+      const name = document.createElement("h3");
+      name.className = "vault-card-name";
+      name.textContent = puzzle.name;
+
+      left.appendChild(dayLabel);
+      left.appendChild(name);
+
+      const right = document.createElement("div");
+      const statusSpan = document.createElement("span");
+      statusSpan.className = "vault-card-status";
+
+      if (record && record.completed) {
+        if (record.won) {
+          statusSpan.classList.add("cleared");
+          statusSpan.textContent = `PASSED (${record.attemptsUsed}/4)`;
+        } else {
+          statusSpan.classList.add("attempted");
+          statusSpan.textContent = "FAILED (X/4)";
+        }
+      } else {
+        statusSpan.classList.add("unplayed");
+        statusSpan.textContent = "UNPLAYED";
+      }
+
+      right.appendChild(statusSpan);
+      card.appendChild(left);
+      card.appendChild(right);
+
+      const launchVaultPuzzle = () => {
+        loadPuzzle(puzzle, day, true);
+      };
+
+      card.addEventListener("click", launchVaultPuzzle);
+      card.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          launchVaultPuzzle();
         }
       });
 
-      state.streak = 0;
-      fillCardBlank(challenge, false);
-
-      DOM.diagBadge.className = "diag-badge wrong";
-      DOM.diagBadge.textContent = "SPEC VIOLATION ✕";
-      DOM.diagPoints.textContent = "+0 PTS (STREAK RESET)";
-      DOM.diagReason.textContent = `Accurate spec: "${challenge.correctAnswer}". ${challenge.diagnosis}`;
-    }
-
-    saveStoredState(persistentData);
-    updateHUD();
-    DOM.diagnosisTray.classList.remove("hidden");
-    DOM.btnNextTicket.focus();
-  }
-
-  function fillCardBlank(challenge) {
-    if (challenge.type === "ingredient") {
-      const el = DOM.ingredientList.querySelector(".is-blank-target .spec-name");
-      if (el) el.textContent = challenge.correctAnswer;
-    } else if (challenge.type === "measure") {
-      const el = DOM.ingredientList.querySelector(".is-blank-target .spec-measure");
-      if (el) el.textContent = challenge.correctAnswer;
-    } else if (challenge.type === "method") {
-      DOM.paramMethodVal.textContent = challenge.correctAnswer.toUpperCase();
-    } else if (challenge.type === "troubleshoot") {
-      if (challenge.targetIndex === -1) {
-        DOM.paramMethodVal.textContent = `${challenge.correctIngredientName || state.activeCocktail.method} (AUDITED)`.toUpperCase();
-      } else {
-        const el = DOM.ingredientList.querySelector(".is-flawed-target .spec-name");
-        if (el) el.textContent = `${challenge.correctIngredientName || challenge.correctAnswer} (AUDITED)`;
-      }
+      DOM.vaultList.appendChild(card);
     }
   }
 
-  function advanceNextTicket() {
-    audio.playClick();
+  // --- 15. STATISTICS CONTROLLER ---
+  function openStatsModal() {
+    const s = AppState.store.stats;
+    DOM.statPlayed.textContent = s.played;
+    const winRate = s.played > 0 ? Math.round((s.won / s.played) * 100) : 0;
+    DOM.statWinRate.textContent = `${winRate}%`;
+    DOM.statCurrentStreak.textContent = s.currentStreak;
+    DOM.statMaxStreak.textContent = s.maxStreak;
 
-    if (state.shiftFinished) {
-      showView("menu");
-      return;
-    }
+    DOM.statsDistribution.innerHTML = "";
+    const maxVal = Math.max(1, ...Object.values(s.distribution));
 
-    state.currentTicketIndex++;
-    if (state.currentTicketIndex >= state.totalTickets) {
-      completeShift();
-    } else {
-      renderTicket();
-    }
-  }
-
-  function completeShift() {
-    state.shiftFinished = true;
-    audio.playCorrect();
-
-    DOM.diagnosisTray.classList.remove("hidden");
-    DOM.choiceMatrix.classList.add("hidden");
-    DOM.confidenceBar.classList.add("hidden");
-
-    DOM.diagBadge.className = "diag-badge correct";
-    DOM.diagBadge.textContent = "SHIFT COMPLETE ★";
-    DOM.diagPoints.textContent = `FINAL SCORE: ${state.shiftScore}`;
-    DOM.diagReason.textContent = `Shift tickets verified! Career statistics and family knowledge updated. High Score: ${persistentData.highScore} PTS.`;
-
-    DOM.btnNextText.textContent = "RETURN TO MENU";
-    DOM.btnReplayShift.classList.remove("hidden");
-    DOM.btnNextTicket.focus();
-  }
-
-  function replayCurrentShift() {
-    audio.playClick();
-    startShiftMode(state.mode);
-  }
-
-  function handleHint() {
-    if (state.answered || !state.activeChallenge) return;
-    audio.playClick();
-    DOM.btnHint.disabled = true;
-    DOM.deckPrompt.textContent = `💡 CLUE: ${state.activeChallenge.hint}`;
-
-    const wrongButtons = Array.from(DOM.choiceMatrix.querySelectorAll(".choice-btn")).filter(
-      btn => btn.dataset.choice !== state.activeChallenge.correctAnswer
-    );
-    if (wrongButtons.length > 0) {
-      const eliminated = wrongButtons[Math.floor(Math.random() * wrongButtons.length)];
-      eliminated.disabled = true;
-      eliminated.style.opacity = "0.35";
-      eliminated.style.textDecoration = "line-through";
-    }
-  }
-
-  /* ==========================================================================
-     10. MENU SUMMARY & ATLAS/CODEX RENDERING
-     ========================================================================== */
-  function updateMenuSummary() {
-    const total = persistentData.totalAttempts;
-    const correct = persistentData.correctCount;
-    const pct = total > 0 ? Math.round((correct / total) * 100) : 0;
-
-    DOM.menuAccuracyPill.textContent = `${pct}% ACCURACY`;
-    DOM.menuHighscoreVal.textContent = persistentData.highScore;
-    DOM.menuBestStreakVal.textContent = persistentData.bestStreak;
-    DOM.menuCertifiedVal.textContent = persistentData.totalCompleted;
-
-    let rank = "BARBACK APPRENTICE";
-    if (persistentData.totalCompleted >= 25 && pct >= 80) rank = "GRANDMASTER MIXOLOGIST";
-    else if (persistentData.totalCompleted >= 12 && pct >= 70) rank = "SENIOR BARTENDER";
-    else if (persistentData.totalCompleted >= 5) rank = "WORKING BARTENDER";
-    DOM.menuRankBadge.textContent = rank;
-
-    const isMuted = audio.muted;
-    DOM.menuSoundIcon.textContent = isMuted ? "🔇" : "🔊";
-    DOM.menuSoundLabel.textContent = `SOUND: ${isMuted ? "OFF" : "ON"}`;
-    DOM.iconSoundOn.classList.toggle("hidden", isMuted);
-    DOM.iconSoundOff.classList.toggle("hidden", !isMuted);
-  }
-
-  function renderCodex(query = "") {
-    DOM.codexGrid.innerHTML = "";
-    const filterTerm = query.trim().toLowerCase();
-
-    const matched = COCKTAIL_DATABASE.filter(c => {
-      return (
-        c.name.toLowerCase().includes(filterTerm) ||
-        c.family.toLowerCase().includes(filterTerm) ||
-        c.baseSpirit.toLowerCase().includes(filterTerm)
-      );
-    });
-
-    if (matched.length === 0) {
-      const emptyMsg = document.createElement("p");
-      emptyMsg.style.color = "var(--tx-muted)";
-      emptyMsg.style.fontSize = "0.85rem";
-      emptyMsg.style.fontWeight = "700";
-      emptyMsg.style.padding = "10px 0";
-      emptyMsg.textContent = "No matching cocktail specifications found in atlas.";
-      DOM.codexGrid.appendChild(emptyMsg);
-      return;
-    }
-
-    matched.forEach(c => {
-      const item = document.createElement("div");
-      item.className = "codex-item";
-      const specSummary = c.spec.map(s => `${s.measure} ${s.name}`).join(" • ");
-
-      item.innerHTML = `
-        <div class="codex-top">
-          <span class="codex-name">${c.name}</span>
-          <span class="codex-fam">${c.family}</span>
-        </div>
-        <div class="codex-formula">${specSummary}</div>
-        <div class="codex-notes">${c.method} • ${c.glass} • ${c.garnish}</div>
-      `;
-      DOM.codexGrid.appendChild(item);
-    });
-  }
-
-  function renderStats() {
-    const total = persistentData.totalAttempts;
-    const correct = persistentData.correctCount;
-    const pct = total > 0 ? Math.round((correct / total) * 100) : 0;
-
-    DOM.stTotalPassed.textContent = persistentData.totalCompleted;
-    DOM.stAccuracy.textContent = `${pct}%`;
-    DOM.stBestStreak.textContent = persistentData.bestStreak;
-
-    let rank = "Barback Apprentice";
-    if (persistentData.totalCompleted >= 25 && pct >= 80) rank = "Grandmaster Mixologist";
-    else if (persistentData.totalCompleted >= 12 && pct >= 70) rank = "Senior Bartender";
-    else if (persistentData.totalCompleted >= 5) rank = "Working Bartender";
-    DOM.stMasteryRank.textContent = rank;
-
-    DOM.familyMeterList.innerHTML = "";
-    const families = Object.keys(persistentData.familyMastery);
-
-    families.forEach(fam => {
-      const fStat = persistentData.familyMastery[fam];
-      const famPct = fStat.attempts > 0 ? Math.round((fStat.correct / fStat.attempts) * 100) : 0;
+    for (let i = 1; i <= MAX_ATTEMPTS; i++) {
+      const val = s.distribution[i] || 0;
+      const pct = Math.max(8, Math.round((val / maxVal) * 100));
 
       const row = document.createElement("div");
-      row.className = "fam-meter-row";
-      row.innerHTML = `
-        <div class="fam-meter-info">
-          <span>${fam}</span>
-          <span>${fStat.correct}/${fStat.attempts} (${famPct}%)</span>
-        </div>
-        <div class="fam-track">
-          <div class="fam-fill" style="width: ${famPct}%;"></div>
-        </div>
-      `;
-      DOM.familyMeterList.appendChild(row);
-    });
-  }
+      row.className = "dist-row";
 
-  function renderAtlas() {
-    DOM.glassAtlasGrid.innerHTML = "";
-    Object.keys(GLASS_SVGS).forEach(glassName => {
-      const card = document.createElement("div");
-      card.className = "glass-card";
-      card.innerHTML = `
-        <div class="glass-svg-wrap" style="width:34px; height:36px;">${GLASS_SVGS[glassName]}</div>
-        <span class="glass-card-name">${glassName}</span>
-        <span class="glass-card-desc">Prescribed Stemware</span>
-      `;
-      DOM.glassAtlasGrid.appendChild(card);
-    });
+      const label = document.createElement("span");
+      label.style.width = "18px";
+      label.style.fontWeight = "700";
+      label.textContent = i;
 
-    const FAMILY_DEFINITIONS = [
-      { name: "The Sour (2 : 0.75 : 0.75)", desc: "2 oz Spirit + 0.75 oz Fresh Citrus + 0.75 oz Sweetener. Shaken hard for aeration and emulsification." },
-      { name: "The Daisy (Citrus + Cordial)", desc: "A sour sweetened by a cordial or orange liqueur (e.g. Cointreau in the Margarita or Sidecar)." },
-      { name: "The Old Fashioned (Spirit Forward)", desc: "2 oz Spirit + Demerara or Rich Syrup + Aromatic Bitters stirred gently over dense ice to velvety chill." },
-      { name: "The Aperitivo / Equal Parts (1 : 1 : 1)", desc: "Equal parts harmony of spirit, bitter gentian aperitif, and vermouth (e.g. Negroni, Boulevardier)." },
-      { name: "The Martini (High-Proof + Fortified)", desc: "High-proof spirit tempered by dry aromatized wine (e.g. 5:1 Dry Gin to French Vermouth)." },
-      { name: "The Highball & Collins (Lengthened Sour)", desc: "Base spirit and citrus lengthened by effervescent club soda over clear column ice spears." }
-    ];
+      const barWrap = document.createElement("div");
+      barWrap.className = "dist-bar-wrap";
 
-    DOM.guideFamiliesList.innerHTML = "";
-    FAMILY_DEFINITIONS.forEach(item => {
-      const box = document.createElement("div");
-      box.className = "guide-fam-box";
-      box.innerHTML = `
-        <div class="guide-fam-head">${item.name}</div>
-        <div class="guide-fam-body">${item.desc}</div>
-      `;
-      DOM.guideFamiliesList.appendChild(box);
-    });
-  }
+      const bar = document.createElement("div");
+      bar.className = "dist-bar";
+      bar.style.width = `${pct}%`;
+      bar.textContent = val;
 
-  function openModal() {
-    audio.playClick();
-    renderCodex(DOM.codexSearch.value || "");
-    renderStats();
-    renderAtlas();
-    DOM.modalBackdrop.classList.remove("hidden");
-    DOM.modalBackdrop.setAttribute("aria-hidden", "false");
-  }
+      if (AppState.isWon && AppState.attemptsUsed === i) {
+        bar.classList.add("highlight");
+      }
 
-  function closeModal() {
-    audio.playClick();
-    DOM.modalBackdrop.classList.add("hidden");
-    DOM.modalBackdrop.setAttribute("aria-hidden", "true");
-  }
-
-  function switchModalPane(paneId) {
-    audio.playClick();
-    DOM.subnavButtons.forEach(btn => {
-      const match = (btn.dataset.pane === paneId);
-      btn.classList.toggle("active", match);
-      btn.setAttribute("aria-selected", match ? "true" : "false");
-    });
-    DOM.modalPanes.forEach(pane => {
-      pane.classList.toggle("active", pane.id === paneId);
-    });
-  }
-
-  function resetCareerData() {
-    if (confirm("Reset all saved high scores, streaks, and family mastery statistics?")) {
-      localStorage.removeItem(STORAGE_KEY);
-      Object.assign(persistentData, JSON.parse(JSON.stringify(defaultStorageData)));
-      saveStoredState(persistentData);
-      renderStats();
-      updateMenuSummary();
-      audio.playClick();
+      barWrap.appendChild(bar);
+      row.appendChild(label);
+      row.appendChild(barWrap);
+      DOM.statsDistribution.appendChild(row);
     }
+
+    DOM.modalStats.classList.remove("hidden");
   }
 
-  /* ==========================================================================
-     11. EVENT LISTENERS
-     ========================================================================== */
-  function setupEventListeners() {
-    DOM.btnStartClassic.addEventListener("click", () => startShiftMode("classic"));
-    DOM.btnStartRepair.addEventListener("click", () => startShiftMode("repair"));
-    DOM.btnStartFamily.addEventListener("click", () => startShiftMode("family"));
+  // --- 16. MIDNIGHT ROLLOVER MONITOR (Section 76) ---
+  function setupMidnightRollover() {
+    function checkRollover() {
+      const liveDay = getCurrentDayIndex();
+      if (liveDay !== AppState.currentDay) {
+        AppState.currentDay = liveDay;
+        const hasUnfinishedDraft = AppState.attemptsUsed > 0 && !AppState.isCompleted;
+        if (!hasUnfinishedDraft && !AppState.isVaultMode) {
+          const nextPuzzle = getPuzzleForDay(liveDay, AppState.store.dailyScheduleMap);
+          AppState.store.dailyScheduleMap[liveDay] = nextPuzzle.id;
+          saveStorageData(AppState.store);
+          loadPuzzle(nextPuzzle, liveDay, false);
+          showToast("A new daily cocktail spec has arrived behind the bar!");
+        }
+      }
+    }
 
-    DOM.modeTabs.forEach(tab => {
-      tab.addEventListener("click", () => startShiftMode(tab.dataset.mode));
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "visible") checkRollover();
     });
+    setInterval(checkRollover, 60000);
+  }
 
-    DOM.btnBackToMenu.addEventListener("click", () => {
-      audio.playClick();
-      showView("menu");
-    });
-
-    const handleAudioToggle = () => {
-      audio.toggleMute();
-      updateMenuSummary();
-    };
-    DOM.btnAudioToggle.addEventListener("click", handleAudioToggle);
-    DOM.btnMenuSoundToggle.addEventListener("click", handleAudioToggle);
-
-    DOM.btnOpenMenu.addEventListener("click", openModal);
-    DOM.btnMenuOpenCodex.addEventListener("click", openModal);
-    DOM.btnCloseModal.addEventListener("click", closeModal);
-    DOM.modalBackdrop.addEventListener("click", (e) => {
-      if (e.target === DOM.modalBackdrop) closeModal();
-    });
-
-    DOM.subnavButtons.forEach(btn => {
-      btn.addEventListener("click", () => switchModalPane(btn.dataset.pane));
-    });
-
-    DOM.codexSearch.addEventListener("input", (e) => {
-      renderCodex(e.target.value);
-    });
-
-    DOM.btnResetProgress.addEventListener("click", resetCareerData);
-
-    DOM.confButtons.forEach(btn => {
-      btn.addEventListener("click", () => {
-        audio.playClick();
-        DOM.confButtons.forEach(b => {
-          b.classList.remove("active");
-          b.setAttribute("aria-checked", "false");
-        });
-        btn.classList.add("active");
-        btn.setAttribute("aria-checked", "true");
-        state.selectedConfidence = btn.dataset.conf;
-      });
-    });
-
-    DOM.btnNextTicket.addEventListener("click", advanceNextTicket);
-    DOM.btnReplayShift.addEventListener("click", replayCurrentShift);
-    DOM.btnHint.addEventListener("click", handleHint);
-
-    // Keyboard Shortcuts
+  // --- 17. ACCESSIBILITY & KEYBOARD CONTROLS ---
+  function setupKeyboardControls() {
     window.addEventListener("keydown", (e) => {
-      if (DOM.modalBackdrop && !DOM.modalBackdrop.classList.contains("hidden")) {
-        if (e.key === "Escape") closeModal();
+      // Escape closes open modals
+      if (!DOM.modalResult.classList.contains("hidden") ||
+          !DOM.modalHelp.classList.contains("hidden") ||
+          !DOM.modalStats.classList.contains("hidden")) {
+        if (e.key === "Escape") {
+          DOM.modalResult.classList.add("hidden");
+          DOM.modalHelp.classList.add("hidden");
+          DOM.modalStats.classList.add("hidden");
+        }
         return;
       }
 
-      if (state.currentView !== "gameplay") return;
-
-      if (!state.answered) {
-        if (["1", "2", "3", "4"].includes(e.key)) {
-          const index = parseInt(e.key, 10) - 1;
-          const buttons = DOM.choiceMatrix.querySelectorAll(".choice-btn");
-          if (buttons[index] && !buttons[index].disabled) {
-            buttons[index].click();
+      // Slot navigation in active game
+      if (!DOM.viewGame.classList.contains("hidden")) {
+        if (e.key >= "1" && e.key <= "5") {
+          const slotIdx = parseInt(e.key, 10) - 1;
+          selectSlot(slotIdx);
+        } else if (e.key === "Enter") {
+          submitSpecification();
+        } else if (e.key === "Backspace" || e.key === "Delete") {
+          if (AppState.currentDraft[AppState.selectedSlot]) {
+            handleSlotClick(AppState.selectedSlot);
           }
-        } else if (e.key.toLowerCase() === "h") {
-          if (!DOM.btnHint.disabled) DOM.btnHint.click();
-        }
-      } else {
-        if (e.key === "Enter" || e.key === " ") {
-          if (e.target && e.target.tagName === "BUTTON") return;
-          e.preventDefault();
-          advanceNextTicket();
         }
       }
     });
   }
 
-  function init() {
-    updateMenuSummary();
-    setupEventListeners();
+  // --- 18. INITIALIZATION & EVENT BINDINGS ---
+  function toggleSound() {
+    audio.enabled = !audio.enabled;
+    AppState.store.soundEnabled = audio.enabled;
+    saveStorageData(AppState.store);
+    
+    const icon = audio.enabled ? "🔊" : "🔇";
+    DOM.soundIcon.textContent = icon;
+    DOM.menuSoundIcon.textContent = icon;
+    DOM.menuSoundLabel.textContent = audio.enabled ? "SOUND" : "MUTED";
+    DOM.navSoundBtn.setAttribute("aria-pressed", audio.enabled ? "true" : "false");
+    
+    showToast(`Sound: ${audio.enabled ? "ON" : "MUTED"}`);
+    if (audio.enabled) audio.playTileTap();
   }
 
-  init();
+  function bindUIEvents() {
+    // Main Menu Navigation
+    DOM.menuTodayCard.addEventListener("click", () => {
+      const todayPuzzle = getPuzzleForDay(AppState.currentDay, AppState.store.dailyScheduleMap);
+      loadPuzzle(todayPuzzle, AppState.currentDay, false);
+    });
+
+    DOM.menuTodayCard.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        DOM.menuTodayCard.click();
+      }
+    });
+
+    DOM.menuBtnVault.addEventListener("click", () => showScreen("vault"));
+    DOM.menuBtnStats.addEventListener("click", openStatsModal);
+    DOM.menuBtnHelp.addEventListener("click", () => DOM.modalHelp.classList.remove("hidden"));
+    DOM.menuBtnSound.addEventListener("click", toggleSound);
+
+    // Platform Top Bar Navigation
+    DOM.btnBackToMenu.addEventListener("click", () => showScreen("menu"));
+    DOM.btnVaultBackMenu.addEventListener("click", () => showScreen("menu"));
+    DOM.navStatsBtn.addEventListener("click", openStatsModal);
+    DOM.navHelpBtn.addEventListener("click", () => DOM.modalHelp.classList.remove("hidden"));
+    DOM.navSoundBtn.addEventListener("click", toggleSound);
+
+    // Blueprint Slots Interaction
+    DOM.slots.forEach(slotEl => {
+      const idx = parseInt(slotEl.dataset.slot, 10);
+      slotEl.addEventListener("click", () => handleSlotClick(idx));
+      slotEl.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          handleSlotClick(idx);
+        }
+      });
+    });
+
+    // Game Action Buttons
+    DOM.btnClearDraft.addEventListener("click", clearUnlockedDraft);
+    DOM.btnSubmitSpec.addEventListener("click", submitSpecification);
+
+    // Modals
+    DOM.btnCloseResult.addEventListener("click", () => DOM.modalResult.classList.add("hidden"));
+    DOM.btnShareResult.addEventListener("click", handleShare);
+    DOM.btnResultMenu.addEventListener("click", () => {
+      DOM.modalResult.classList.add("hidden");
+      showScreen("menu");
+    });
+    DOM.btnResultVault.addEventListener("click", () => {
+      DOM.modalResult.classList.add("hidden");
+      showScreen("vault");
+    });
+
+    DOM.btnCloseHelp.addEventListener("click", () => DOM.modalHelp.classList.add("hidden"));
+    DOM.btnHelpStart.addEventListener("click", () => DOM.modalHelp.classList.add("hidden"));
+    DOM.btnCloseStats.addEventListener("click", () => DOM.modalStats.classList.add("hidden"));
+    DOM.btnStatsClose.addEventListener("click", () => DOM.modalStats.classList.add("hidden"));
+  }
+
+  function initApp() {
+    bindUIEvents();
+    setupKeyboardControls();
+    setupMidnightRollover();
+
+    // Sync sound state
+    const soundIcon = audio.enabled ? "🔊" : "🔇";
+    DOM.soundIcon.textContent = soundIcon;
+    DOM.menuSoundIcon.textContent = soundIcon;
+    DOM.menuSoundLabel.textContent = audio.enabled ? "SOUND" : "MUTED";
+
+    // Initial Screen is the Dedicated Main Menu (Section 12)
+    showScreen("menu");
+
+    // First time visitor prompt
+    if (AppState.store.stats.played === 0 && Object.keys(AppState.store.puzzleHistory).length === 0) {
+      setTimeout(() => DOM.modalHelp.classList.remove("hidden"), 300);
+    }
+  }
+
+  // Launch on DOM ready
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initApp);
+  } else {
+    initApp();
+  }
+
 })();
