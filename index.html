@@ -3,105 +3,78 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <meta name="theme-color" content="#0D0704">
-  <meta name="description" content="A daily cocktail puzzle game where players test their bar knowledge by reconstructing authentic cocktail spec cards.">
-  <title>Cocktail Specs — Daily Bar Specification Challenge</title>
+  <meta name="theme-color" content="#0d0402">
+  <title>Cocktail Specs</title>
   
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;900&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
   
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="./style.css">
 </head>
 <body>
-  <!-- Ambient Atmospheric & Garnish Background Layer -->
+  <!-- Ambient Background -->
   <div class="ambient-lounge-bg" aria-hidden="true">
-    <div class="glow-orb orb-1"></div>
-    <div class="glow-orb orb-2"></div>
-    <div class="glow-orb orb-3"></div>
-    <div class="lounge-ambient-light"></div>
     <div id="garnish-container" class="garnish-layer"></div>
     <div class="glass-sheen"></div>
   </div>
 
-  <div id="app" class="app-container">
+  <!-- Error Screen -->
+  <div id="error-screen" class="error-screen hidden" role="alert">
+    <h1 class="error-title">SERVICE UNAVAILABLE</h1>
+    <p id="error-message" class="error-text">Today's puzzle is not available.</p>
+    <button id="btn-retry" class="neo-button btn-primary-action" type="button">TRY AGAIN</button>
+  </div>
+
+  <div id="app" class="app-container hidden">
     
-    <!-- Top Platform Header (Visible on Game Board & Vault screens) -->
+    <!-- Header -->
     <header id="platform-header" class="platform-header hidden" role="banner">
       <div class="header-inner">
-        
-        <!-- Left: Return to Main Menu -->
         <div class="header-left">
-          <button id="btn-back-to-menu" class="header-nav-btn" type="button" aria-label="Return to Main Menu">
+          <button id="btn-back-to-menu" class="header-nav-btn" type="button" aria-label="Menu">
             <span class="btn-arrow" aria-hidden="true">←</span>
             <span class="btn-label">MENU</span>
           </button>
-          <a href="https://tileworksgamesstudio.github.io/86/" class="home-badge" title="Return to 86 Game Studio" aria-label="Return to 86 Game Studio">
-            <span class="home-icon" aria-hidden="true">🍸</span>
-            <span class="home-text">86</span>
-          </a>
         </div>
-
-        <!-- Center: Brand Title -->
         <div class="header-center">
           <span class="header-title">SPECS <span class="gold-accent">CARD</span></span>
         </div>
-
-        <!-- Right: Utility Controls -->
-        <nav class="header-nav" aria-label="Screen Navigation">
-          <button id="nav-stats-btn" class="header-icon-btn" type="button" title="View Statistics" aria-label="View Statistics">
-            <span aria-hidden="true">📊</span>
-          </button>
-          <button id="nav-help-btn" class="header-icon-btn" type="button" title="How to Play" aria-label="How to Play">
-            <span aria-hidden="true">❓</span>
-          </button>
-          <button id="nav-sound-btn" class="header-icon-btn" type="button" title="Toggle Sound" aria-label="Toggle Sound" aria-pressed="true">
+        <nav class="header-nav" aria-label="Navigation">
+          <button id="nav-stats-btn" class="header-icon-btn" type="button" aria-label="Statistics">📊</button>
+          <button id="nav-help-btn" class="header-icon-btn" type="button" aria-label="Help">❓</button>
+          <button id="nav-sound-btn" class="header-icon-btn" type="button" aria-label="Sound" aria-pressed="true">
             <span id="sound-icon" aria-hidden="true">🔊</span>
           </button>
         </nav>
-
       </div>
     </header>
 
-    <!-- Main View Switcher -->
     <main id="main-content" class="main-content" role="main">
       
-      <!-- VIEW 1: DEDICATED MAIN MENU SCREEN -->
-      <section id="view-menu" class="menu-view" aria-label="Main Menu">
+      <!-- MENU VIEW -->
+      <section id="view-menu" class="menu-view" aria-label="Menu">
         
-        <!-- Game Title & Branding -->
         <div class="menu-brand-block">
-          <div class="brand-eyebrow">
-            <span class="eyebrow-accent">🍸 86 GAME STUDIO</span>
-            <span class="eyebrow-dot">•</span>
-            <span class="eyebrow-sub">BAR CURRICULUM</span>
-          </div>
           <h1 class="menu-game-title">SPECS <span class="gold-accent">CARD</span></h1>
-          <p class="menu-game-desc">Reconstruct authentic canonical cocktail specifications from memory.</p>
         </div>
 
-        <!-- Menu Navigation Cards Hierarchy -->
         <div class="menu-navigation-stack">
           
-          <!-- 1. TODAY'S PUZZLE (HERO ACTION) -->
-          <article class="menu-card menu-card-today neo-card" id="menu-today-card" tabindex="0" role="button" aria-label="Today's Cocktail Specification Challenge">
+          <article class="menu-card menu-card-today neo-card" id="menu-today-card" tabindex="0" role="button" aria-label="Today's Puzzle">
             <div class="card-gold-trim"></div>
-            
             <div class="today-card-meta">
-              <span id="menu-today-badge" class="badge gold-badge">TODAY'S SHIFT</span>
+              <span class="badge gold-badge">TODAY'S SHIFT</span>
               <span id="menu-today-day-number" class="badge tag-badge">DAY #1</span>
-              <span id="menu-today-status-badge" class="badge diff-badge">READY FOR SERVICE</span>
+              <span id="menu-today-status-badge" class="badge diff-badge">READY</span>
             </div>
 
             <div class="today-card-content">
               <div class="today-cocktail-preview">
-                <span class="today-eyebrow">FEATURED SPECIFICATION</span>
-                <h2 id="menu-today-cocktail-name" class="today-cocktail-title">Loading Service Ticket...</h2>
-                <p id="menu-today-cocktail-clue" class="today-cocktail-clue">Preparing canonical reference recipe.</p>
+                <h2 id="menu-today-cocktail-name" class="today-cocktail-title">Loading...</h2>
               </div>
-
               <div class="today-card-footer">
-                <div class="today-shakers-preview" aria-label="Available Shakers">
+                <div class="today-shakers-preview" aria-label="Shakers">
                   <span class="preview-label">SHAKERS:</span>
                   <div id="menu-shakers-indicator" class="mini-shakers">
                     <span class="mini-shaker">🍸</span>
@@ -110,23 +83,20 @@
                     <span class="mini-shaker">🍸</span>
                   </div>
                 </div>
-
                 <div class="btn-primary-action neo-button menu-action-btn">
-                  <span id="menu-today-action-text" class="btn-text">START SERVICE</span>
+                  <span id="menu-today-action-text" class="btn-text">PLAY</span>
                   <span class="btn-arrow-right" aria-hidden="true">→</span>
                 </div>
               </div>
             </div>
           </article>
 
-          <!-- 2. VAULT ARCHIVE -->
           <button id="menu-btn-vault" class="menu-card menu-card-vault neo-card" type="button">
             <div class="menu-vault-inner">
               <div class="vault-info-group">
                 <div class="vault-icon-frame" aria-hidden="true">🗝️</div>
                 <div class="vault-text-group">
-                  <span class="vault-card-title">THE VAULT ARCHIVE</span>
-                  <span class="vault-card-desc">Review and study completed specifications from past shifts</span>
+                  <span class="vault-card-title">VAULT</span>
                 </div>
               </div>
               <div class="vault-meta-group">
@@ -136,43 +106,26 @@
             </div>
           </button>
 
-          <!-- 3. PLATFORM ACTIONS ROW (HOME & PREFERENCES) -->
           <div class="menu-actions-row">
-            
-            <!-- Home: Master Game Hub (Section 20) -->
-            <a href="https://tileworksgamesstudio.github.io/86/" class="menu-sub-btn neo-button" id="menu-btn-home" title="Return to 86 Cocktail Games Hub">
-              <span class="sub-btn-icon" aria-hidden="true">🍸</span>
-              <span class="sub-btn-label">86 HUB</span>
-            </a>
-
-            <!-- Career Statistics -->
             <button id="menu-btn-stats" class="menu-sub-btn neo-button" type="button">
               <span class="sub-btn-icon" aria-hidden="true">📊</span>
               <span class="sub-btn-label">STATS</span>
             </button>
-
-            <!-- How to Play -->
             <button id="menu-btn-help" class="menu-sub-btn neo-button" type="button">
               <span class="sub-btn-icon" aria-hidden="true">❓</span>
               <span class="sub-btn-label">RULES</span>
             </button>
-
-            <!-- Sound Toggle (Section 21) -->
-            <button id="menu-btn-sound" class="menu-sub-btn neo-button" type="button" aria-label="Toggle Sound Effects">
+            <button id="menu-btn-sound" class="menu-sub-btn neo-button" type="button" aria-label="Sound">
               <span id="menu-sound-icon" class="sub-btn-icon" aria-hidden="true">🔊</span>
               <span id="menu-sound-label" class="sub-btn-label">SOUND</span>
             </button>
-
           </div>
-
         </div>
-
       </section>
 
-      <!-- VIEW 2: ACTIVE GAME BOARD SCREEN -->
-      <section id="view-game" class="game-view hidden" aria-label="Active Game Board">
+      <!-- GAME VIEW -->
+      <section id="view-game" class="game-view hidden" aria-label="Game Board">
         
-        <!-- Ticket Meta Bar -->
         <div class="ticket-meta-bar neo-panel">
           <div class="ticket-meta-left">
             <span id="puzzle-day-badge" class="badge gold-badge">DAY #1</span>
@@ -180,253 +133,205 @@
             <span id="puzzle-difficulty-badge" class="badge diff-badge">MEDIUM</span>
           </div>
           <div class="ticket-meta-right">
-            <div class="attempts-container" aria-label="Attempts Remaining">
+            <div class="attempts-container" aria-label="Attempts">
               <span class="attempts-label">SHAKERS:</span>
               <div id="shaker-tokens" class="shaker-tokens" aria-live="polite">
-                <span class="shaker-icon" title="Shaker 1">🍸</span>
-                <span class="shaker-icon" title="Shaker 2">🍸</span>
-                <span class="shaker-icon" title="Shaker 3">🍸</span>
-                <span class="shaker-icon" title="Shaker 4">🍸</span>
+                <span class="shaker-icon">🍸</span>
+                <span class="shaker-icon">🍸</span>
+                <span class="shaker-icon">🍸</span>
+                <span class="shaker-icon">🍸</span>
               </div>
             </div>
           </div>
         </div>
 
-        <!-- The Spec Blueprint Card (Hero Element) -->
-        <article class="spec-card-container neo-card" id="spec-blueprint-card" aria-label="Cocktail Specification Blueprint">
+        <article class="spec-card-container neo-card" id="spec-blueprint-card" aria-label="Specification Blueprint">
           <div class="card-gold-trim"></div>
           
           <div class="card-header">
             <div class="order-ticket-info">
               <div class="ticket-topline">
-                <span class="order-no">BAR TICKET #<span id="ticket-number">001</span></span>
-                <span id="cocktail-era" class="order-era">Savoy Canon</span>
+                <span class="order-no">TICKET #<span id="ticket-number">001</span></span>
+                <span id="cocktail-era" class="order-era">Era</span>
               </div>
               <h2 id="cocktail-name" class="cocktail-title">COCKTAIL NAME</h2>
-              <p id="cocktail-historical-clue" class="cocktail-clue">Loading historical specifications...</p>
+              <p id="cocktail-historical-clue" class="cocktail-clue">Clue...</p>
             </div>
           </div>
 
-          <!-- Spec Slots Grid -->
-          <div class="spec-slots-grid" id="spec-slots-grid" role="region" aria-label="Specification Card Drop Slots">
-            
-            <!-- Slot 1: Base Spirit -->
-            <div class="spec-slot" data-slot="0" tabindex="0" role="button" aria-label="Slot 1: Base Spirit. Empty. Click to select or replace.">
+          <div class="spec-slots-grid" id="spec-slots-grid" role="region" aria-label="Drop Slots">
+            <div class="spec-slot" data-slot="0" tabindex="0" role="button">
               <div class="slot-label">
                 <span class="slot-num">01</span>
                 <span class="slot-type">BASE SPIRIT</span>
               </div>
               <div class="slot-content-holder">
-                <span class="slot-placeholder">Select Spirit Tile</span>
+                <span class="slot-placeholder">Select</span>
               </div>
               <div class="slot-status-indicator" aria-hidden="true"></div>
             </div>
 
-            <!-- Slot 2: Modifier / Fortified -->
-            <div class="spec-slot" data-slot="1" tabindex="0" role="button" aria-label="Slot 2: Modifier or Fortified Wine. Empty.">
+            <div class="spec-slot" data-slot="1" tabindex="0" role="button">
               <div class="slot-label">
                 <span class="slot-num">02</span>
                 <span class="slot-type">MODIFIER / LIQUEUR</span>
               </div>
               <div class="slot-content-holder">
-                <span class="slot-placeholder">Select Modifier Tile</span>
+                <span class="slot-placeholder">Select</span>
               </div>
               <div class="slot-status-indicator" aria-hidden="true"></div>
             </div>
 
-            <!-- Slot 3: Acid / Sweetener / Accent -->
-            <div class="spec-slot" data-slot="2" tabindex="0" role="button" aria-label="Slot 3: Balance or Citrus. Empty.">
+            <div class="spec-slot" data-slot="2" tabindex="0" role="button">
               <div class="slot-label">
                 <span class="slot-num">03</span>
                 <span class="slot-type">BALANCE / CITRUS</span>
               </div>
               <div class="slot-content-holder">
-                <span class="slot-placeholder">Select Balance Tile</span>
+                <span class="slot-placeholder">Select</span>
               </div>
               <div class="slot-status-indicator" aria-hidden="true"></div>
             </div>
 
-            <!-- Slot 4: Technique & Ice -->
-            <div class="spec-slot" data-slot="3" tabindex="0" role="button" aria-label="Slot 4: Technique and Ice. Empty.">
+            <div class="spec-slot" data-slot="3" tabindex="0" role="button">
               <div class="slot-label">
                 <span class="slot-num">04</span>
                 <span class="slot-type">TECHNIQUE & ICE</span>
               </div>
               <div class="slot-content-holder">
-                <span class="slot-placeholder">Select Technique Tile</span>
+                <span class="slot-placeholder">Select</span>
               </div>
               <div class="slot-status-indicator" aria-hidden="true"></div>
             </div>
 
-            <!-- Slot 5: Glassware & Garnish -->
-            <div class="spec-slot" data-slot="4" tabindex="0" role="button" aria-label="Slot 5: Glassware and Garnish. Empty.">
+            <div class="spec-slot" data-slot="4" tabindex="0" role="button">
               <div class="slot-label">
                 <span class="slot-num">05</span>
                 <span class="slot-type">GLASS & GARNISH</span>
               </div>
               <div class="slot-content-holder">
-                <span class="slot-placeholder">Select Glass & Garnish Tile</span>
+                <span class="slot-placeholder">Select</span>
               </div>
               <div class="slot-status-indicator" aria-hidden="true"></div>
             </div>
-
           </div>
 
-          <!-- Head Bartender's Tasting Clue (Unlocked on attempt 2+) -->
           <div id="bartender-hint-box" class="bartender-hint-box hidden" aria-live="polite">
             <span class="hint-icon" aria-hidden="true">💡</span>
             <div class="hint-body">
-              <strong>HEAD BARTENDER'S LOG:</strong>
-              <span id="bartender-hint-text">Taste the balance before testing the spec.</span>
+              <strong>HINT:</strong>
+              <span id="bartender-hint-text">Hint text.</span>
             </div>
           </div>
-
         </article>
 
-        <!-- The Bar Rail: Spec Supply Tiles -->
-        <section class="bar-rail-section" aria-label="Bar Rail: Available Spec Components">
+        <section class="bar-rail-section" aria-label="Available Components">
           <div class="rail-header">
-            <h3 class="rail-title">BAR RAIL <span class="rail-note">(TAP TILES TO FILL BLUEPRINT)</span></h3>
-            <button id="btn-clear-draft" class="btn-text-action" type="button" title="Clear unlocked draft tiles">CLEAR DRAFT</button>
+            <h3 class="rail-title">BAR RAIL</h3>
+            <button id="btn-clear-draft" class="btn-text-action" type="button">CLEAR DRAFT</button>
           </div>
 
-          <div id="bar-rail-tiles" class="bar-rail-tiles" role="group" aria-label="Ingredient and Specification Tiles">
-            <!-- Tiles rendered dynamically via script.js -->
-          </div>
+          <div id="bar-rail-tiles" class="bar-rail-tiles" role="group"></div>
 
-          <!-- Bottom Action Controls -->
           <div class="game-actions-bar">
-            <button id="btn-submit-spec" class="btn-primary-action neo-button" type="button">
-              <span class="btn-text">TEST SPECIFICATION</span>
-              <span class="btn-subtext">(4 ATTEMPTS REMAINING)</span>
+            <button id="btn-submit-spec" class="btn-primary-action neo-button full-width" type="button">
+              <span class="btn-text">TEST</span>
             </button>
           </div>
         </section>
-
       </section>
 
-      <!-- VIEW 3: VAULT ARCHIVE SCREEN -->
-      <section id="view-vault" class="vault-view hidden" aria-label="Puzzles Vault Archive">
+      <!-- VAULT VIEW -->
+      <section id="view-vault" class="vault-view hidden" aria-label="Vault">
         <div class="vault-header neo-panel">
-          <div class="vault-title-wrap">
-            <h2 class="vault-title">THE VAULT ARCHIVE</h2>
-            <p class="vault-desc">Review and study completed specifications from past cocktail shifts.</p>
-          </div>
-          <button id="btn-vault-back-menu" class="btn-secondary neo-button" type="button">RETURN TO MENU</button>
+          <h2 class="vault-title">VAULT</h2>
+          <button id="btn-vault-back-menu" class="btn-secondary neo-button" type="button">MENU</button>
         </div>
-
-        <div id="vault-list" class="vault-grid" role="list">
-          <!-- Vault puzzle cards rendered dynamically -->
-        </div>
+        <div id="vault-list" class="vault-grid" role="list"></div>
       </section>
 
     </main>
 
-    <!-- Interactive Toast Feedback Banner -->
     <div id="toast-region" class="toast-region" aria-live="assertive" aria-atomic="true"></div>
 
-    <!-- MODAL: RESULT & SHIFT REPORT -->
+    <!-- RESULT MODAL -->
     <div id="modal-result" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="modal-result-title">
       <div class="modal-card neo-card result-card">
-        <button class="modal-close-btn" id="btn-close-result" aria-label="Close Specification Summary">&times;</button>
+        <button class="modal-close-btn" id="btn-close-result" aria-label="Close">&times;</button>
         
         <div class="result-header">
-          <span id="result-status-badge" class="badge gold-badge">SHIFT REPORT</span>
-          <h2 id="modal-result-title" class="result-title">SPECIFICATION COMPLETE</h2>
-          <p id="result-cocktail-name" class="result-cocktail-sub">The Official Spec</p>
+          <span id="result-status-badge" class="badge gold-badge">REPORT</span>
+          <h2 id="modal-result-title" class="result-title">COMPLETE</h2>
+          <p id="result-cocktail-name" class="result-cocktail-sub">Name</p>
         </div>
 
-        <!-- NYT Style Visual Share Grid Preview -->
-        <div class="share-grid-preview" id="share-grid-preview" aria-label="Attempt summary representation"></div>
+        <div class="share-grid-preview" id="share-grid-preview" aria-hidden="true"></div>
 
-        <!-- Full Authoritative Specs Sheet -->
         <div class="authoritative-specs-box">
-          <h3 class="specs-box-title">MASTER BARTENDER SPECIFICATION</h3>
-          <ul id="authoritative-specs-list" class="specs-breakdown-list">
-            <!-- Rendered specs breakdown -->
-          </ul>
+          <h3 class="specs-box-title">SPECIFICATION</h3>
+          <ul id="authoritative-specs-list" class="specs-breakdown-list"></ul>
         </div>
 
-        <!-- Historical Education & Lore -->
         <div class="cocktail-lore-box">
-          <h4 class="lore-title">ORIGINS & TECHNIQUE</h4>
+          <h4 class="lore-title">ORIGINS</h4>
           <p id="lore-body-text" class="lore-text">Lore goes here.</p>
           <div class="curriculum-tag-wrap">
-            <span class="curriculum-tag" id="lore-curriculum-category">Curriculum: Classic Cocktails</span>
+            <span class="curriculum-tag" id="lore-curriculum-category">Category</span>
           </div>
         </div>
 
-        <!-- Action Row -->
         <div class="result-actions">
           <button id="btn-share-result" class="btn-primary-action neo-button" type="button">
-            <span class="btn-text">📋 SHARE SHIFT REPORT</span>
+            <span class="btn-text">SHARE REPORT</span>
           </button>
           <div class="result-secondary-actions">
-            <button id="btn-result-menu" class="btn-secondary neo-button" type="button">MAIN MENU</button>
-            <button id="btn-result-vault" class="btn-secondary neo-button" type="button">THE VAULT</button>
+            <button id="btn-result-menu" class="btn-secondary neo-button" type="button">MENU</button>
+            <button id="btn-result-vault" class="btn-secondary neo-button" type="button">VAULT</button>
           </div>
         </div>
-
       </div>
     </div>
 
-    <!-- MODAL: HOW TO PLAY -->
+    <!-- HELP MODAL -->
     <div id="modal-help" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="modal-help-title">
       <div class="modal-card neo-card">
-        <button class="modal-close-btn" id="btn-close-help" aria-label="Close instructions">&times;</button>
-        <h2 id="modal-help-title" class="modal-title">HOW TO PLAY</h2>
+        <button class="modal-close-btn" id="btn-close-help" aria-label="Close">&times;</button>
+        <h2 id="modal-help-title" class="modal-title">RULES</h2>
         <div class="help-content">
-          <p class="help-lead">Step behind the bar. Reconstruct the authentic, canonical recipe specification card for the day's featured cocktail.</p>
-          
           <div class="help-step">
             <span class="step-badge">1</span>
             <div class="step-text">
-              <strong>Study the Order Ticket:</strong> Read the cocktail name, era, and historical balance clues.
+              <strong>Study Ticket:</strong> Read the cocktail name, era, and clues.
             </div>
           </div>
-
           <div class="help-step">
             <span class="step-badge">2</span>
             <div class="step-text">
-              <strong>Fill the 5 Blueprint Slots:</strong> Select components from the <em>Bar Rail</em> to assign:
-              <ul>
-                <li><strong>Base Spirit & Measure</strong></li>
-                <li><strong>Modifier / Liqueur & Measure</strong></li>
-                <li><strong>Balance / Citrus / Accent</strong></li>
-                <li><strong>Technique & Ice Preparation</strong></li>
-                <li><strong>Glassware & Garnish</strong></li>
-              </ul>
+              <strong>Fill Blueprint:</strong> Select components from the Bar Rail.
             </div>
           </div>
-
           <div class="help-step">
             <span class="step-badge">3</span>
             <div class="step-text">
-              <strong>Test Your Spec:</strong> You have <strong>4 Shakers</strong> (attempts).
-              <ul>
-                <li><span class="color-sample gold"></span> Correct specs lock with gold trim.</li>
-                <li><span class="color-sample miss"></span> Incorrect specs are ejected back to the bar rail.</li>
-              </ul>
+              <strong>Test:</strong> You have 4 attempts. Correct specs lock in gold. Incorrect specs eject.
             </div>
           </div>
-
           <div class="help-step">
             <span class="step-badge">4</span>
             <div class="step-text">
-              <strong>Master the Curriculum:</strong> A new cocktail unlocks every midnight. Past releases enter the permanent Vault Archive.
+              <strong>Curriculum:</strong> A new cocktail unlocks every midnight. Past releases enter the Vault.
             </div>
           </div>
         </div>
-
-        <button id="btn-help-start" class="btn-primary-action neo-button full-width" type="button">READY FOR SERVICE</button>
+        <button id="btn-help-start" class="btn-primary-action neo-button full-width" type="button" style="margin-top:16px;">PLAY</button>
       </div>
     </div>
 
-    <!-- MODAL: STATISTICS -->
+    <!-- STATS MODAL -->
     <div id="modal-stats" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="modal-stats-title">
       <div class="modal-card neo-card">
-        <button class="modal-close-btn" id="btn-close-stats" aria-label="Close statistics">&times;</button>
-        <h2 id="modal-stats-title" class="modal-title">BARTENDER STATS</h2>
+        <button class="modal-close-btn" id="btn-close-stats" aria-label="Close">&times;</button>
+        <h2 id="modal-stats-title" class="modal-title">STATS</h2>
         
         <div class="stats-metric-grid">
           <div class="stat-card">
@@ -439,27 +344,22 @@
           </div>
           <div class="stat-card">
             <span id="stat-current-streak" class="stat-num">0</span>
-            <span class="stat-lbl">CURRENT STREAK</span>
+            <span class="stat-lbl">STREAK</span>
           </div>
           <div class="stat-card">
             <span id="stat-max-streak" class="stat-num">0</span>
-            <span class="stat-lbl">MAX STREAK</span>
+            <span class="stat-lbl">MAX</span>
           </div>
         </div>
 
-        <h3 class="stat-subhead">SHAKER GUESS DISTRIBUTION</h3>
-        <div id="stats-distribution" class="stats-distribution-bars" aria-label="Attempts Distribution">
-          <!-- Bars generated via JS -->
-        </div>
+        <h3 class="stat-subhead">GUESS DISTRIBUTION</h3>
+        <div id="stats-distribution" class="stats-distribution-bars" aria-label="Distribution"></div>
 
-        <button id="btn-stats-close" class="btn-secondary neo-button full-width" type="button">CLOSE</button>
+        <button id="btn-stats-close" class="btn-secondary neo-button full-width" type="button" style="margin-top:16px;">CLOSE</button>
       </div>
     </div>
-
   </div>
 
-  <!-- Load Database then Engine -->
-  <script src="puzzles.js"></script>
-  <script src="script.js"></script>
+  <script src="./script.js"></script>
 </body>
 </html>
