@@ -2,7 +2,7 @@
   "use strict";
 
   // Configuration Constants
-  const STORAGE_KEY = "universal_sequence_puzzle_state_v1";
+  const STORAGE_KEY = "Cocktail_universal_sequence_puzzle_state_v1";
   const HOME_URL = "https://tileworksgamesstudio.github.io/86/"; // REPLACE_WITH_HOME_URL: Destination provided by project owner
   const MAX_ATTEMPTS = 4;
   const SLOTS_COUNT = 5;
