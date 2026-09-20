@@ -1,13 +1,195 @@
+/**
+ * SEQUENCE — COCKTAIL LOUNGE UNIVERSAL PUZZLE ENGINE
+ * Integrated with the Cocktail Lounge Universal Design Transformation Bible.
+ * Features 12 botanical and mixology garnish vector assets, bottom-to-top flight,
+ * authoritative daily release, and tactile brass & crystal interface.
+ */
+
 (function () {
   "use strict";
 
-  // Configuration Constants
-  const STORAGE_KEY = "Cocktail_universal_sequence_puzzle_state_v1";
-  const HOME_URL = "https://tileworksgamesstudio.github.io/86/"; // REPLACE_WITH_HOME_URL: Destination provided by project owner
+  // ==========================================================================
+  // 1. CONSTANTS & CONFIGURATION
+  // ==========================================================================
+  const STORAGE_KEY = "cocktail_tileworks_sequence_state_v2";
+  const HOME_URL = "https://tileworksgamesstudio.github.io/86/";
   const MAX_ATTEMPTS = 4;
   const SLOTS_COUNT = 5;
+  const CANONICAL_TIMEZONE = "Europe/London";
 
-  // Application State
+  // 12 Ultra-Premium Vector Garnish Icons (Cocktail Lounge Signature Family)
+  const GARNISH_SVGS = [
+    // 1: Orange Twist
+    `<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M8 38C10 24 24 10 38 12C44 13 42 22 34 24C22 27 18 36 28 40C34 42 40 38 42 34" stroke="#FFA733" stroke-width="4" stroke-linecap="round"/>
+      <path d="M10 36C12 25 24 13 36 14C41 15 39 21 33 23" stroke="#FFF1BE" stroke-width="1.5" stroke-linecap="round"/>
+    </svg>`,
+    // 2: Lemon Twist
+    `<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M12 40C11 25 22 10 36 10C42 10 42 18 35 22C24 28 22 38 32 40C38 41 42 36 43 32" stroke="#FFD84D" stroke-width="3.2" stroke-linecap="round"/>
+      <path d="M14 38C13 26 23 12 35 12" stroke="#FFFBE6" stroke-width="1.2" stroke-linecap="round"/>
+    </svg>`,
+    // 3: Lime Wheel
+    `<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="24" cy="24" r="20" stroke="#7CB342" stroke-width="3" fill="rgba(46, 125, 50, 0.2)"/>
+      <circle cx="24" cy="24" r="16" stroke="#AED581" stroke-width="1.5"/>
+      <circle cx="24" cy="24" r="3" fill="#DCEDC8"/>
+      <line x1="24" y1="8" x2="24" y2="21" stroke="#AED581" stroke-width="1.2"/>
+      <line x1="24" y1="27" x2="24" y2="40" stroke="#AED581" stroke-width="1.2"/>
+      <line x1="8" y1="24" x2="21" y2="24" stroke="#AED581" stroke-width="1.2"/>
+      <line x1="27" y1="24" x2="40" y2="24" stroke="#AED581" stroke-width="1.2"/>
+      <line x1="12.7" y1="12.7" x2="21.9" y2="21.9" stroke="#AED581" stroke-width="1.2"/>
+      <line x1="26.1" y1="26.1" x2="35.3" y2="35.3" stroke="#AED581" stroke-width="1.2"/>
+      <line x1="35.3" y1="12.7" x2="26.1" y2="21.9" stroke="#AED581" stroke-width="1.2"/>
+      <line x1="21.9" y1="26.1" x2="12.7" y2="35.3" stroke="#AED581" stroke-width="1.2"/>
+    </svg>`,
+    // 4: Grapefruit Wheel
+    `<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="24" cy="24" r="20" stroke="#FF7043" stroke-width="3" fill="rgba(239, 83, 80, 0.25)"/>
+      <circle cx="24" cy="24" r="16" stroke="#FFAB91" stroke-width="1.5"/>
+      <circle cx="24" cy="24" r="3" fill="#FFE0B2"/>
+      <line x1="24" y1="8" x2="24" y2="40" stroke="#FFAB91" stroke-width="1.2"/>
+      <line x1="8" y1="24" x2="40" y2="24" stroke="#FFAB91" stroke-width="1.2"/>
+      <line x1="12.7" y1="12.7" x2="35.3" y2="35.3" stroke="#FFAB91" stroke-width="1.2"/>
+      <line x1="35.3" y1="12.7" x2="12.7" y2="35.3" stroke="#FFAB91" stroke-width="1.2"/>
+    </svg>`,
+    // 5: Blood Orange Wheel
+    `<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="24" cy="24" r="20" stroke="#E64A19" stroke-width="3.2" fill="rgba(183, 28, 28, 0.35)"/>
+      <circle cx="24" cy="24" r="16" stroke="#FF8A65" stroke-width="1.5"/>
+      <circle cx="24" cy="24" r="3" fill="#FFCCBC"/>
+      <line x1="24" y1="8" x2="24" y2="40" stroke="#FF8A65" stroke-width="1.2"/>
+      <line x1="8" y1="24" x2="40" y2="24" stroke="#FF8A65" stroke-width="1.2"/>
+      <line x1="12.7" y1="12.7" x2="35.3" y2="35.3" stroke="#FF8A65" stroke-width="1.2"/>
+      <line x1="35.3" y1="12.7" x2="12.7" y2="35.3" stroke="#FF8A65" stroke-width="1.2"/>
+    </svg>`,
+    // 6: Dehydrated Citrus Wheel
+    `<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="24" cy="24" r="20" stroke="#8D6E63" stroke-width="3" fill="rgba(109, 76, 65, 0.25)"/>
+      <circle cx="24" cy="24" r="16" stroke="#BCAAA4" stroke-dasharray="3 2" stroke-width="1.2"/>
+      <circle cx="24" cy="24" r="3" fill="#D7CCC8"/>
+      <line x1="24" y1="8" x2="24" y2="40" stroke="#A1887F" stroke-width="1.2"/>
+      <line x1="8" y1="24" x2="40" y2="24" stroke="#A1887F" stroke-width="1.2"/>
+      <line x1="12.7" y1="12.7" x2="35.3" y2="35.3" stroke="#A1887F" stroke-width="1.2"/>
+      <line x1="35.3" y1="12.7" x2="12.7" y2="35.3" stroke="#A1887F" stroke-width="1.2"/>
+    </svg>`,
+    // 7: Cocktail Cherry
+    `<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M26 26C34 16 38 8 36 6C34 4 28 10 24 22" stroke="#8D6E63" stroke-width="2" stroke-linecap="round"/>
+      <circle cx="22" cy="30" r="12" fill="#B71C1C" stroke="#D32F2F" stroke-width="2"/>
+      <path d="M16 26C18 24 22 24 24 25" stroke="#FF8A80" stroke-width="2" stroke-linecap="round"/>
+    </svg>`,
+    // 8: Double Cherry
+    `<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M18 28C22 16 26 8 28 6C30 8 34 18 36 30" stroke="#795548" stroke-width="2" stroke-linecap="round"/>
+      <circle cx="16" cy="32" r="9" fill="#B71C1C" stroke="#D32F2F" stroke-width="1.8"/>
+      <circle cx="34" cy="34" r="8" fill="#880E4F" stroke="#C2185B" stroke-width="1.8"/>
+      <path d="M13 29C15 27 18 27 19 28" stroke="#FF8A80" stroke-width="1.5" stroke-linecap="round"/>
+    </svg>`,
+    // 9: Mint Sprig
+    `<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M24 42C24 30 24 16 24 6" stroke="#4CAF50" stroke-width="2" stroke-linecap="round"/>
+      <path d="M24 26C16 24 10 16 12 10C18 8 22 18 24 26Z" fill="#66BB6A" stroke="#2E7D32" stroke-width="1.2"/>
+      <path d="M24 22C32 20 38 12 36 6C30 4 26 14 24 22Z" fill="#81C784" stroke="#388E3C" stroke-width="1.2"/>
+      <path d="M24 34C18 32 14 26 16 22C20 20 23 28 24 34Z" fill="#4CAF50" stroke="#1B5E20" stroke-width="1.2"/>
+    </svg>`,
+    // 10: Rosemary Sprig
+    `<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M16 42C22 30 26 18 28 6" stroke="#5D4037" stroke-width="1.8" stroke-linecap="round"/>
+      <path d="M22 30L12 24" stroke="#558B2F" stroke-width="2" stroke-linecap="round"/>
+      <path d="M24 26L34 20" stroke="#689F38" stroke-width="2" stroke-linecap="round"/>
+      <path d="M25 20L15 14" stroke="#558B2F" stroke-width="2" stroke-linecap="round"/>
+      <path d="M27 16L37 10" stroke="#689F38" stroke-width="2" stroke-linecap="round"/>
+      <path d="M28 10L24 4" stroke="#7CB342" stroke-width="2" stroke-linecap="round"/>
+    </svg>`,
+    // 11: Green Olive
+    `<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <ellipse cx="24" cy="24" rx="14" ry="18" fill="#689F38" stroke="#8BC34A" stroke-width="2" transform="rotate(-15 24 24)"/>
+      <circle cx="24" cy="17" r="4.5" fill="#D32F2F" stroke="#E57373" stroke-width="1"/>
+      <ellipse cx="19" cy="26" rx="2" ry="5" fill="#DCEDC8" opacity="0.6" transform="rotate(-15 19 26)"/>
+    </svg>`,
+    // 12: Cucumber Ribbon
+    `<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M10 38C12 24 34 32 36 18C38 8 26 6 18 10C10 14 20 28 34 36" stroke="#81C784" stroke-width="3" stroke-linecap="round"/>
+      <path d="M10 38C12 24 34 32 36 18" stroke="#2E7D32" stroke-width="1.2" stroke-linecap="round"/>
+    </svg>`
+  ];
+
+  // ==========================================================================
+  // 2. AUTHORITATIVE DAILY RELEASE ENGINE
+  // ==========================================================================
+  const DailyReleaseEngine = {
+    synchronized: false,
+    authoritativeOffsetMs: 0,
+
+    async synchronize() {
+      const endpoints = [
+        async () => {
+          const res = await fetch("https://worldtimeapi.org/api/timezone/Etc/UTC", { cache: "no-store" });
+          if (!res.ok) throw new Error("WTA");
+          const json = await res.json();
+          return new Date(json.utc_datetime).getTime();
+        },
+        async () => {
+          const res = await fetch("https://timeapi.io/api/time/current/zone?timeZone=UTC", { cache: "no-store" });
+          if (!res.ok) throw new Error("TA");
+          const json = await res.json();
+          return new Date(json.dateTime).getTime();
+        },
+        async () => {
+          const res = await fetch("puzzles.csv", { method: "HEAD", cache: "no-store" });
+          const dateHeader = res.headers.get("Date");
+          if (!dateHeader) throw new Error("Header Date");
+          return new Date(dateHeader).getTime();
+        }
+      ];
+
+      for (const fn of endpoints) {
+        try {
+          const remoteTimeMs = await Promise.race([
+            fn(),
+            new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 3200))
+          ]);
+          if (!isNaN(remoteTimeMs) && remoteTimeMs > 0) {
+            this.authoritativeOffsetMs = remoteTimeMs - performance.now();
+            this.synchronized = true;
+            return true;
+          }
+        } catch (e) {
+          // Continue to fallback
+        }
+      }
+
+      this.synchronized = false;
+      return false;
+    },
+
+    getNow() {
+      if (this.synchronized) {
+        return new Date(performance.now() + this.authoritativeOffsetMs);
+      }
+      return new Date();
+    },
+
+    getCanonicalReleaseDate() {
+      const now = this.getNow();
+      try {
+        const formatter = new Intl.DateTimeFormat("en-CA", {
+          timeZone: CANONICAL_TIMEZONE,
+          year: "numeric",
+          month: "2-digit",
+          day: "2-digit"
+        });
+        return formatter.format(now);
+      } catch (e) {
+        return now.toISOString().slice(0, 10);
+      }
+    }
+  };
+
+  // ==========================================================================
+  // 3. APPLICATION STATE
+  // ==========================================================================
   const AppState = {
     puzzles: [],
     todayPuzzle: null,
@@ -23,34 +205,68 @@
     store: loadStorage()
   };
 
-  // DOM Elements Cache
+  // ==========================================================================
+  // 4. DOM REFERENCES
+  // ==========================================================================
   const DOM = {
-    headerBackBtn: document.getElementById("header-back-btn"),
+    btnHeaderHome: document.getElementById("btn-header-home"),
+    btnHeaderBack: document.getElementById("btn-header-back"),
     headerTitle: document.getElementById("header-title"),
-    btnStats: document.getElementById("btn-stats"),
-    btnRules: document.getElementById("btn-rules"),
+    
+    // Views
     viewMenu: document.getElementById("view-menu"),
     viewGame: document.getElementById("view-game"),
     viewVault: document.getElementById("view-vault"),
+    viewSettings: document.getElementById("view-settings"),
+    
+    // Main Menu
+    btnMenuPlay: document.getElementById("btn-menu-play"),
+    btnPlayLabel: document.getElementById("btn-play-label"),
+    menuPlaySub: document.getElementById("menu-play-sub"),
     menuTodayDate: document.getElementById("menu-today-date"),
-    menuTodayTitle: document.getElementById("menu-today-title"),
-    menuTodayStatus: document.getElementById("menu-today-status"),
-    btnPlayToday: document.getElementById("btn-play-today"),
-    menuArchiveCount: document.getElementById("menu-archive-count"),
-    btnViewVault: document.getElementById("btn-view-vault"),
-    btnNavHome: document.getElementById("btn-nav-home"),
-    gameDateBadge: document.getElementById("game-date-badge"),
+    btnMenuVault: document.getElementById("btn-menu-vault"),
+    menuVaultCount: document.getElementById("menu-vault-count"),
+    btnMenuSettings: document.getElementById("btn-menu-settings"),
+    btnMenuRules: document.getElementById("btn-menu-rules"),
+    
+    // Utilities
+    btnUtilStats: document.getElementById("btn-util-stats"),
+    btnUtilShare: document.getElementById("btn-util-share"),
+    btnUtilPlus: document.getElementById("btn-util-plus"),
+    
+    // Game Board
+    gameTitleBadge: document.getElementById("game-title-badge"),
     gameAttemptsBadge: document.getElementById("game-attempts-badge"),
-    hintStatusIndicator: document.getElementById("hint-status-indicator"),
-    hintStatusText: document.getElementById("hint-status-text"),
-    slots: document.querySelectorAll(".slot"),
     gameClue: document.getElementById("game-clue"),
     hintBox: document.getElementById("hint-box"),
     hintText: document.getElementById("hint-text"),
+    slotsContainer: document.getElementById("slots-container"),
+    slots: document.querySelectorAll(".slot-tile"),
     itemsPool: document.getElementById("items-pool"),
-    btnClear: document.getElementById("btn-clear"),
+    btnClearPool: document.getElementById("btn-clear-pool"),
     btnSubmit: document.getElementById("btn-submit"),
+    
+    // Vault & Settings
     vaultList: document.getElementById("vault-list"),
+    btnAnimOn: document.getElementById("btn-anim-on"),
+    btnAnimOff: document.getElementById("btn-anim-off"),
+    
+    // Overlays & Panels
+    panelRulesOverlay: document.getElementById("panel-rules-overlay"),
+    sidePanelRules: document.getElementById("side-panel-rules"),
+    backdropRules: document.getElementById("backdrop-rules"),
+    btnCloseRules: document.getElementById("btn-close-rules"),
+    btnRulesConfirm: document.getElementById("btn-rules-confirm"),
+    
+    // Modals
+    modalStats: document.getElementById("modal-stats"),
+    btnCloseStats: document.getElementById("btn-close-stats"),
+    statPlayed: document.getElementById("stat-played"),
+    statWinRate: document.getElementById("stat-win-rate"),
+    statStreak: document.getElementById("stat-streak"),
+    statMaxStreak: document.getElementById("stat-max-streak"),
+    statsDistribution: document.getElementById("stats-distribution"),
+    
     modalResult: document.getElementById("modal-result"),
     btnCloseResult: document.getElementById("btn-close-result"),
     resultTitle: document.getElementById("result-title"),
@@ -61,396 +277,33 @@
     btnShare: document.getElementById("btn-share"),
     btnResultVault: document.getElementById("btn-result-vault"),
     btnResultMenu: document.getElementById("btn-result-menu"),
-    modalRules: document.getElementById("modal-rules"),
-    btnCloseRules: document.getElementById("btn-close-rules"),
-    btnRulesOk: document.getElementById("btn-rules-ok"),
-    modalStats: document.getElementById("modal-stats"),
-    btnCloseStats: document.getElementById("btn-close-stats"),
-    statPlayed: document.getElementById("stat-played"),
-    statWinRate: document.getElementById("stat-win-rate"),
-    statStreak: document.getElementById("stat-streak"),
-    statMaxStreak: document.getElementById("stat-max-streak"),
-    statsDistribution: document.getElementById("stats-distribution"),
+    
+    // Atmosphere
     toast: document.getElementById("toast"),
-    garnishCanvas: document.getElementById("garnish-canvas")
+    bgFloatingIcons: document.getElementById("bg-floating-icons")
   };
 
-  /* ==========================================================================
-     LIGHTWEIGHT WEB AUDIO SYNTHESIZER (Luxury Lounge Sound Palette)
-     ========================================================================== */
-  const SoundSystem = (function () {
-    let ctx = null;
-    let isMuted = false;
-
-    function getContext() {
-      if (!ctx && (window.AudioContext || window.webkitAudioContext)) {
-        try {
-          const AudioCtx = window.AudioContext || window.webkitAudioContext;
-          ctx = new AudioCtx();
-        } catch (e) {
-          ctx = null;
-        }
-      }
-      if (ctx && ctx.state === "suspended") {
-        ctx.resume().catch(() => {});
-      }
-      return ctx;
-    }
-
-    function playTone(freq, duration, type, gainLevel, decay) {
-      if (isMuted) return;
-      try {
-        const audio = getContext();
-        if (!audio) return;
-        const osc = audio.createOscillator();
-        const gain = audio.createGain();
-        osc.type = type || "sine";
-        osc.frequency.setValueAtTime(freq, audio.currentTime);
-
-        gain.gain.setValueAtTime(gainLevel || 0.04, audio.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.0001, audio.currentTime + (decay || duration));
-
-        osc.connect(gain);
-        gain.connect(audio.destination);
-
-        osc.start();
-        osc.stop(audio.currentTime + (decay || duration));
-      } catch (err) {
-        // Fail silently to avoid breaking execution
-      }
-    }
-
-    return {
-      tap: function () {
-        playTone(1840, 0.05, "sine", 0.02, 0.05);
-      },
-      place: function () {
-        playTone(980, 0.08, "triangle", 0.03, 0.08);
-      },
-      hit: function () {
-        playTone(1320, 0.12, "sine", 0.04, 0.15);
-        setTimeout(() => playTone(1760, 0.18, "sine", 0.03, 0.22), 60);
-      },
-      miss: function () {
-        playTone(280, 0.15, "triangle", 0.04, 0.18);
-      },
-      win: function () {
-        playTone(880, 0.16, "sine", 0.04, 0.25);
-        setTimeout(() => playTone(1174.66, 0.2, "sine", 0.04, 0.3), 110);
-        setTimeout(() => playTone(1760, 0.35, "sine", 0.05, 0.45), 230);
-      }
-    };
-  })();
-
-  /* ==========================================================================
-     ANIMATED FLOATING COCKTAIL GARNISH ENGINE (12 Distinct Icons)
-     ========================================================================== */
-  const GarnishEngine = (function () {
-    let canvas, ctx;
-    let width, height;
-    let particles = [];
-    let animId = null;
-    const MAX_PARTICLES = 16;
-    let isReducedMotion = false;
-
-    // 12 Distinct Cocktail Garnish Renderers
-    const garnishes = [
-      // 1. Orange Twist
-      function drawOrangeTwist(ctx) {
-        ctx.beginPath();
-        ctx.arc(0, 0, 14, 0.3, Math.PI * 1.5);
-        ctx.bezierCurveTo(6, -12, 16, 2, 4, 15);
-        ctx.lineWidth = 2.4;
-        ctx.stroke();
-      },
-      // 2. Lemon Twist
-      function drawLemonTwist(ctx) {
-        ctx.beginPath();
-        ctx.moveTo(-12, -10);
-        ctx.bezierCurveTo(2, -18, 14, -6, 2, 6);
-        ctx.bezierCurveTo(-10, 14, 6, 18, 12, 10);
-        ctx.lineWidth = 2.2;
-        ctx.stroke();
-      },
-      // 3. Lime Wheel
-      function drawLimeWheel(ctx) {
-        ctx.beginPath();
-        ctx.arc(0, 0, 13, 0, Math.PI * 2);
-        ctx.lineWidth = 1.8;
-        ctx.stroke();
-        for (let i = 0; i < 6; i++) {
-          const ang = (i * Math.PI) / 3;
-          ctx.beginPath();
-          ctx.moveTo(0, 0);
-          ctx.lineTo(Math.cos(ang) * 11, Math.sin(ang) * 11);
-          ctx.lineWidth = 1;
-          ctx.stroke();
-        }
-      },
-      // 4. Lemon Wheel
-      function drawLemonWheel(ctx) {
-        ctx.beginPath();
-        ctx.arc(0, 0, 14, 0, Math.PI * 2);
-        ctx.lineWidth = 2;
-        ctx.stroke();
-        ctx.beginPath();
-        ctx.arc(0, 0, 11, 0, Math.PI * 2);
-        ctx.lineWidth = 0.8;
-        ctx.stroke();
-        for (let i = 0; i < 8; i++) {
-          const ang = (i * Math.PI) / 4;
-          ctx.beginPath();
-          ctx.moveTo(0, 0);
-          ctx.lineTo(Math.cos(ang) * 10, Math.sin(ang) * 10);
-          ctx.lineWidth = 0.9;
-          ctx.stroke();
-        }
-      },
-      // 5. Dehydrated Orange Wheel
-      function drawDehydratedOrange(ctx) {
-        ctx.beginPath();
-        ctx.arc(0, 0, 13, 0, Math.PI * 2);
-        ctx.lineWidth = 2.5;
-        ctx.stroke();
-        ctx.beginPath();
-        ctx.arc(0, 0, 5, 0, Math.PI * 2);
-        ctx.fill();
-        for (let i = 0; i < 7; i++) {
-          const a = (i * Math.PI * 2) / 7;
-          ctx.beginPath();
-          ctx.moveTo(Math.cos(a) * 5, Math.sin(a) * 5);
-          ctx.lineTo(Math.cos(a) * 11, Math.sin(a) * 11);
-          ctx.lineWidth = 1.2;
-          ctx.stroke();
-        }
-      },
-      // 6. Dehydrated Lemon Wheel
-      function drawDehydratedLemon(ctx) {
-        ctx.beginPath();
-        ctx.arc(0, 0, 12, 0, Math.PI * 2);
-        ctx.lineWidth = 1.8;
-        ctx.stroke();
-        ctx.beginPath();
-        ctx.arc(0, 0, 3, 0, Math.PI * 2);
-        ctx.fill();
-        for (let i = 0; i < 8; i++) {
-          const a = (i * Math.PI) / 4;
-          ctx.beginPath();
-          ctx.moveTo(Math.cos(a) * 3, Math.sin(a) * 3);
-          ctx.lineTo(Math.cos(a) * 10, Math.sin(a) * 10);
-          ctx.lineWidth = 0.8;
-          ctx.stroke();
-        }
-      },
-      // 7. Cocktail Cherry
-      function drawCherry(ctx) {
-        ctx.beginPath();
-        ctx.arc(0, 4, 8, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.beginPath();
-        ctx.moveTo(0, -3);
-        ctx.bezierCurveTo(4, -10, 10, -14, 14, -16);
-        ctx.lineWidth = 1.6;
-        ctx.stroke();
-      },
-      // 8. Maraschino Cherry Pair
-      function drawCherryPair(ctx) {
-        ctx.beginPath();
-        ctx.arc(-6, 6, 6, 0, Math.PI * 2);
-        ctx.arc(6, 7, 5.5, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.beginPath();
-        ctx.moveTo(-6, 0);
-        ctx.quadraticCurveTo(-4, -12, 2, -16);
-        ctx.moveTo(6, 1);
-        ctx.quadraticCurveTo(4, -12, 2, -16);
-        ctx.lineWidth = 1.4;
-        ctx.stroke();
-      },
-      // 9. Mint Sprig
-      function drawMintSprig(ctx) {
-        ctx.beginPath();
-        ctx.moveTo(0, 14);
-        ctx.lineTo(0, -12);
-        ctx.lineWidth = 1.4;
-        ctx.stroke();
-        // Leaf pairs
-        function drawLeaf(x, y, scaleX, scaleY) {
-          ctx.beginPath();
-          ctx.ellipse(x, y, 6 * scaleX, 3 * scaleY, Math.PI / 4, 0, Math.PI * 2);
-          ctx.fill();
-        }
-        drawLeaf(-6, 2, 1, 0.8);
-        drawLeaf(6, 0, 1, 0.8);
-        drawLeaf(-5, -6, 0.8, 0.7);
-        drawLeaf(5, -8, 0.8, 0.7);
-      },
-      // 10. Rosemary Sprig
-      function drawRosemary(ctx) {
-        ctx.beginPath();
-        ctx.moveTo(0, 16);
-        ctx.lineTo(0, -16);
-        ctx.lineWidth = 1.5;
-        ctx.stroke();
-        for (let y = 10; y >= -12; y -= 5) {
-          ctx.beginPath();
-          ctx.moveTo(0, y);
-          ctx.lineTo(-7, y - 6);
-          ctx.moveTo(0, y - 2);
-          ctx.lineTo(7, y - 8);
-          ctx.lineWidth = 1.1;
-          ctx.stroke();
-        }
-      },
-      // 11. Green Olive with Cocktail Pick
-      function drawOlive(ctx) {
-        ctx.beginPath();
-        ctx.ellipse(0, 2, 7, 10, 0, 0, Math.PI * 2);
-        ctx.stroke();
-        ctx.beginPath();
-        ctx.ellipse(0, 0, 2.5, 4, 0, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.beginPath();
-        ctx.moveTo(0, -14);
-        ctx.lineTo(0, 16);
-        ctx.lineWidth = 1.2;
-        ctx.stroke();
-      },
-      // 12. Cucumber Ribbon
-      function drawCucumberRibbon(ctx) {
-        ctx.beginPath();
-        ctx.moveTo(-14, -10);
-        ctx.bezierCurveTo(-6, -16, 6, -6, 14, -10);
-        ctx.lineTo(12, 10);
-        ctx.bezierCurveTo(4, 6, -8, 16, -16, 10);
-        ctx.closePath();
-        ctx.lineWidth = 1.5;
-        ctx.stroke();
-      }
-    ];
-
-    function createParticle(initialY) {
-      const depthTier = Math.random();
-      let scale, speed, alpha, blur;
-
-      if (depthTier < 0.45) {
-        // Distant
-        scale = 0.55 + Math.random() * 0.25;
-        speed = 0.18 + Math.random() * 0.22;
-        alpha = 0.08 + Math.random() * 0.08;
-        blur = 2;
-      } else if (depthTier < 0.82) {
-        // Middle
-        scale = 0.8 + Math.random() * 0.3;
-        speed = 0.35 + Math.random() * 0.35;
-        alpha = 0.14 + Math.random() * 0.12;
-        blur = 0.5;
-      } else {
-        // Near
-        scale = 1.1 + Math.random() * 0.35;
-        speed = 0.55 + Math.random() * 0.4;
-        alpha = 0.22 + Math.random() * 0.16;
-        blur = 0;
-      }
-
-      return {
-        iconIndex: Math.floor(Math.random() * garnishes.length),
-        x: Math.random() * width,
-        y: initialY !== undefined ? initialY : height + 30 + Math.random() * 40,
-        scale,
-        speed,
-        baseAlpha: alpha,
-        rotation: Math.random() * Math.PI * 2,
-        rotSpeed: (Math.random() - 0.5) * 0.008,
-        swayOffset: Math.random() * Math.PI * 2,
-        swaySpeed: 0.01 + Math.random() * 0.015,
-        swayAmp: 0.6 + Math.random() * 0.9,
-        blur
-      };
-    }
-
-    function resize() {
-      if (!canvas) return;
-      width = canvas.width = window.innerWidth;
-      height = canvas.height = window.innerHeight;
-    }
-
-    function init() {
-      canvas = DOM.garnishCanvas;
-      if (!canvas) return;
-      ctx = canvas.getContext("2d");
-      resize();
-      window.addEventListener("resize", resize, { passive: true });
-
-      const mql = window.matchMedia("(prefers-reduced-motion: reduce)");
-      isReducedMotion = mql.matches;
-      mql.addEventListener("change", (e) => {
-        isReducedMotion = e.matches;
-      });
-
-      const count = isReducedMotion ? 6 : MAX_PARTICLES;
-      particles = [];
-      for (let i = 0; i < count; i++) {
-        particles.push(createParticle(Math.random() * height));
-      }
-
-      loop();
-    }
-
-    function loop() {
-      if (!ctx) return;
-      ctx.clearRect(0, 0, width, height);
-
-      particles.forEach((p, idx) => {
-        if (!isReducedMotion) {
-          p.y -= p.speed;
-          p.rotation += p.rotSpeed;
-          p.swayOffset += p.swaySpeed;
-          p.x += Math.sin(p.swayOffset) * p.swayAmp * 0.4;
-
-          if (p.y < -40) {
-            particles[idx] = createParticle();
-          }
-        }
-
-        ctx.save();
-        ctx.translate(p.x, p.y);
-        ctx.rotate(p.rotation);
-        ctx.scale(p.scale, p.scale);
-
-        ctx.strokeStyle = `rgba(220, 130, 50, ${p.baseAlpha})`;
-        ctx.fillStyle = `rgba(180, 80, 25, ${p.baseAlpha * 0.65})`;
-        ctx.shadowColor = "rgba(225, 120, 30, 0.45)";
-        ctx.shadowBlur = p.blur ? p.blur * 4 : 4;
-
-        garnishes[p.iconIndex](ctx);
-        ctx.restore();
-      });
-
-      animId = requestAnimationFrame(loop);
-    }
-
-    return { init };
-  })();
-
-  // Safe Storage Management (Section 28-32)
+  // ==========================================================================
+  // 5. STORAGE SYSTEM
+  // ==========================================================================
   function loadStorage() {
     const fallback = {
-      version: 1,
+      version: 2,
+      settings: { anim: true },
       stats: { played: 0, won: 0, currentStreak: 0, maxStreak: 0, dist: { 1: 0, 2: 0, 3: 0, 4: 0 } },
       history: {}
     };
     try {
-      const data = localStorage.getItem(STORAGE_KEY);
-      if (!data) return fallback;
-      const parsed = JSON.parse(data);
-      if (!parsed || typeof parsed !== "object") return fallback;
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return fallback;
+      const parsed = JSON.parse(raw);
       return {
-        version: parsed.version || 1,
+        version: 2,
+        settings: Object.assign({}, fallback.settings, parsed.settings || {}),
         stats: Object.assign({}, fallback.stats, parsed.stats || {}),
         history: parsed.history || {}
       };
-    } catch (err) {
+    } catch (e) {
       return fallback;
     }
   }
@@ -459,11 +312,13 @@
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(AppState.store));
     } catch (e) {
-      // Storage quota or disabled fallback
+      // Graceful fallback
     }
   }
 
-  // Robust CSV Parser
+  // ==========================================================================
+  // 6. CSV PARSER & UTILITIES
+  // ==========================================================================
   function parseCSV(text) {
     const rows = [];
     let row = [];
@@ -508,13 +363,9 @@
     return res;
   }
 
-  function formatLocalYYYYMMDD(date) {
-    const y = date.getFullYear();
-    const m = String(date.getMonth() + 1).padStart(2, "0");
-    const d = String(date.getDate()).padStart(2, "0");
-    return `${y}-${m}-${d}`;
-  }
-
+  // ==========================================================================
+  // 7. TOAST NOTIFICATIONS
+  // ==========================================================================
   let toastTimer = null;
   function showToast(msg) {
     if (toastTimer) clearTimeout(toastTimer);
@@ -525,41 +376,133 @@
     }, 2400);
   }
 
-  // Navigation Controller (Section 2, 7)
+  // ==========================================================================
+  // 8. NAVIGATION ROUTING
+  // ==========================================================================
   function showView(viewId) {
     DOM.viewMenu.classList.add("hidden");
     DOM.viewGame.classList.add("hidden");
     DOM.viewVault.classList.add("hidden");
+    DOM.viewSettings.classList.add("hidden");
 
     if (viewId === "menu") {
-      DOM.headerBackBtn.classList.add("hidden");
+      DOM.btnHeaderBack.classList.add("hidden");
+      DOM.btnHeaderHome.classList.remove("hidden");
       DOM.headerTitle.textContent = "SEQUENCE";
       DOM.viewMenu.classList.remove("hidden");
       renderMenu();
-    } else if (viewId === "game") {
-      DOM.headerBackBtn.classList.remove("hidden");
-      DOM.headerTitle.textContent = AppState.activePuzzle.title;
-      DOM.viewGame.classList.remove("hidden");
-    } else if (viewId === "vault") {
-      DOM.headerBackBtn.classList.remove("hidden");
-      DOM.headerTitle.textContent = "VAULT";
-      DOM.viewVault.classList.remove("hidden");
-      renderVault();
+    } else {
+      DOM.btnHeaderHome.classList.add("hidden");
+      DOM.btnHeaderBack.classList.remove("hidden");
+
+      if (viewId === "game") {
+        DOM.headerTitle.textContent = "SEQUENCE";
+        DOM.viewGame.classList.remove("hidden");
+      } else if (viewId === "vault") {
+        DOM.headerTitle.textContent = "VAULT";
+        DOM.viewVault.classList.remove("hidden");
+        renderVault();
+      } else if (viewId === "settings") {
+        DOM.headerTitle.textContent = "SETTINGS";
+        DOM.viewSettings.classList.remove("hidden");
+        renderSettings();
+      }
     }
     window.scrollTo(0, 0);
   }
 
-  // Application Initialization
+  // ==========================================================================
+  // 9. HOW TO PLAY: STRICT RIGHT-TO-LEFT ENTRANCE
+  // ==========================================================================
+  function openHowToPlay() {
+    DOM.panelRulesOverlay.classList.remove("hidden");
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        DOM.panelRulesOverlay.classList.add("active");
+        DOM.sidePanelRules.focus();
+      });
+    });
+  }
+
+  function closeHowToPlay() {
+    DOM.panelRulesOverlay.classList.remove("active");
+    setTimeout(() => {
+      DOM.panelRulesOverlay.classList.add("hidden");
+    }, 420);
+  }
+
+  // ==========================================================================
+  // 10. ATMOSPHERIC GARNISH FLIGHT SYSTEM (6-9 VISIBLE, BOTTOM TO TOP)
+  // ==========================================================================
+  function initFloatingGarnishes() {
+    DOM.bgFloatingIcons.innerHTML = "";
+    // Target 8 concurrent rising garnishes for continuous lounge atmosphere
+    const count = 8;
+    const depths = ["depth-bg", "depth-mid", "depth-fg"];
+
+    for (let i = 0; i < count; i++) {
+      const el = document.createElement("div");
+      const depth = depths[i % 3];
+      el.className = `floating-garnish ${depth}`;
+      el.innerHTML = GARNISH_SVGS[i % GARNISH_SVGS.length];
+
+      const left = Math.floor(Math.random() * 88) + 6;
+      // Staggered long unhurried flight times
+      const duration = depth === "depth-bg" ? 24 + Math.random() * 8 : depth === "depth-mid" ? 18 + Math.random() * 6 : 14 + Math.random() * 4;
+      const delay = -(Math.random() * duration);
+      const drift = Math.floor(Math.random() * 44) - 22;
+      const rot = Math.floor(Math.random() * 90) - 45;
+
+      el.style.left = `${left}%`;
+      el.style.animationDuration = `${duration}s`;
+      el.style.animationDelay = `${delay}s`;
+      el.style.setProperty("--drift", `${drift}px`);
+      el.style.setProperty("--rot", `${rot}deg`);
+
+      DOM.bgFloatingIcons.appendChild(el);
+    }
+    applyAnimationSetting();
+  }
+
+  function applyAnimationSetting() {
+    const isEnabled = AppState.store.settings.anim;
+    if (isEnabled) {
+      document.body.classList.remove("anim-paused");
+      DOM.btnAnimOn.classList.add("active");
+      DOM.btnAnimOn.setAttribute("aria-pressed", "true");
+      DOM.btnAnimOff.classList.remove("active");
+      DOM.btnAnimOff.setAttribute("aria-pressed", "false");
+    } else {
+      document.body.classList.add("anim-paused");
+      DOM.btnAnimOff.classList.add("active");
+      DOM.btnAnimOff.setAttribute("aria-pressed", "true");
+      DOM.btnAnimOn.classList.remove("active");
+      DOM.btnAnimOn.setAttribute("aria-pressed", "false");
+    }
+  }
+
+  function setAnimationSetting(on) {
+    AppState.store.settings.anim = on;
+    saveStorage();
+    applyAnimationSetting();
+  }
+
+  // ==========================================================================
+  // 11. INITIALIZATION & DATA LOADING
+  // ==========================================================================
   async function init() {
-    DOM.btnNavHome.setAttribute("href", HOME_URL);
-    GarnishEngine.init();
+    DOM.btnHeaderHome.setAttribute("href", HOME_URL);
+    bindEvents();
+    initFloatingGarnishes();
+
+    await DailyReleaseEngine.synchronize();
 
     try {
       const res = await fetch("puzzles.csv");
-      if (!res.ok) throw new Error("Unable to load puzzles source.");
+      if (!res.ok) throw new Error("Network CSV missing");
       const text = await res.text();
       const rows = parseCSV(text);
-      if (rows.length < 2) throw new Error("Dataset is empty or malformed.");
+      if (rows.length < 2) throw new Error("Malformed CSV");
 
       const header = rows[0];
       const rawList = [];
@@ -575,7 +518,7 @@
         const slots = [];
         const pool = [];
         for (let s = 1; s <= SLOTS_COUNT; s++) {
-          const name = p[`slot_${s}_name`] || `Step ${s}`;
+          const name = p[`slot_${s}_name`] || `Stage ${s}`;
           const answer = p[`slot_${s}_answer`] || `Answer ${s}`;
           const decoy = p[`slot_${s}_decoy`] || `Decoy ${s}`;
           slots.push({ slotIndex: s - 1, name, answer });
@@ -585,8 +528,8 @@
         return {
           date: p.date,
           title: p.title || "Sequence Challenge",
-          clue: p.clue || "Determine the proper sequence.",
-          hint: p.hint || "Review the step names and logical progression.",
+          clue: p.clue || "Determine the authentic sequence.",
+          hint: p.hint || "Carefully observe the chronological tier.",
           notes: p.notes || "",
           slots,
           pool
@@ -595,83 +538,77 @@
 
       AppState.puzzles.sort((a, b) => a.date.localeCompare(b.date));
 
-      const todayStr = formatLocalYYYYMMDD(new Date());
-      let available = AppState.puzzles.filter((p) => p.date <= todayStr);
+      const canonicalToday = DailyReleaseEngine.getCanonicalReleaseDate();
+      let available = AppState.puzzles.filter((p) => p.date <= canonicalToday);
       if (available.length === 0) available = [AppState.puzzles[0]];
 
       AppState.todayPuzzle = available[available.length - 1];
-
-      bindEvents();
       showView("menu");
     } catch (err) {
-      // Graceful fallback for offline / server preview
       createFallbackPuzzle();
-      bindEvents();
       showView("menu");
     }
   }
 
   function createFallbackPuzzle() {
-    const today = formatLocalYYYYMMDD(new Date());
+    const today = DailyReleaseEngine.getCanonicalReleaseDate();
     const fallback = {
       date: today,
-      title: "Classic Cocktail Build",
-      clue: "Order the standard stages of an Old Fashioned preparation.",
-      hint: "The sugar and bitters must be married before spirits and ice enter the glass.",
-      notes: "Traditional method for an Old Fashioned in high-end cocktail hospitality.",
+      title: "Botanical Distillation Process",
+      clue: "Arrange the traditional stages of spirit infusion and finishing in order.",
+      hint: "Maceration starts the process; barrel resting completes the maturation.",
+      notes: "The artisanal distillation cycle progresses from botanical infusion through heart collection.",
       slots: [
-        { slotIndex: 0, name: "1st Step", answer: "Sugar Cube & Bitters" },
-        { slotIndex: 1, name: "2nd Step", answer: "Muddle & Dissolve" },
-        { slotIndex: 2, name: "3rd Step", answer: "Rye or Bourbon" },
-        { slotIndex: 3, name: "4th Step", answer: "Large Clear Ice" },
-        { slotIndex: 4, name: "5th Step", answer: "Express Orange Twist" }
+        { slotIndex: 0, name: "Stage I", answer: "Maceration" },
+        { slotIndex: 1, name: "Stage II", answer: "Vaporization" },
+        { slotIndex: 2, name: "Stage III", answer: "Condensation" },
+        { slotIndex: 3, name: "Stage IV", answer: "Heart Cut" },
+        { slotIndex: 4, name: "Stage V", answer: "Cask Maturation" }
       ],
       pool: [
-        { id: "fb-c-1", text: "Sugar Cube & Bitters", slotIndex: 0 },
-        { id: "fb-d-1", text: "Shake Vigorously", slotIndex: null },
-        { id: "fb-c-2", text: "Muddle & Dissolve", slotIndex: 1 },
-        { id: "fb-d-2", text: "Crushed Ice Fill", slotIndex: null },
-        { id: "fb-c-3", text: "Rye or Bourbon", slotIndex: 2 },
-        { id: "fb-d-3", text: "Top with Club Soda", slotIndex: null },
-        { id: "fb-c-4", text: "Large Clear Ice", slotIndex: 3 },
-        { id: "fb-d-4", text: "Add Simple Syrup", slotIndex: null },
-        { id: "fb-c-5", text: "Express Orange Twist", slotIndex: 4 },
-        { id: "fb-d-5", text: "Rim with Salt", slotIndex: null }
+        { id: "fb-c-1", text: "Maceration", slotIndex: 0 },
+        { id: "fb-d-1", text: "Carbonation", slotIndex: null },
+        { id: "fb-c-2", text: "Vaporization", slotIndex: 1 },
+        { id: "fb-d-2", text: "Centrifuging", slotIndex: null },
+        { id: "fb-c-3", text: "Condensation", slotIndex: 2 },
+        { id: "fb-d-3", text: "Freeze Drying", slotIndex: null },
+        { id: "fb-c-4", text: "Heart Cut", slotIndex: 3 },
+        { id: "fb-d-4", text: "Pasteurization", slotIndex: null },
+        { id: "fb-c-5", text: "Cask Maturation", slotIndex: 4 },
+        { id: "fb-d-5", text: "Cold Press", slotIndex: null }
       ]
     };
     AppState.puzzles = [fallback];
     AppState.todayPuzzle = fallback;
   }
 
-  // Menu View Controller (Section 3, 4, 5)
+  // ==========================================================================
+  // 12. MENU RENDERING
+  // ==========================================================================
   function renderMenu() {
     const today = AppState.todayPuzzle;
     if (!today) return;
 
     DOM.menuTodayDate.textContent = today.date;
-    DOM.menuTodayTitle.textContent = today.title;
+    DOM.btnPlayLabel.textContent = "Play Sequence";
 
     const record = AppState.store.history[today.date];
     if (record && record.completed) {
-      DOM.menuTodayStatus.textContent = record.won
-        ? `Status: Solved (${record.attemptsUsed}/${MAX_ATTEMPTS} attempts)`
-        : "Status: Completed (Unsolved)";
-      DOM.btnPlayToday.textContent = "Review Result";
+      DOM.menuPlaySub.textContent = record.won ? `Solved (${record.attemptsUsed}/${MAX_ATTEMPTS})` : "Completed (Unsolved)";
     } else if (record && record.attemptsUsed > 0) {
-      DOM.menuTodayStatus.textContent = `Status: In Progress (${record.attemptsUsed}/${MAX_ATTEMPTS} attempts)`;
-      DOM.btnPlayToday.textContent = "Resume Daily Puzzle";
+      DOM.menuPlaySub.textContent = `Resume (${record.attemptsUsed}/${MAX_ATTEMPTS} attempts)`;
     } else {
-      DOM.menuTodayStatus.textContent = "Status: Ready to play";
-      DOM.btnPlayToday.textContent = "Play Daily Puzzle";
+      DOM.menuPlaySub.textContent = "Daily Challenge";
     }
 
-    const pastPuzzles = AppState.puzzles.filter((p) => p.date < today.date);
-    DOM.menuArchiveCount.textContent = `${pastPuzzles.length} puzzle${pastPuzzles.length === 1 ? "" : "s"}`;
+    const past = AppState.puzzles.filter((p) => p.date < today.date);
+    DOM.menuVaultCount.textContent = past.length;
   }
 
-  // Gameplay Setup
+  // ==========================================================================
+  // 13. GAMEPLAY ENGINE
+  // ==========================================================================
   function startPuzzle(puzzle, isArchive = false) {
-    SoundSystem.tap();
     AppState.activePuzzle = puzzle;
     AppState.isArchiveMode = isArchive;
     AppState.selectedSlot = 0;
@@ -681,15 +618,9 @@
       AppState.isCompleted = !!record.completed;
       AppState.isWon = !!record.won;
       AppState.attemptsUsed = record.attemptsUsed || 0;
-      AppState.lockedSlots = Array.isArray(record.lockedSlots)
-        ? record.lockedSlots.slice()
-        : [false, false, false, false, false];
-      AppState.currentDraft = Array.isArray(record.draft)
-        ? record.draft.slice()
-        : [null, null, null, null, null];
-      AppState.historyGrid = Array.isArray(record.historyGrid)
-        ? record.historyGrid.slice()
-        : [];
+      AppState.lockedSlots = Array.isArray(record.lockedSlots) ? record.lockedSlots.slice() : [false, false, false, false, false];
+      AppState.currentDraft = Array.isArray(record.draft) ? record.draft.slice() : [null, null, null, null, null];
+      AppState.historyGrid = Array.isArray(record.historyGrid) ? record.historyGrid.slice() : [];
     } else {
       AppState.isCompleted = false;
       AppState.isWon = false;
@@ -699,7 +630,7 @@
       AppState.historyGrid = [];
     }
 
-    DOM.gameDateBadge.textContent = puzzle.date;
+    DOM.gameTitleBadge.textContent = `${puzzle.title} (${puzzle.date})`;
     DOM.gameClue.textContent = puzzle.clue;
 
     if (!puzzle.shuffledPool) {
@@ -715,34 +646,31 @@
     showView("game");
   }
 
-  // Render Status & Feedback
   function renderGameStatus() {
-    const left = MAX_ATTEMPTS - AppState.attemptsUsed;
-    DOM.gameAttemptsBadge.textContent = `Attempts: ${left} / ${MAX_ATTEMPTS}`;
+    const remaining = MAX_ATTEMPTS - AppState.attemptsUsed;
+    DOM.gameAttemptsBadge.textContent = `Attempts: ${remaining} / ${MAX_ATTEMPTS}`;
 
     const hintAvailable = AppState.attemptsUsed >= 2 || AppState.isCompleted;
     if (hintAvailable) {
       DOM.hintBox.classList.remove("hidden");
       DOM.hintText.textContent = AppState.activePuzzle.hint;
-      DOM.hintStatusIndicator.classList.remove("hidden");
     } else {
       DOM.hintBox.classList.add("hidden");
-      DOM.hintStatusIndicator.classList.add("hidden");
     }
 
     if (AppState.isCompleted) {
       DOM.btnSubmit.textContent = "View Summary";
-      DOM.btnClear.classList.add("hidden");
+      DOM.btnClearPool.classList.add("hidden");
     } else {
       DOM.btnSubmit.textContent = "Submit Sequence";
-      DOM.btnClear.classList.remove("hidden");
+      DOM.btnClearPool.classList.remove("hidden");
     }
   }
 
   function renderSlots() {
     DOM.slots.forEach((el, idx) => {
       const slotDef = AppState.activePuzzle.slots[idx];
-      el.querySelector(".slot-name").textContent = slotDef.name;
+      el.querySelector(".slot-label").textContent = slotDef.name;
       el.classList.remove("active", "locked");
 
       const valHolder = el.querySelector(".slot-value");
@@ -750,11 +678,18 @@
 
       if (AppState.lockedSlots[idx]) {
         el.classList.add("locked");
+        el.setAttribute("aria-label", `Slot ${idx + 1}: Locked correct, ${slotDef.answer}`);
+        el.setAttribute("aria-pressed", "true");
         valHolder.textContent = slotDef.answer;
       } else if (AppState.currentDraft[idx]) {
-        valHolder.textContent = AppState.currentDraft[idx].text;
+        const item = AppState.currentDraft[idx];
+        el.setAttribute("aria-label", `Slot ${idx + 1}: ${item.text}. Tap to remove.`);
+        el.setAttribute("aria-pressed", idx === AppState.selectedSlot ? "true" : "false");
+        valHolder.textContent = item.text;
       } else {
-        valHolder.innerHTML = '<span class="placeholder">Awaiting placement</span>';
+        el.setAttribute("aria-label", `Slot ${idx + 1}: Empty`);
+        el.setAttribute("aria-pressed", idx === AppState.selectedSlot ? "true" : "false");
+        valHolder.innerHTML = '<span class="placeholder">Select slot to fill</span>';
       }
 
       if (!AppState.isCompleted && !AppState.lockedSlots[idx] && idx === AppState.selectedSlot) {
@@ -776,27 +711,34 @@
       if (placedIds.has(item.id)) {
         btn.classList.add("used");
         btn.setAttribute("aria-disabled", "true");
+        btn.tabIndex = -1;
       } else {
+        btn.setAttribute("aria-label", `Place ${item.text}`);
         btn.addEventListener("click", () => handleTileClick(item));
       }
       DOM.itemsPool.appendChild(btn);
     });
   }
 
-  // Interactions (Sections 16-18)
   function handleTileClick(item) {
     if (AppState.isCompleted) return;
 
-    SoundSystem.place();
-
     let target = AppState.selectedSlot;
-    if (AppState.lockedSlots[target]) {
-      target = AppState.lockedSlots.findIndex((l) => !l);
+    if (AppState.lockedSlots[target] || AppState.currentDraft[target]) {
+      target = -1;
+      for (let i = 0; i < SLOTS_COUNT; i++) {
+        if (!AppState.lockedSlots[i] && !AppState.currentDraft[i]) {
+          target = i;
+          break;
+        }
+      }
     }
-    if (target === -1) return;
+    if (target === -1) target = AppState.selectedSlot;
+    if (AppState.lockedSlots[target]) return;
 
     AppState.currentDraft[target] = item;
 
+    // Advance to next unfilled slot
     let next = -1;
     for (let i = 0; i < SLOTS_COUNT; i++) {
       if (!AppState.lockedSlots[i] && !AppState.currentDraft[i]) {
@@ -813,8 +755,6 @@
   function handleSlotClick(idx) {
     if (AppState.isCompleted || AppState.lockedSlots[idx]) return;
 
-    SoundSystem.tap();
-
     if (AppState.currentDraft[idx]) {
       AppState.currentDraft[idx] = null;
       AppState.selectedSlot = idx;
@@ -827,7 +767,6 @@
 
   function clearDraft() {
     if (AppState.isCompleted) return;
-    SoundSystem.tap();
     for (let i = 0; i < SLOTS_COUNT; i++) {
       if (!AppState.lockedSlots[i]) AppState.currentDraft[i] = null;
     }
@@ -839,22 +778,19 @@
 
   function submitAttempt() {
     if (AppState.isCompleted) {
-      SoundSystem.tap();
       openResultModal();
       return;
     }
 
     for (let i = 0; i < SLOTS_COUNT; i++) {
       if (!AppState.lockedSlots[i] && !AppState.currentDraft[i]) {
-        SoundSystem.miss();
-        showToast("Fill all 5 slots before submitting.");
+        showToast("Fill all 5 sequence slots before submitting.");
         return;
       }
     }
 
     AppState.attemptsUsed++;
     const rowResult = [];
-    let hadHit = false;
 
     for (let i = 0; i < SLOTS_COUNT; i++) {
       if (AppState.lockedSlots[i]) {
@@ -865,27 +801,19 @@
       if (item && item.slotIndex === i) {
         AppState.lockedSlots[i] = true;
         rowResult.push("hit");
-        hadHit = true;
       } else {
         AppState.currentDraft[i] = null;
         rowResult.push("miss");
         const slotEl = DOM.slots[i];
         slotEl.classList.add("incorrect-flash");
-        setTimeout(() => slotEl.classList.remove("incorrect-flash"), 500);
+        setTimeout(() => slotEl.classList.remove("incorrect-flash"), 450);
       }
-    }
-
-    if (hadHit) {
-      SoundSystem.hit();
-    } else {
-      SoundSystem.miss();
     }
 
     AppState.historyGrid.push(rowResult);
 
-    const won = AppState.lockedSlots.every(Boolean);
-    if (won) {
-      SoundSystem.win();
+    const isAllCorrect = AppState.lockedSlots.every(Boolean);
+    if (isAllCorrect) {
       AppState.isCompleted = true;
       AppState.isWon = true;
       saveProgress();
@@ -898,7 +826,6 @@
     }
 
     if (AppState.attemptsUsed >= MAX_ATTEMPTS) {
-      SoundSystem.miss();
       AppState.isCompleted = true;
       AppState.isWon = false;
       AppState.lockedSlots = [true, true, true, true, true];
@@ -946,10 +873,90 @@
     saveStorage();
   }
 
-  // Modals & Details
+  // ==========================================================================
+  // 14. VAULT & SETTINGS RENDERING
+  // ==========================================================================
+  function renderVault() {
+    DOM.vaultList.innerHTML = "";
+    const canonicalToday = DailyReleaseEngine.getCanonicalReleaseDate();
+    const past = AppState.puzzles.filter((p) => p.date < canonicalToday);
+
+    if (past.length === 0) {
+      DOM.vaultList.innerHTML = '<p class="status-caption">No prior challenges in the vault.</p>';
+      return;
+    }
+
+    past.slice().reverse().forEach((puzzle) => {
+      const record = AppState.store.history[puzzle.date];
+      const item = document.createElement("div");
+      item.className = "vault-item";
+      item.setAttribute("role", "button");
+      item.setAttribute("tabindex", "0");
+
+      let status = "Not Started";
+      let isSolved = false;
+      if (record && record.completed) {
+        status = record.won ? `Solved (${record.attemptsUsed}/${MAX_ATTEMPTS})` : "Unsolved";
+        isSolved = record.won;
+      }
+
+      item.innerHTML = `
+        <div>
+          <div class="vault-item-title">${puzzle.title}</div>
+          <div class="status-caption">${puzzle.date}</div>
+        </div>
+        <span class="badge ${isSolved ? "badge-accent" : ""}">${status}</span>
+      `;
+
+      const selectVaultPuzzle = () => startPuzzle(puzzle, true);
+      item.addEventListener("click", selectVaultPuzzle);
+      item.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          selectVaultPuzzle();
+        }
+      });
+
+      DOM.vaultList.appendChild(item);
+    });
+  }
+
+  function renderSettings() {
+    applyAnimationSetting();
+  }
+
+  // ==========================================================================
+  // 15. MODALS: STATS & RESULTS
+  // ==========================================================================
+  function openStatsModal() {
+    const s = AppState.store.stats;
+    DOM.statPlayed.textContent = s.played;
+    DOM.statWinRate.textContent = `${s.played > 0 ? Math.round((s.won / s.played) * 100) : 0}%`;
+    DOM.statStreak.textContent = s.currentStreak;
+    DOM.statMaxStreak.textContent = s.maxStreak;
+
+    DOM.statsDistribution.innerHTML = "";
+    const maxVal = Math.max(1, ...Object.values(s.dist));
+    for (let i = 1; i <= MAX_ATTEMPTS; i++) {
+      const count = s.dist[i] || 0;
+      const pct = Math.max(14, Math.round((count / maxVal) * 100));
+
+      const row = document.createElement("div");
+      row.className = "dist-row";
+      row.innerHTML = `
+        <span style="width:16px;font-weight:700;font-family:var(--font-serif);">${i}</span>
+        <div class="dist-bar-bg">
+          <div class="dist-bar-fill" style="width:${pct}%">${count}</div>
+        </div>
+      `;
+      DOM.statsDistribution.appendChild(row);
+    }
+    DOM.modalStats.classList.remove("hidden");
+  }
+
   function openResultModal() {
     const p = AppState.activePuzzle;
-    DOM.resultTitle.textContent = AppState.isWon ? "Sequence Perfected" : "Challenge Concluded";
+    DOM.resultTitle.textContent = AppState.isWon ? "Sequence Mastered" : "Sequence Complete";
     DOM.resultSubtitle.textContent = `${p.title} (${p.date})`;
 
     DOM.resultGrid.innerHTML = "";
@@ -975,110 +982,71 @@
     DOM.modalResult.classList.remove("hidden");
   }
 
-  function openStatsModal() {
-    SoundSystem.tap();
-    const s = AppState.store.stats;
-    DOM.statPlayed.textContent = s.played;
-    DOM.statWinRate.textContent = `${s.played > 0 ? Math.round((s.won / s.played) * 100) : 0}%`;
-    DOM.statStreak.textContent = s.currentStreak;
-    DOM.statMaxStreak.textContent = s.maxStreak;
+  // ==========================================================================
+  // 16. SHARING SYSTEM
+  // ==========================================================================
+  function handleShareAction() {
+    const url = window.location.href;
+    const title = "Sequence Puzzle";
+    const text = "Discover the correct sequence of five elements!";
 
-    DOM.statsDistribution.innerHTML = "";
-    const maxVal = Math.max(1, ...Object.values(s.dist));
-    for (let i = 1; i <= MAX_ATTEMPTS; i++) {
-      const count = s.dist[i] || 0;
-      const pct = Math.max(10, Math.round((count / maxVal) * 100));
-
-      const row = document.createElement("div");
-      row.className = "dist-row";
-      row.innerHTML = `
-        <span style="width:16px;font-weight:700;color:var(--c-gold-metallic);">${i}</span>
-        <div class="dist-bar-bg">
-          <div class="dist-bar-fill" style="width:${pct}%">${count}</div>
-        </div>
-      `;
-      DOM.statsDistribution.appendChild(row);
+    if (navigator.share) {
+      navigator.share({ title, text, url }).catch(() => {});
+    } else if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(url)
+        .then(() => showToast("Lounge link copied."))
+        .catch(() => showToast("Unable to copy link."));
+    } else {
+      showToast("Sharing not supported on this browser.");
     }
-    DOM.modalStats.classList.remove("hidden");
   }
 
-  // Vault Screen (Section 5)
-  function renderVault() {
-    DOM.vaultList.innerHTML = "";
-    const past = AppState.puzzles.filter((p) => p.date < AppState.todayPuzzle.date);
-    if (past.length === 0) {
-      DOM.vaultList.innerHTML = '<p class="status-text" style="text-align:center;padding:24px;">No vintage puzzles in the vault cellar yet.</p>';
-      return;
-    }
-
-    past.slice().reverse().forEach((puzzle) => {
-      const record = AppState.store.history[puzzle.date];
-      const item = document.createElement("div");
-      item.className = "vault-item";
-      item.setAttribute("role", "button");
-      item.setAttribute("tabindex", "0");
-
-      let status = "Cellar Reserve";
-      if (record && record.completed) {
-        status = record.won ? `Solved (${record.attemptsUsed}/${MAX_ATTEMPTS})` : "Archived";
-      }
-
-      item.innerHTML = `
-        <div>
-          <div class="vault-item-title">${puzzle.title}</div>
-          <div class="status-text">${puzzle.date}</div>
-        </div>
-        <span class="badge ${record && record.completed && record.won ? "badge-accent" : ""}">${status}</span>
-      `;
-
-      const onSelect = () => startPuzzle(puzzle, true);
-      item.addEventListener("click", onSelect);
-      item.addEventListener("keydown", (e) => {
-        if (e.key === "Enter" || e.key === " ") {
-          e.preventDefault();
-          onSelect();
-        }
-      });
-
-      DOM.vaultList.appendChild(item);
-    });
-  }
-
-  function copyShareSnippet() {
-    SoundSystem.tap();
+  function handleResultShare() {
     const p = AppState.activePuzzle;
     const score = AppState.isWon ? `${AppState.attemptsUsed}/${MAX_ATTEMPTS}` : "X/4";
-    let text = `Sequence ${p.date} — ${score}\n`;
+    let shareText = `Sequence ${p.date} — ${score}\n`;
     AppState.historyGrid.forEach((row) => {
-      text += row.map((cell) => (cell === "hit" ? "✦" : "✧")).join(" ") + "\n";
+      shareText += row.map((cell) => (cell === "hit" ? "🥃" : "⬛")).join("") + "\n";
     });
 
     if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(text).then(() => showToast("Tasting results copied to clipboard."));
+      navigator.clipboard.writeText(shareText)
+        .then(() => showToast("Score copied to clipboard!"))
+        .catch(() => showToast("Unable to copy score."));
     } else {
       showToast("Clipboard unavailable.");
     }
   }
 
-  // Universal Navigation & Event Binding
+  // ==========================================================================
+  // 17. EVENT BINDING
+  // ==========================================================================
   function bindEvents() {
-    DOM.headerBackBtn.addEventListener("click", () => {
-      SoundSystem.tap();
-      showView("menu");
+    DOM.btnHeaderBack.addEventListener("click", () => showView("menu"));
+
+    // Menu Navigation
+    DOM.btnMenuPlay.addEventListener("click", () => startPuzzle(AppState.todayPuzzle, false));
+    DOM.btnMenuVault.addEventListener("click", () => showView("vault"));
+    DOM.btnMenuSettings.addEventListener("click", () => showView("settings"));
+    DOM.btnMenuRules.addEventListener("click", openHowToPlay);
+
+    // Utilities
+    DOM.btnUtilStats.addEventListener("click", openStatsModal);
+    DOM.btnUtilShare.addEventListener("click", handleShareAction);
+    DOM.btnUtilPlus.addEventListener("click", () => {
+      showToast("Tileworks Nocturne collection.");
     });
 
-    DOM.btnPlayToday.addEventListener("click", () => startPuzzle(AppState.todayPuzzle, false));
-    DOM.btnViewVault.addEventListener("click", () => {
-      SoundSystem.tap();
-      showView("vault");
-    });
+    // Settings
+    DOM.btnAnimOn.addEventListener("click", () => setAnimationSetting(true));
+    DOM.btnAnimOff.addEventListener("click", () => setAnimationSetting(false));
 
-    DOM.btnStats.addEventListener("click", openStatsModal);
-    DOM.btnRules.addEventListener("click", () => {
-      SoundSystem.tap();
-      DOM.modalRules.classList.remove("hidden");
-    });
+    // Side Panel
+    DOM.btnCloseRules.addEventListener("click", closeHowToPlay);
+    DOM.btnRulesConfirm.addEventListener("click", closeHowToPlay);
+    DOM.backdropRules.addEventListener("click", closeHowToPlay);
 
+    // Gameplay Board
     DOM.slots.forEach((el) => {
       const idx = parseInt(el.dataset.slot, 10);
       el.addEventListener("click", () => handleSlotClick(idx));
@@ -1090,48 +1058,40 @@
       });
     });
 
-    DOM.btnClear.addEventListener("click", clearDraft);
+    DOM.btnClearPool.addEventListener("click", clearDraft);
     DOM.btnSubmit.addEventListener("click", submitAttempt);
 
-    DOM.btnCloseResult.addEventListener("click", () => {
-      SoundSystem.tap();
-      DOM.modalResult.classList.add("hidden");
-    });
+    // Modals
+    DOM.btnCloseStats.addEventListener("click", () => DOM.modalStats.classList.add("hidden"));
+    DOM.btnCloseResult.addEventListener("click", () => DOM.modalResult.classList.add("hidden"));
     DOM.btnResultMenu.addEventListener("click", () => {
-      SoundSystem.tap();
       DOM.modalResult.classList.add("hidden");
       showView("menu");
     });
     DOM.btnResultVault.addEventListener("click", () => {
-      SoundSystem.tap();
       DOM.modalResult.classList.add("hidden");
       showView("vault");
     });
-    DOM.btnShare.addEventListener("click", copyShareSnippet);
+    DOM.btnShare.addEventListener("click", handleResultShare);
 
-    DOM.btnCloseRules.addEventListener("click", () => {
-      SoundSystem.tap();
-      DOM.modalRules.classList.add("hidden");
-    });
-    DOM.btnRulesOk.addEventListener("click", () => {
-      SoundSystem.tap();
-      DOM.modalRules.classList.add("hidden");
-    });
-
-    DOM.btnCloseStats.addEventListener("click", () => {
-      SoundSystem.tap();
-      DOM.modalStats.classList.add("hidden");
-    });
-
-    [DOM.modalResult, DOM.modalRules, DOM.modalStats].forEach((backdrop) => {
+    [DOM.modalStats, DOM.modalResult].forEach((backdrop) => {
       backdrop.addEventListener("click", (e) => {
-        if (e.target === backdrop) {
-          SoundSystem.tap();
-          backdrop.classList.add("hidden");
-        }
+        if (e.target === backdrop) backdrop.classList.add("hidden");
       });
+    });
+
+    // Pause / Resume Optimization
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "visible") {
+        DailyReleaseEngine.synchronize();
+      }
     });
   }
 
-  document.addEventListener("DOMContentLoaded", init);
+  // Boot on DOM Ready
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", init);
+  } else {
+    init();
+  }
 })();

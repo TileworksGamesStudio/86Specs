@@ -2,278 +2,321 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <title>Cocktail Specs</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
+  <meta name="description" content="Sequence — Arrange five elements into their correct chronological, structural, or logical order.">
+  <meta name="theme-color" content="#0E0604">
+  <title>Sequence</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,600&family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <!-- LUXURY BACKGROUND ATMOSPHERE LAYERS -->
-  <div class="lounge-ambient" aria-hidden="true">
-    <div class="caustic-layer"></div>
-    <canvas id="garnish-canvas" class="garnish-canvas"></canvas>
-    <div class="vignette-overlay"></div>
-    <div class="grain-overlay"></div>
-  </div>
+  <!-- ATMOSPHERIC FOUNDATION LAYERS -->
+  <div class="bg-base" aria-hidden="true"></div>
+  <div class="bg-caustics" aria-hidden="true"></div>
+  <div class="bg-micro-texture" aria-hidden="true"></div>
+  <div id="bg-floating-icons" class="bg-floating-icons" aria-hidden="true"></div>
+  <div class="bg-vignette" aria-hidden="true"></div>
 
+  <!-- APPLICATION SHELL -->
   <div id="app" class="app-shell">
     
-    <!-- MAIN NAVIGATION BAR -->
+    <!-- TOP APP HEADER -->
     <header class="app-header">
       <div class="header-left">
-        <button id="header-back-btn" class="btn btn-sm btn-nav-back hidden" type="button" aria-label="Back to Menu">
-          <span class="btn-icon-glyph">‹</span> Back
+        <a id="btn-header-home" class="btn-icon header-btn" href="#home" aria-label="Home" title="Home">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M3 10.5 12 3l9 7.5v10a1.5 1.5 0 0 1-1.5 1.5H4.5A1.5 1.5 0 0 1 3 20.5z"></path>
+            <polyline points="9 22 9 12 15 12 15 22"></polyline>
+          </svg>
+        </a>
+        <button id="btn-header-back" class="btn-icon header-btn hidden" type="button" aria-label="Back to Menu" title="Back">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <line x1="19" y1="12" x2="5" y2="12"></line>
+            <polyline points="12 19 5 12 12 5"></polyline>
+          </svg>
         </button>
       </div>
+
       <div class="header-center">
-        <div class="header-emblem" aria-hidden="true">✦</div>
         <h1 id="header-title" class="header-title">SEQUENCE</h1>
-        <div class="header-subtitle" aria-hidden="true">PRIVATE LOUNGE</div>
       </div>
+
       <div class="header-right">
-        <button id="btn-stats" class="btn btn-icon" type="button" aria-label="Statistics" title="Statistics">
-          <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <line x1="18" y1="20" x2="18" y2="10"></line>
-            <line x1="12" y1="20" x2="12" y2="4"></line>
-            <line x1="6" y1="20" x2="6" y2="14"></line>
-          </svg>
-        </button>
-        <button id="btn-rules" class="btn btn-icon" type="button" aria-label="How to Play" title="How to Play">
-          <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <circle cx="12" cy="12" r="10"></circle>
-            <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
-            <line x1="12" y1="17" x2="12.01" y2="17"></line>
-          </svg>
-        </button>
+        <div class="header-spacer" aria-hidden="true"></div>
       </div>
     </header>
 
+    <!-- CONTENT WRAPPER -->
     <main class="app-content">
-      <!-- VIEW 1: MAIN MENU (DAILY PUZZLE -> VAULT -> HOME) -->
-      <section id="view-menu" class="view">
-        <div class="menu-hero">
-          <div class="menu-flourish top-flourish" aria-hidden="true">
-            <span class="flourish-line"></span>
-            <span class="flourish-gem">◆</span>
-            <span class="flourish-line"></span>
+      
+      <!-- ================================================================
+           VIEW 1: MAIN MENU (CENTERED COMPOSITION)
+           ================================================================ -->
+      <section id="view-menu" class="view view-menu" aria-label="Main Menu">
+        <div class="menu-stage">
+          
+          <!-- TITLE FOCUS BLOCK -->
+          <div class="menu-title-block">
+            <span class="menu-eyebrow">CHRONOLOGY & ORDER</span>
+            <h2 class="menu-main-title">SEQUENCE</h2>
+            <p class="menu-subtitle">Five elements. One authentic progression.</p>
+            <div class="menu-title-ornament" aria-hidden="true">
+              <span class="ornament-line"></span>
+              <span class="ornament-diamond">◆</span>
+              <span class="ornament-line"></span>
+            </div>
           </div>
-          <h2 class="hero-brand">SEQUENCE</h2>
-          <p class="hero-tagline">Handcrafted Order of Five</p>
-          <div class="menu-flourish bottom-flourish" aria-hidden="true">
-            <span class="flourish-line"></span>
-            <span class="flourish-gem">✦</span>
-            <span class="flourish-line"></span>
+
+          <!-- PRIMARY ACTIONS GROUP -->
+          <nav class="menu-primary-group" aria-label="Primary Navigation">
+            <!-- 1. Play Game -->
+            <button id="btn-menu-play" class="btn-menu btn-menu-primary" type="button">
+              <span class="btn-menu-content">
+                <span id="btn-play-label" class="btn-menu-label">Play Sequence</span>
+                <span id="menu-play-sub" class="btn-menu-sub">Daily Challenge</span>
+              </span>
+              <span class="btn-menu-badge" id="menu-today-date">----.--.--</span>
+            </button>
+
+            <!-- 2. Vault -->
+            <button id="btn-menu-vault" class="btn-menu" type="button">
+              <span class="btn-menu-content">
+                <span class="btn-menu-label">Vault</span>
+                <span class="btn-menu-sub">Historical Daily Challenges</span>
+              </span>
+              <span class="btn-menu-badge" id="menu-vault-count">0</span>
+            </button>
+
+            <!-- 3. Settings -->
+            <button id="btn-menu-settings" class="btn-menu" type="button">
+              <span class="btn-menu-content">
+                <span class="btn-menu-label">Settings</span>
+                <span class="btn-menu-sub">Atmosphere & Visual Motion</span>
+              </span>
+            </button>
+
+            <!-- 4. How to Play -->
+            <button id="btn-menu-rules" class="btn-menu" type="button">
+              <span class="btn-menu-content">
+                <span class="btn-menu-label">How to Play</span>
+                <span class="btn-menu-sub">Rules & Chronological Strategy</span>
+              </span>
+            </button>
+          </nav>
+
+          <!-- 3 CENTERED BOTTOM UTILITY BUTTONS -->
+          <div class="menu-utility-group" aria-label="Utility Controls">
+            <button id="btn-util-stats" class="btn-icon btn-util" type="button" aria-label="Player Statistics" title="Statistics">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <line x1="18" y1="20" x2="18" y2="10"></line>
+                <line x1="12" y1="20" x2="12" y2="4"></line>
+                <line x1="6" y1="20" x2="6" y2="14"></line>
+              </svg>
+            </button>
+            <button id="btn-util-share" class="btn-icon btn-util" type="button" aria-label="Share Game" title="Share">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <circle cx="18" cy="5" r="3"></circle>
+                <circle cx="6" cy="12" r="3"></circle>
+                <circle cx="18" cy="19" r="3"></circle>
+                <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+                <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+              </svg>
+            </button>
+            <button id="btn-util-plus" class="btn-icon btn-util" type="button" aria-label="More Lounge Games" title="More Games">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+              </svg>
+            </button>
           </div>
+
         </div>
-
-        <nav class="universal-nav" aria-label="Main Navigation">
-          <!-- 1. DAILY PUZZLE -->
-          <article class="nav-card primary-card gold-border-sheen">
-            <div class="card-meta">
-              <span class="badge badge-accent">1. Daily Reserve</span>
-              <span id="menu-today-date" class="badge badge-date">Today</span>
-            </div>
-            <h3 id="menu-today-title" class="card-title">Curating today's challenge...</h3>
-            <p id="menu-today-status" class="status-text">Status: Preparing tasting room...</p>
-            <button id="btn-play-today" class="btn btn-primary btn-block" type="button">
-              Play Daily Puzzle
-            </button>
-          </article>
-
-          <!-- 2. VAULT -->
-          <article class="nav-card">
-            <div class="card-meta">
-              <span class="badge">2. The Vault</span>
-              <span id="menu-archive-count" class="badge badge-gold">0 Puzzles</span>
-            </div>
-            <h3 class="card-title">Lounge Archives</h3>
-            <p class="status-text">Revisit vintage cellar puzzles and timeless arrangements</p>
-            <button id="btn-view-vault" class="btn btn-secondary btn-block" type="button">
-              Open Vault
-            </button>
-          </article>
-
-          <!-- 3. HOME -->
-          <article class="nav-card nav-card-flat">
-            <div class="card-meta">
-              <span class="badge">3. Concierge</span>
-            </div>
-            <p class="status-text">Return to main portfolio collection</p>
-            <a id="btn-nav-home" class="btn btn-outline btn-block" href="#home" target="_top" rel="noopener">
-              Exit to Home
-            </a>
-          </article>
-        </nav>
       </section>
 
-      <!-- VIEW 2: GAMEPLAY SCREEN -->
-      <section id="view-game" class="view hidden">
-        <!-- ICONS & STATUS ABOVE THE GAME BOARD -->
-        <div class="board-status-bar">
-          <div class="status-pill-group">
-            <span id="game-date-badge" class="badge badge-date">2025-01-01</span>
-            <span id="game-attempts-badge" class="badge badge-status">Attempts: 4 / 4</span>
+      <!-- ================================================================
+           VIEW 2: ACTIVE GAMEPLAY
+           ================================================================ -->
+      <section id="view-game" class="view view-game hidden" aria-label="Sequence Puzzle Board">
+        <div class="game-layout">
+          
+          <!-- BANNER: PUZZLE INFO & ATTEMPTS -->
+          <div class="glass-card game-meta-banner">
+            <div class="meta-row">
+              <span id="game-title-badge" class="game-puzzle-title">Title</span>
+              <span id="game-attempts-badge" class="badge badge-accent" aria-live="polite">Attempts: 4 / 4</span>
+            </div>
+            <div class="goal-group">
+              <span class="meta-label">Sequence Objective</span>
+              <p id="game-clue" class="clue-text"></p>
+            </div>
+            <div id="hint-box" class="hint-card hidden" aria-live="polite">
+              <span class="meta-label hint-label">✦ Lounge Tasting Note</span>
+              <p id="hint-text" class="hint-text"></p>
+            </div>
           </div>
-          <div id="hint-status-indicator" class="hint-indicator hidden" aria-live="polite">
-            <span class="hint-icon" aria-hidden="true">✦</span>
-            <span id="hint-status-text">Sommelier hint unlocked</span>
-          </div>
-        </div>
 
-        <!-- GAME BOARD IN THE CENTER -->
-        <div class="game-board" id="game-board">
+          <!-- THE 5 TARGET SLOTS -->
           <div id="slots-container" class="slots-container" role="region" aria-label="Sequence Slots">
-            <div class="slot" data-slot="0" tabindex="0" role="button" aria-label="Slot 1">
-              <div class="slot-num" aria-hidden="true">I</div>
-              <div class="slot-body">
-                <span class="slot-name">Slot 1</span>
-                <span class="slot-value"><span class="placeholder">Awaiting placement</span></span>
+            <div class="slot-tile" data-slot="0" tabindex="0" role="button" aria-pressed="false" aria-label="Slot 1: Empty">
+              <div class="slot-idx" aria-hidden="true">I</div>
+              <div class="slot-info">
+                <span class="slot-label">Slot 1</span>
+                <span class="slot-value"><span class="placeholder">Select slot to fill</span></span>
               </div>
-              <div class="slot-status" aria-label="Status indicator"></div>
+              <div class="slot-icon" aria-hidden="true"></div>
             </div>
-            <div class="slot" data-slot="1" tabindex="0" role="button" aria-label="Slot 2">
-              <div class="slot-num" aria-hidden="true">II</div>
-              <div class="slot-body">
-                <span class="slot-name">Slot 2</span>
-                <span class="slot-value"><span class="placeholder">Awaiting placement</span></span>
+
+            <div class="slot-tile" data-slot="1" tabindex="0" role="button" aria-pressed="false" aria-label="Slot 2: Empty">
+              <div class="slot-idx" aria-hidden="true">II</div>
+              <div class="slot-info">
+                <span class="slot-label">Slot 2</span>
+                <span class="slot-value"><span class="placeholder">Select slot to fill</span></span>
               </div>
-              <div class="slot-status" aria-label="Status indicator"></div>
+              <div class="slot-icon" aria-hidden="true"></div>
             </div>
-            <div class="slot" data-slot="2" tabindex="0" role="button" aria-label="Slot 3">
-              <div class="slot-num" aria-hidden="true">III</div>
-              <div class="slot-body">
-                <span class="slot-name">Slot 3</span>
-                <span class="slot-value"><span class="placeholder">Awaiting placement</span></span>
+
+            <div class="slot-tile" data-slot="2" tabindex="0" role="button" aria-pressed="false" aria-label="Slot 3: Empty">
+              <div class="slot-idx" aria-hidden="true">III</div>
+              <div class="slot-info">
+                <span class="slot-label">Slot 3</span>
+                <span class="slot-value"><span class="placeholder">Select slot to fill</span></span>
               </div>
-              <div class="slot-status" aria-label="Status indicator"></div>
+              <div class="slot-icon" aria-hidden="true"></div>
             </div>
-            <div class="slot" data-slot="3" tabindex="0" role="button" aria-label="Slot 4">
-              <div class="slot-num" aria-hidden="true">IV</div>
-              <div class="slot-body">
-                <span class="slot-name">Slot 4</span>
-                <span class="slot-value"><span class="placeholder">Awaiting placement</span></span>
+
+            <div class="slot-tile" data-slot="3" tabindex="0" role="button" aria-pressed="false" aria-label="Slot 4: Empty">
+              <div class="slot-idx" aria-hidden="true">IV</div>
+              <div class="slot-info">
+                <span class="slot-label">Slot 4</span>
+                <span class="slot-value"><span class="placeholder">Select slot to fill</span></span>
               </div>
-              <div class="slot-status" aria-label="Status indicator"></div>
+              <div class="slot-icon" aria-hidden="true"></div>
             </div>
-            <div class="slot" data-slot="4" tabindex="0" role="button" aria-label="Slot 5">
-              <div class="slot-num" aria-hidden="true">V</div>
-              <div class="slot-body">
-                <span class="slot-name">Slot 5</span>
-                <span class="slot-value"><span class="placeholder">Awaiting placement</span></span>
+
+            <div class="slot-tile" data-slot="4" tabindex="0" role="button" aria-pressed="false" aria-label="Slot 5: Empty">
+              <div class="slot-idx" aria-hidden="true">V</div>
+              <div class="slot-info">
+                <span class="slot-label">Slot 5</span>
+                <span class="slot-value"><span class="placeholder">Select slot to fill</span></span>
               </div>
-              <div class="slot-status" aria-label="Status indicator"></div>
+              <div class="slot-icon" aria-hidden="true"></div>
             </div>
           </div>
 
-          <!-- ITEMS POOL -->
-          <div class="pool-section glass-panel">
-            <div class="pool-header">
-              <span class="section-label">Selected Elements (Tap to place)</span>
-              <button id="btn-clear" class="btn btn-xs btn-outline-gold" type="button">Clear Unlocked</button>
+          <!-- OPTION TILES POOL -->
+          <div class="pool-container">
+            <div class="pool-header-row">
+              <span class="meta-label">Tokens Pool (Tap to place)</span>
+              <button id="btn-clear-pool" class="btn-text-subtle" type="button">Reset Unlocked</button>
             </div>
-            <div id="items-pool" class="items-pool" role="group" aria-label="Available items"></div>
-          </div>
-        </div>
-
-        <!-- SUPPORTING TEXT & ACTIONS BELOW THE GAME BOARD -->
-        <div class="board-supporting-info">
-          <div class="clue-box glass-panel">
-            <div class="clue-badge-wrapper">
-              <span class="clue-label">Tasting Clue</span>
-              <span class="card-flourish">❖</span>
-            </div>
-            <p id="game-clue" class="clue-text"></p>
+            <div id="items-pool" class="items-grid" role="group" aria-label="Available Tokens"></div>
           </div>
 
-          <div id="hint-box" class="hint-box glass-panel hidden">
-            <div class="clue-badge-wrapper">
-              <span class="hint-label">Sommelier Note</span>
-              <span class="card-flourish">✦</span>
-            </div>
-            <p id="hint-text" class="hint-text"></p>
-          </div>
-
-          <div class="submit-actions">
-            <button id="btn-submit" class="btn btn-primary btn-block btn-large gold-shimmer-btn" type="button">
+          <!-- SUBMIT ACTION -->
+          <div class="action-container">
+            <button id="btn-submit" class="btn-primary btn-block btn-submit-game" type="button">
               Submit Sequence
             </button>
           </div>
+
         </div>
       </section>
 
-      <!-- VIEW 3: VAULT (ARCHIVE) -->
-      <section id="view-vault" class="view hidden">
-        <div class="vault-header">
-          <div class="menu-flourish" aria-hidden="true">
-            <span class="flourish-line"></span>
-            <span class="flourish-gem">✦</span>
-            <span class="flourish-line"></span>
+      <!-- ================================================================
+           VIEW 3: VAULT (HISTORICAL ARCHIVE)
+           ================================================================ -->
+      <section id="view-vault" class="view view-vault hidden" aria-label="Puzzle Vault">
+        <div class="vault-container">
+          <div class="subview-header">
+            <span class="menu-eyebrow">ARCHIVAL LEDGER</span>
+            <h2 class="subview-title">Puzzle Vault</h2>
+            <p class="subview-caption">Revisit and replay previous official daily sequences.</p>
           </div>
-          <h2>Cellar Vault</h2>
-          <p class="status-text">Vintage archive of prior sequence challenges.</p>
+          <div id="vault-list" class="vault-list" role="list"></div>
         </div>
-        <div id="vault-list" class="vault-list" role="list"></div>
       </section>
+
+      <!-- ================================================================
+           VIEW 4: SETTINGS
+           ================================================================ -->
+      <section id="view-settings" class="view view-settings hidden" aria-label="Game Settings">
+        <div class="settings-container">
+          <div class="subview-header">
+            <span class="menu-eyebrow">CONFIGURATION</span>
+            <h2 class="subview-title">Settings</h2>
+            <p class="subview-caption">Adjust ambient atmosphere and motion preferences.</p>
+          </div>
+          
+          <div class="glass-card settings-group">
+            <div class="setting-row">
+              <div class="setting-meta">
+                <span class="setting-title">Floating Garnish Atmosphere</span>
+                <span class="setting-desc">Ambient botanical flight in background</span>
+              </div>
+              <div class="segmented-control" role="group" aria-label="Background Atmosphere Setting">
+                <button id="btn-anim-on" class="btn-seg active" type="button" aria-pressed="true">On</button>
+                <button id="btn-anim-off" class="btn-seg" type="button" aria-pressed="false">Off</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
     </main>
 
-    <!-- MODAL: RESULT -->
-    <div id="modal-result" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="result-title">
-      <div class="modal glass-modal">
-        <button class="modal-close" id="btn-close-result" type="button" aria-label="Close modal">✕</button>
-        <div class="modal-emblem" aria-hidden="true">✦</div>
-        <h2 id="result-title" class="modal-heading">Sequence Complete</h2>
-        <p id="result-subtitle" class="status-text"></p>
+    <!-- ==================================================================
+         OVERLAYS & MODALS
+         ================================================================== -->
+
+    <!-- HOW TO PLAY PANEL: RIGHT-TO-LEFT DIRECT ENTRY -->
+    <div id="panel-rules-overlay" class="panel-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="rules-panel-title">
+      <div class="panel-backdrop" id="backdrop-rules"></div>
+      <aside class="side-panel" id="side-panel-rules" tabindex="-1">
+        <header class="panel-header">
+          <div class="panel-header-left">
+            <span class="meta-label">GUIDE</span>
+            <h2 id="rules-panel-title" class="panel-title">How to Play</h2>
+          </div>
+          <button id="btn-close-rules" class="btn-icon btn-sm" type="button" aria-label="Close How to Play">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
+        </header>
         
-        <div id="result-grid" class="result-grid" aria-label="Attempt summary grid"></div>
-
-        <div class="solution-container">
-          <h3 class="section-label">Master Arrangement</h3>
-          <ol id="result-solution-list" class="solution-list"></ol>
+        <div class="panel-body">
+          <ol class="rules-ol">
+            <li>
+              <strong>Observe the Objective:</strong> Read the prompt carefully. Slots I through V follow an exact chronological, structural, or scale-based progression.
+            </li>
+            <li>
+              <strong>Positioning Tokens:</strong> Tap a slot, then select any token from the pool. Tapping an already filled active slot removes the token back to the pool.
+            </li>
+            <li>
+              <strong>Four Sequences:</strong> You receive 4 attempts. Submitting verifies all 5 slots. Correct items lock permanently in place (<span class="text-gold">✦</span>). Decoys and misplaced tokens return to the pool.
+            </li>
+            <li>
+              <strong>Tasting Note Hint:</strong> After 2 incorrect attempts, an informative tasting note automatically reveals itself to refine your sequence.
+            </li>
+          </ol>
+          <button id="btn-rules-confirm" class="btn-primary btn-block" type="button">Understood</button>
         </div>
-
-        <p id="result-notes" class="result-notes"></p>
-
-        <div class="modal-actions">
-          <button id="btn-share" class="btn btn-primary" type="button">Copy Result</button>
-          <button id="btn-result-vault" class="btn btn-secondary" type="button">Vault</button>
-          <button id="btn-result-menu" class="btn btn-outline" type="button">Menu</button>
-        </div>
-      </div>
+      </aside>
     </div>
 
-    <!-- MODAL: RULES -->
-    <div id="modal-rules" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="rules-title">
-      <div class="modal glass-modal">
-        <button class="modal-close" id="btn-close-rules" type="button" aria-label="Close modal">✕</button>
-        <div class="modal-emblem" aria-hidden="true">✦</div>
-        <h2 id="rules-title" class="modal-heading">Lounge Etiquette</h2>
-        <div class="menu-flourish" aria-hidden="true">
-          <span class="flourish-line"></span>
-          <span class="flourish-gem">◆</span>
-          <span class="flourish-line"></span>
-        </div>
-        <ol class="rules-list">
-          <li><strong>Study the Clue:</strong> Decipher the progression that governs Slots I through V.</li>
-          <li><strong>Arrange the Ingredients:</strong> Tap a slot, then choose your selection from the element tray.</li>
-          <li><strong>Submit with Restraint:</strong> You have <strong>4 attempts</strong>. Perfect alignments lock permanently. Incorrect placements are returned to the pool.</li>
-          <li><strong>Consult the Sommelier:</strong> After two attempts, a delicate clue unlocks automatically to guide your palate.</li>
-        </ol>
-        <button id="btn-rules-ok" class="btn btn-primary btn-block" type="button">Understood</button>
-      </div>
-    </div>
-
-    <!-- MODAL: STATS -->
+    <!-- STATS MODAL -->
     <div id="modal-stats" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="stats-title">
-      <div class="modal glass-modal">
-        <button class="modal-close" id="btn-close-stats" type="button" aria-label="Close modal">✕</button>
-        <div class="modal-emblem" aria-hidden="true">✦</div>
-        <h2 id="stats-title" class="modal-heading">Connoisseur Record</h2>
+      <div class="glass-modal">
+        <button class="modal-close" id="btn-close-stats" type="button" aria-label="Close statistics">&times;</button>
+        <span class="meta-label">RECORDS</span>
+        <h2 id="stats-title" class="modal-heading">Player Statistics</h2>
         <div class="stats-grid">
           <div class="stat-box">
             <span id="stat-played" class="stat-value">0</span>
-            <span class="stat-label">Tasted</span>
+            <span class="stat-label">Played</span>
           </div>
           <div class="stat-box">
             <span id="stat-win-rate" class="stat-value">0%</span>
@@ -285,16 +328,42 @@
           </div>
           <div class="stat-box">
             <span id="stat-max-streak" class="stat-value">0</span>
-            <span class="stat-label">Best Streak</span>
+            <span class="stat-label">Best</span>
           </div>
         </div>
-        <h3 class="section-label">Attempt Distribution</h3>
+        <span class="meta-label">Sequence Distribution</span>
         <div id="stats-distribution" class="dist-container"></div>
       </div>
     </div>
 
-    <!-- TOAST NOTIFICATION -->
+    <!-- RESULT SUMMARY MODAL -->
+    <div id="modal-result" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="result-title">
+      <div class="glass-modal">
+        <button class="modal-close" id="btn-close-result" type="button" aria-label="Close summary">&times;</button>
+        <span class="meta-label">VERIFICATION</span>
+        <h2 id="result-title" class="modal-heading">Sequence Complete</h2>
+        <p id="result-subtitle" class="status-caption"></p>
+        
+        <div id="result-grid" class="result-grid" aria-label="Attempt breakdown grid"></div>
+
+        <div class="solution-card">
+          <span class="meta-label">The Authentic Order</span>
+          <ol id="result-solution-list" class="solution-list"></ol>
+        </div>
+
+        <p id="result-notes" class="result-notes"></p>
+
+        <div class="modal-actions">
+          <button id="btn-share" class="btn-primary" type="button">Share Score</button>
+          <button id="btn-result-vault" class="btn-secondary" type="button">Vault</button>
+          <button id="btn-result-menu" class="btn-outline" type="button">Menu</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ACCESSIBLE TOAST FEEDBACK -->
     <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
+
   </div>
 
   <script src="script.js"></script>
